@@ -1,6 +1,6 @@
 export class CreateTeamDto {
   name: string;
-  coach: string;
+  coach?: string;
   profileImage?: string;
   createdById: string;
   players?: string[];
