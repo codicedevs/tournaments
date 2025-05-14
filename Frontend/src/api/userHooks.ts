@@ -29,22 +29,24 @@ export function usePlayers() {
 
 export function useCreatePlayer() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: createPlayer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });
     },
   });
+  return mutation;
 }
 
 export function useDeletePlayer() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: deletePlayer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });
     },
   });
+  return mutation;
 }
 
 // --- Teams ---
@@ -64,10 +66,11 @@ export function useTeams() {
 
 export function useCreateTeam() {
   const queryClient = useQueryClient();
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: createTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });
+  return mutation;
 }
