@@ -2,10 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon } from "lucide-react";
-import { useCreatePlayer } from "../api/userHooks";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCreatePlayer } from "../api/playerHooks";
 
 const playerSchema = z.object({
   name: z.string().min(1, "El nombre del jugador es requerido"),

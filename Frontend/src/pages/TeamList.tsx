@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { PlusIcon, ArrowLeftIcon } from "lucide-react";
+import { useTeams } from "../api/teamHooks";
 // You need to implement useTeams in your api/userHooks.ts
-import { useTeams } from "../api/userHooks";
 
 const TeamList: React.FC = () => {
   const navigate = useNavigate();

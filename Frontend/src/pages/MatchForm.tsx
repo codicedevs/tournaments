@@ -5,8 +5,8 @@ import { ArrowLeftIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCreateMatch } from "../api/matchHooks";
 // You need to implement useCreateMatch in your api/userHooks.ts
-import { useCreateMatch } from "../api/userHooks";
 
 const matchSchema = z.object({
   teamA: z.string().min(1, "El equipo A es requerido"),

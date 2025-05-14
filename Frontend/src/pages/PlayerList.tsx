@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { PlusIcon, ArrowLeftIcon } from "lucide-react";
-import { usePlayers } from "../api/userHooks";
+import { usePlayers } from "../api/playerHooks";
 
 const PlayerList: React.FC = () => {
   const navigate = useNavigate();

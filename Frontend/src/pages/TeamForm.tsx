@@ -5,8 +5,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-// You need to implement useCreateTeam in your api/userHooks.ts
-import { useCreateTeam } from "../api/userHooks";
+import { useCreateTeam } from "../api/teamHooks";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
