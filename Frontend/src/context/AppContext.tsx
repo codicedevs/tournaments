@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext, ReactNode } from "react";
 // Define types for our data
 export interface Tournament {
   id: string;
@@ -26,9 +26,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{
   children: ReactNode;
-}> = ({
-  children
-}) => {
+}> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -48,21 +46,21 @@ export const AppProvider: React.FC<{
   const addTournament = (name: string) => {
     const newTournament: Tournament = {
       id: Date.now().toString(),
-      name
+      name,
     };
     setTournaments([...tournaments, newTournament]);
   };
   const addTeam = (name: string) => {
     const newTeam: Team = {
       id: Date.now().toString(),
-      name
+      name,
     };
     setTeams([...teams, newTeam]);
   };
   const addPlayer = (name: string) => {
     const newPlayer: Player = {
       id: Date.now().toString(),
-      name
+      name,
     };
     setPlayers([...players, newPlayer]);
   };
@@ -75,14 +73,14 @@ export const AppProvider: React.FC<{
     players,
     addTournament,
     addTeam,
-    addPlayer
+    addPlayer,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 };

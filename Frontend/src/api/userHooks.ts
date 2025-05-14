@@ -1,0 +1,73 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+const API_BASE = "http://localhost:3000";
+
+// --- Players ---
+export const getPlayers = async () => {
+  const res = await axios.get(`${API_BASE}/users`);
+  return res.data;
+};
+
+export const createPlayer = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}) => {
+  const res = await axios.post(`${API_BASE}/users`, data);
+  return res.data;
+};
+
+export const deletePlayer = async (id: string) => {
+  await axios.delete(`${API_BASE}/users/${id}`);
+};
+
+export function usePlayers() {
+  return useQuery({ queryKey: ["players"], queryFn: getPlayers });
+}
+
+export function useCreatePlayer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPlayer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}
+
+export function useDeletePlayer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deletePlayer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}
+
+// --- Teams ---
+export const getTeams = async () => {
+  const res = await axios.get(`${API_BASE}/teams`);
+  return res.data;
+};
+
+export const createTeam = async (data: any) => {
+  const res = await axios.post(`${API_BASE}/teams`, data);
+  return res.data;
+};
+
+export function useTeams() {
+  return useQuery({ queryKey: ["teams"], queryFn: getTeams });
+}
+
+export function useCreateTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createTeam,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
