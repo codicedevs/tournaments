@@ -7,12 +7,19 @@ import {
   Matchday,
   MatchdaySchema,
 } from '../matchdays/entities/matchday.entity';
+import { Match, MatchSchema } from '../matches/entities/match.entity';
+import {
+  Registration,
+  RegistrationSchema,
+} from '../registrations/entities/registration.entity';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Phase.name, schema: PhaseSchema },
       { name: Matchday.name, schema: MatchdaySchema },
+      { name: Match.name, schema: MatchSchema },
+      { name: Registration.name, schema: RegistrationSchema },
     ]),
   ],
   controllers: [PhasesController],

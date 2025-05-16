@@ -37,12 +37,12 @@ async function testAPI() {
 
     // Test creating a league phase
     console.log('\nCreating a league phase:');
-    const leaguePhaseResponse = await axios.post(`${API_URL}/phases`, {
+    const leaguePhaseResponse1 = await axios.post(`${API_URL}/phases`, {
       name: 'League Stage',
       type: PhaseType.LEAGUE,
       tournamentId: tournamentId,
     });
-    console.log('Response:', leaguePhaseResponse.data);
+    console.log('Response:', leaguePhaseResponse1.data);
 
     // Test creating match days
     console.log('\nCreating match days:');
@@ -58,7 +58,12 @@ async function testAPI() {
 
     // Test creating teams
     console.log('\nCreating teams:');
-    const teamsToCreate = ['Team Alpha', 'Team Beta', 'Team Gamma'];
+    const teamsToCreate = [
+      'Team Alpha',
+      'Team Beta',
+      'Team Gamma',
+      'Team Delta',
+    ];
     const createdTeams = [];
 
     for (const teamName of teamsToCreate) {
@@ -85,6 +90,48 @@ async function testAPI() {
       );
       console.log(`Registered team ${team.name} for the tournament`);
       registrations.push(registrationResponse.data);
+    }
+
+    // Create a league phase
+    console.log('\nCreating a league phase:');
+    const leaguePhaseResponse = await axios.post(`${API_URL}/phases`, {
+      name: 'League Stage',
+      type: PhaseType.LEAGUE,
+      tournamentId: tournamentId,
+    });
+    console.log('Response:', leaguePhaseResponse.data);
+
+    const leaguePhaseId = leaguePhaseResponse.data._id;
+
+    // Generate league fixtures
+    console.log('\nGenerating league fixtures:');
+    const fixtureResponse = await axios.post(
+      `${API_URL}/phases/${leaguePhaseId}/fixture?isLocalAway=true`,
+    );
+
+    console.log(`Created ${fixtureResponse.data.matchDays.length} match days`);
+    console.log(`Created ${fixtureResponse.data.matches.length} matches`);
+
+    // Test getting match days for the phase
+    console.log('\nGetting match days for the phase:');
+    const matchDaysResponse = await axios.get(
+      `${API_URL}/matchdays/phase/${leaguePhaseId}`,
+    );
+    console.log(`Found ${matchDaysResponse.data.length} match days`);
+
+    // Get matches for the first match day
+    if (matchDaysResponse.data.length > 0) {
+      const firstMatchDayId = matchDaysResponse.data[0]._id;
+      console.log(`\nGetting matches for match day ${firstMatchDayId}:`);
+      const matchesResponse = await axios.get(
+        `${API_URL}/matches/matchday/${firstMatchDayId}`,
+      );
+      console.log(`Found ${matchesResponse.data.length} matches`);
+
+      // Show matches
+      matchesResponse.data.forEach((match) => {
+        console.log(`Match: ${match.teamA.name} vs ${match.teamB.name}`);
+      });
     }
 
     // Test getting all teams registered for the tournament

@@ -58,4 +58,12 @@ export class PhasesController {
       isLocalAway === 'true',
     );
   }
+
+  @Post(':id/fixture')
+  generateFixture(
+    @Param('id') id: string,
+    @Query('isLocalAway') isLocalAway: string,
+  ) {
+    return this.phasesService.generateFixture(id, isLocalAway === 'true');
+  }
 }
