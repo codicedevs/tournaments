@@ -76,10 +76,13 @@ async function testAPI() {
     const registrations = [];
 
     for (const team of createdTeams) {
-      const registrationResponse = await axios.post(`${API_URL}/registrations`, {
-        teamId: team._id,
-        tournamentId: tournamentId,
-      });
+      const registrationResponse = await axios.post(
+        `${API_URL}/registrations`,
+        {
+          teamId: team._id,
+          tournamentId: tournamentId,
+        },
+      );
       console.log(`Registered team ${team.name} for the tournament`);
       registrations.push(registrationResponse.data);
     }
@@ -87,12 +90,14 @@ async function testAPI() {
     // Test getting all teams registered for the tournament
     console.log('\nGetting teams registered for the tournament:');
     const tournamentRegistrationsResponse = await axios.get(
-      `${API_URL}/registrations/tournament/${tournamentId}`
+      `${API_URL}/registrations/tournament/${tournamentId}`,
     );
     const registeredTeams = tournamentRegistrationsResponse.data;
 
-    console.log(`Found ${registeredTeams.length} teams registered for tournament ID: ${tournamentId}`);
-    registeredTeams.forEach(reg => {
+    console.log(
+      `Found ${registeredTeams.length} teams registered for tournament ID: ${tournamentId}`,
+    );
+    registeredTeams.forEach((reg) => {
       console.log(`- Team: ${reg.teamId.name}`);
     });
   } catch (error) {

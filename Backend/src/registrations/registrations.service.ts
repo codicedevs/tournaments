@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Registration } from './entities/registration.entity';
@@ -8,10 +12,13 @@ import { UpdateRegistrationDto } from './dto/update-registration.dto';
 @Injectable()
 export class RegistrationsService {
   constructor(
-    @InjectModel(Registration.name) private readonly registrationModel: Model<Registration>,
+    @InjectModel(Registration.name)
+    private readonly registrationModel: Model<Registration>,
   ) {}
 
-  async create(createRegistrationDto: CreateRegistrationDto): Promise<Registration> {
+  async create(
+    createRegistrationDto: CreateRegistrationDto,
+  ): Promise<Registration> {
     // Check if registration already exists
     const existingRegistration = await this.registrationModel.findOne({
       teamId: createRegistrationDto.teamId,
@@ -19,7 +26,9 @@ export class RegistrationsService {
     });
 
     if (existingRegistration) {
-      throw new ConflictException('Team is already registered for this tournament');
+      throw new ConflictException(
+        'Team is already registered for this tournament',
+      );
     }
 
     const newRegistration = new this.registrationModel(createRegistrationDto);
@@ -31,18 +40,30 @@ export class RegistrationsService {
   }
 
   async findOne(id: string): Promise<Registration | null> {
-    return this.registrationModel.findById(id).populate('teamId tournamentId').exec();
+    return this.registrationModel
+      .findById(id)
+      .populate('teamId tournamentId')
+      .exec();
   }
 
   async findByTournament(tournamentId: string): Promise<Registration[]> {
-    return this.registrationModel.find({ tournamentId }).populate('teamId').exec();
+    return this.registrationModel
+      .find({ tournamentId })
+      .populate('teamId')
+      .exec();
   }
 
   async findByTeam(teamId: string): Promise<Registration[]> {
-    return this.registrationModel.find({ teamId }).populate('tournamentId').exec();
+    return this.registrationModel
+      .find({ teamId })
+      .populate('tournamentId')
+      .exec();
   }
 
-  async update(id: string, updateRegistrationDto: UpdateRegistrationDto): Promise<Registration | null> {
+  async update(
+    id: string,
+    updateRegistrationDto: UpdateRegistrationDto,
+  ): Promise<Registration | null> {
     const registration = await this.registrationModel.findById(id);
     if (!registration) {
       throw new NotFoundException(`Registration with ID ${id} not found`);

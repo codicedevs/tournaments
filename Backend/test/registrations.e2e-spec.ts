@@ -21,7 +21,7 @@ describe('Registrations API (e2e)', () => {
     const tournamentResponse = await request(app.getHttpServer())
       .post('/tournaments')
       .send({ name: 'Tournament for Registration Tests' });
-    
+
     tournamentId = tournamentResponse.body._id;
 
     // Create multiple teams for testing
@@ -29,10 +29,10 @@ describe('Registrations API (e2e)', () => {
     for (const name of teamNames) {
       const teamResponse = await request(app.getHttpServer())
         .post('/teams')
-        .send({ 
-          name, 
+        .send({
+          name,
           coach: `Coach for ${name}`,
-          createdById: new Types.ObjectId().toString() 
+          createdById: new Types.ObjectId().toString(),
         });
       teamIds.push(teamResponse.body._id);
     }
@@ -43,10 +43,10 @@ describe('Registrations API (e2e)', () => {
       .post('/registrations')
       .send({
         teamId: teamIds[0],
-        tournamentId: tournamentId
+        tournamentId: tournamentId,
       })
       .expect(201)
-      .then(response => {
+      .then((response) => {
         expect(response.body.teamId.toString()).toEqual(teamIds[0]);
         expect(response.body.tournamentId.toString()).toEqual(tournamentId);
       });
@@ -55,24 +55,22 @@ describe('Registrations API (e2e)', () => {
   it('retrieves all registrations for a tournament', async () => {
     // Register the remaining teams
     for (let i = 1; i < teamIds.length; i++) {
-      await request(app.getHttpServer())
-        .post('/registrations')
-        .send({
-          teamId: teamIds[i],
-          tournamentId: tournamentId
-        });
+      await request(app.getHttpServer()).post('/registrations').send({
+        teamId: teamIds[i],
+        tournamentId: tournamentId,
+      });
     }
 
     // Retrieve registrations for the tournament
     return request(app.getHttpServer())
       .get(`/registrations/tournament/${tournamentId}`)
       .expect(200)
-      .then(response => {
+      .then((response) => {
         expect(Array.isArray(response.body)).toBe(true);
         expect(response.body.length).toEqual(teamIds.length);
-        
+
         // Check that each team ID is in the response
-        const retrievedTeamIds = response.body.map(reg => reg.teamId._id);
+        const retrievedTeamIds = response.body.map((reg) => reg.teamId._id);
         for (const teamId of teamIds) {
           expect(retrievedTeamIds).toContain(teamId);
         }
@@ -83,8 +81,8 @@ describe('Registrations API (e2e)', () => {
     return request(app.getHttpServer())
       .post('/registrations')
       .send({
-        teamId: teamIds[0],  // This team is already registered
-        tournamentId: tournamentId
+        teamId: teamIds[0], // This team is already registered
+        tournamentId: tournamentId,
       })
       .expect(409); // Conflict status code
   });
@@ -93,8 +91,8 @@ describe('Registrations API (e2e)', () => {
     return request(app.getHttpServer())
       .get(`/registrations/tournament/${tournamentId}`)
       .expect(200)
-      .then(response => {
-        const teams = response.body.map(reg => reg.teamId);
+      .then((response) => {
+        const teams = response.body.map((reg) => reg.teamId);
         expect(teams.length).toBe(teamIds.length);
         expect(teams[0]).toHaveProperty('name');
         expect(teams[0]).toHaveProperty('coach');
