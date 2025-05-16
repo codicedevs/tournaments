@@ -14,6 +14,7 @@ export class MatchesService {
     teamB: string,
     date: Date,
     result: 'TeamA' | 'TeamB' | 'Draw',
+    matchDayId?: string,
   ): Promise<Match> {
     if (!isValidObjectId(teamA) || !isValidObjectId(teamB)) {
       throw new BadRequestException('Invalid team IDs');
@@ -22,11 +23,25 @@ export class MatchesService {
       throw new BadRequestException('A match must involve two different teams');
     }
 
-    const match = new this.matchModel({ teamA, teamB, date, result });
+    const matchData: any = { teamA, teamB, date, result };
+
+    // Add matchDayId if provided
+    if (matchDayId && isValidObjectId(matchDayId)) {
+      matchData.matchDayId = matchDayId;
+    }
+
+    const match = new this.matchModel(matchData);
     return match.save();
   }
 
   async findAllMatches(): Promise<Match[]> {
-    return this.matchModel.find().populate('teamA teamB').exec();
+    return this.matchModel.find().populate('teamA teamB matchDayId').exec();
+  }
+
+  async findMatchesByMatchDay(matchDayId: string): Promise<Match[]> {
+    if (!isValidObjectId(matchDayId)) {
+      throw new BadRequestException('Invalid matchday ID');
+    }
+    return this.matchModel.find({ matchDayId }).populate('teamA teamB').exec();
   }
 }

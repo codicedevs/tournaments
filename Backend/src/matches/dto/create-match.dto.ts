@@ -3,4 +3,5 @@ export class CreateMatchDto {
   teamB: string;
   date: Date;
   result: 'TeamA' | 'TeamB' | 'Draw';
+  matchDayId?: string;
 }

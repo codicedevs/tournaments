@@ -14,6 +14,9 @@ export class Match extends Document {
 
   @Prop({ type: String, enum: ['TeamA', 'TeamB', 'Draw'], required: false })
   result: 'TeamA' | 'TeamB' | 'Draw';
+
+  @Prop({ type: Types.ObjectId, ref: 'Matchday', required: false })
+  matchDayId: Types.ObjectId;
 }
 
 export const MatchSchema = SchemaFactory.createForClass(Match);

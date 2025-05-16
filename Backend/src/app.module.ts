@@ -7,6 +7,7 @@ import { TeamsModule } from './teams/teams.module';
 import { MatchesModule } from './matches/matches.module';
 import { TournamentsModule } from './tournaments/tournaments.module';
 import { PhasesModule } from './phases/phases.module';
+import { MatchdaysModule } from './matchdays/matchdays.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PhasesModule } from './phases/phases.module';
     MatchesModule,
     TournamentsModule,
     PhasesModule,
+    MatchdaysModule,
   ],
   controllers: [AppController],
   providers: [AppService],
