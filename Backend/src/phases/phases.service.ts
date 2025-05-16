@@ -4,11 +4,13 @@ import { Model, Types } from 'mongoose';
 import { Phase } from './entities/phase.entity';
 import { CreatePhaseDto } from './dto/create-phase.dto';
 import { UpdatePhaseDto } from './dto/update-phase.dto';
+import { Matchday } from '../matchdays/entities/matchday.entity';
 
 @Injectable()
 export class PhasesService {
   constructor(
     @InjectModel(Phase.name) private readonly phaseModel: Model<Phase>,
+    @InjectModel(Matchday.name) private readonly matchdayModel: Model<Matchday>,
   ) {}
 
   async create(createPhaseDto: CreatePhaseDto): Promise<Phase> {
@@ -41,6 +43,41 @@ export class PhasesService {
       .findByIdAndUpdate(id, updatePhaseDto, { new: true })
       .populate('tournamentId')
       .exec();
+  }
+
+  /**
+   * Creates match days for a league phase
+   * @param phaseId ID of the phase to create match days for
+   * @param matchDaysAmount Number of match days to create
+   * @param isLocalAway If true, creates double match days for home and away matches
+   * @returns Array of created match days
+   */
+  async createLeague(
+    phaseId: string,
+    matchDaysAmount: number,
+    isLocalAway: boolean,
+  ): Promise<Matchday[]> {
+    // Verify phase exists
+    const phase = await this.phaseModel.findById(phaseId);
+    if (!phase) {
+      throw new NotFoundException(`Phase with ID ${phaseId} not found`);
+    }
+
+    const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
+    const createdMatchDays: Matchday[] = [];
+
+    for (let i = 1; i <= totalMatchDays; i++) {
+      const matchDay = new this.matchdayModel({
+        order: i,
+        phaseId: new Types.ObjectId(phaseId),
+        // No date is set, it will be defined later
+      });
+
+      const savedMatchDay = await matchDay.save();
+      createdMatchDays.push(savedMatchDay);
+    }
+
+    return createdMatchDays;
   }
 
   async remove(id: string): Promise<Phase | null> {

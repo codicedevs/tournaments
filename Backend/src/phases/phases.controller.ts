@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PhasesService } from './phases.service';
 import { CreatePhaseDto } from './dto/create-phase.dto';
@@ -43,5 +44,18 @@ export class PhasesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.phasesService.remove(id);
+  }
+
+  @Post(':id/league')
+  createLeague(
+    @Param('id') id: string,
+    @Query('matchDaysAmount') matchDaysAmount: string,
+    @Query('isLocalAway') isLocalAway: string,
+  ) {
+    return this.phasesService.createLeague(
+      id,
+      Number(matchDaysAmount),
+      isLocalAway === 'true',
+    );
   }
 }
