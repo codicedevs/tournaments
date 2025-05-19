@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, isValidObjectId } from 'mongoose';
+import { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
 
 @Injectable()
@@ -42,6 +42,9 @@ export class MatchesService {
     if (!isValidObjectId(matchDayId)) {
       throw new BadRequestException('Invalid matchday ID');
     }
-    return this.matchModel.find({ matchDayId }).populate('teamA teamB').exec();
+    return this.matchModel
+      .find({ matchDayId: new Types.ObjectId(matchDayId) })
+      .populate('teamA teamB')
+      .exec();
   }
 }

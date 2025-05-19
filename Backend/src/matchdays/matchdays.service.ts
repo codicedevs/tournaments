@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Matchday } from './entities/matchday.entity';
 import { CreateMatchdayDto } from './dto/create-matchday.dto';
 import { UpdateMatchdayDto } from './dto/update-matchday.dto';
@@ -39,7 +39,10 @@ export class MatchdaysService {
   }
 
   async findByPhase(phaseId: string): Promise<Matchday[]> {
-    return this.matchdayModel.find({ phaseId }).sort({ order: 1 }).exec();
+    return this.matchdayModel
+      .find({ phaseId: new Types.ObjectId(phaseId) })
+      .sort({ order: 1 })
+      .exec();
   }
 
   async update(

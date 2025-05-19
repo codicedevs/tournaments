@@ -43,7 +43,7 @@ const TournamentRegistrations: React.FC = () => {
     }
   };
 
-  // Type-safe helper function
+  // Type-safe helper function with null checking
   const getTeamInfo = (
     registration: PopulatedRegistration
   ): {
@@ -51,11 +51,19 @@ const TournamentRegistrations: React.FC = () => {
     name: string;
     coach: string;
   } => {
+    if (!registration.teamId) {
+      return {
+        id: "N/A",
+        name: "Equipo no disponible",
+        coach: "No disponible",
+      };
+    }
+
     const team = registration.teamId as Team;
     return {
-      id: team._id,
-      name: team.name,
-      coach: team.coach || "No coach",
+      id: team._id || "N/A",
+      name: team.name || "Sin nombre",
+      coach: team.coach || "Sin entrenador",
     };
   };
 

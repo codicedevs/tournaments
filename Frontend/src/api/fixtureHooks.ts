@@ -42,6 +42,22 @@ export const generateFixtures = async ({
   return res.data;
 };
 
+// Create league structure (match days only)
+export const createLeague = async ({
+  phaseId,
+  matchDaysAmount,
+  isLocalAway,
+}: {
+  phaseId: string;
+  matchDaysAmount: number;
+  isLocalAway: boolean;
+}): Promise<Matchday[]> => {
+  const res = await axios.post(
+    `${API_BASE}/phases/${phaseId}/league?matchDaysAmount=${matchDaysAmount}&isLocalAway=${isLocalAway}`
+  );
+  return res.data;
+};
+
 // Custom hooks
 export function useTournamentPhases(tournamentId: string | undefined) {
   return useQuery<Phase[]>({
@@ -71,10 +87,24 @@ export function useGenerateFixtures() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: generateFixtures,
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["phases"] });
-      queryClient.invalidateQueries({ queryKey: ["matchdays"] });
+      queryClient.invalidateQueries({
+        queryKey: ["matchdays", variables.phaseId],
+      });
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+  });
+}
+
+export function useCreateLeague() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createLeague,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["matchdays", variables.phaseId],
+      });
     },
   });
 }

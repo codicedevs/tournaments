@@ -39,8 +39,9 @@ export class TeamsService {
   }
 
   async update(id: string, updateTeamDto: UpdateTeamDto): Promise<Team | null> {
+    console.log('Update team with ID:', id, updateTeamDto);
     return this.teamModel
-      .findByIdAndUpdate(id, updateTeamDto, { new: true })
+      .findByIdAndUpdate(new Types.ObjectId(id), updateTeamDto, { new: true })
       .populate('createdById players')
       .exec();
   }
@@ -111,5 +112,11 @@ export class TeamsService {
 
     team.players.splice(playerIndex, 1);
     return team.save();
+  }
+
+  async findByUser(userId: string): Promise<Team[]> {
+    return this.teamModel
+      .find({ createdById: new Types.ObjectId(userId) })
+      .exec();
   }
 }

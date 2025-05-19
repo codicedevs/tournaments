@@ -1,13 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import {
-  PlusIcon,
-  ArrowLeftIcon,
-  EyeIcon,
-  CalendarIcon,
-  UsersIcon,
-} from "lucide-react";
+import { PlusIcon, ArrowLeftIcon, EyeIcon, UsersIcon } from "lucide-react";
 import { useTournaments } from "../api/tournamentHooks";
 
 const TournamentList: React.FC = () => {
@@ -91,7 +85,16 @@ const TournamentList: React.FC = () => {
                       {tournament._id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {tournament.name}
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/tournaments/${tournament._id}`);
+                        }}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {tournament.name}
+                      </a>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <button
@@ -107,23 +110,12 @@ const TournamentList: React.FC = () => {
                       </button>
                       <button
                         onClick={() =>
-                          navigate(`/tournaments/${tournament._id}/fixture`)
-                        }
-                        className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 mr-4"
-                      >
-                        <EyeIcon size={16} />
-                        <span>Ver Calendario</span>
-                      </button>
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/tournaments/${tournament._id}/fixtures/new`
-                          )
+                          navigate(`/tournaments/${tournament._id}`)
                         }
                         className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
                       >
-                        <CalendarIcon size={16} />
-                        <span>Generar Calendario</span>
+                        <EyeIcon size={16} />
+                        <span>Ver Detalles</span>
                       </button>
                     </td>
                   </tr>

@@ -220,11 +220,14 @@ export class PhasesService {
       }
     }
 
-    // If local-away format, create second round (away matches)
+    // If local-away format, create second round (away matches) with continuing order numbers
     if (isLocalAway) {
+      // Start order numbering where the first round ended
+      const startOrder = schedule.length + 1;
+
       for (let round = 0; round < schedule.length; round++) {
         const matchDay = new this.matchdayModel({
-          order: round + 1, // Reset order to start at 1 again for away matches
+          order: startOrder + round, // Continue numbering from where home matches ended
           phaseId: new Types.ObjectId(phaseId),
           // Date to be set later
         });

@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Registration } from './entities/registration.entity';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { UpdateRegistrationDto } from './dto/update-registration.dto';
@@ -55,7 +55,7 @@ export class RegistrationsService {
 
   async findByTeam(teamId: string): Promise<Registration[]> {
     return this.registrationModel
-      .find({ teamId })
+      .find({ teamId: new Types.ObjectId(teamId) })
       .populate('tournamentId')
       .exec();
   }

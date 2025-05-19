@@ -9,15 +9,20 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import TournamentList from "./pages/TournamentList";
 import TournamentForm from "./pages/TournamentForm";
+import TournamentDetail from "./pages/TournamentDetail";
 import TournamentRegistrations from "./pages/TournamentRegistrations";
+import PhaseForm from "./pages/PhaseForm";
+import PhaseDetail from "./pages/PhaseDetail";
+import PhaseFixture from "./pages/PhaseFixture";
+import MatchdayList from "./pages/MatchdayList";
 import RegistrationForm from "./pages/RegistrationForm";
 import TeamList from "./pages/TeamList";
 import TeamForm from "./pages/TeamForm";
 import PlayerList from "./pages/PlayerList";
 import PlayerForm from "./pages/PlayerForm";
-
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import EditTeamForm from "./pages/EditTeamForm";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +42,8 @@ export function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Tournament Routes */}
               <Route
                 path="/tournaments"
                 element={
@@ -53,7 +60,14 @@ export function App() {
                   </ProtectedRoute>
                 }
               />
-
+              <Route
+                path="/tournaments/:tournamentId"
+                element={
+                  <ProtectedRoute>
+                    <TournamentDetail />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/tournaments/:tournamentId/registrations"
                 element={
@@ -70,6 +84,42 @@ export function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Phase Routes */}
+              <Route
+                path="/tournaments/:tournamentId/phases/new"
+                element={
+                  <ProtectedRoute>
+                    <PhaseForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tournaments/:tournamentId/phases/:phaseId"
+                element={
+                  <ProtectedRoute>
+                    <PhaseDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tournaments/:tournamentId/phases/:phaseId/fixture"
+                element={
+                  <ProtectedRoute>
+                    <PhaseFixture />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tournaments/:tournamentId/phases/:phaseId/matchdays"
+                element={
+                  <ProtectedRoute>
+                    <MatchdayList />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Other Routes */}
               <Route
                 path="/teams"
                 element={
@@ -83,6 +133,14 @@ export function App() {
                 element={
                   <ProtectedRoute>
                     <TeamForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teams/:teamId/edit"
+                element={
+                  <ProtectedRoute>
+                    <EditTeamForm />
                   </ProtectedRoute>
                 }
               />
@@ -102,6 +160,7 @@ export function App() {
                   </ProtectedRoute>
                 }
               />
+
               <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
           </div>
