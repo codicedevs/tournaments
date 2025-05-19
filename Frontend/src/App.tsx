@@ -1,4 +1,3 @@
-import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,10 +9,13 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import TournamentList from "./pages/TournamentList";
 import TournamentForm from "./pages/TournamentForm";
+import TournamentRegistrations from "./pages/TournamentRegistrations";
+import RegistrationForm from "./pages/RegistrationForm";
 import TeamList from "./pages/TeamList";
 import TeamForm from "./pages/TeamForm";
 import PlayerList from "./pages/PlayerList";
 import PlayerForm from "./pages/PlayerForm";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -48,6 +50,23 @@ export function App() {
                 element={
                   <ProtectedRoute>
                     <TournamentForm />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/tournaments/:tournamentId/registrations"
+                element={
+                  <ProtectedRoute>
+                    <TournamentRegistrations />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tournaments/:tournamentId/register-team"
+                element={
+                  <ProtectedRoute>
+                    <RegistrationForm />
                   </ProtectedRoute>
                 }
               />

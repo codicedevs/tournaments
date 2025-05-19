@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { User } from "../models";
 
 const API_BASE = "http://localhost:3000";
 
-export const getPlayers = async () => {
+export const getPlayers = async (): Promise<User[]> => {
   const res = await axios.get(`${API_BASE}/users`);
   return res.data;
 };
@@ -13,37 +14,38 @@ export const createPlayer = async (data: {
   email: string;
   password: string;
   role: string;
-}) => {
+}): Promise<User> => {
   const res = await axios.post(`${API_BASE}/users`, data);
   return res.data;
 };
 
-export const deletePlayer = async (id: string) => {
+export const deletePlayer = async (id: string): Promise<void> => {
   await axios.delete(`${API_BASE}/users/${id}`);
 };
 
 export function usePlayers() {
-  return useQuery({ queryKey: ["players"], queryFn: getPlayers });
+  return useQuery<User[]>({
+    queryKey: ["players"],
+    queryFn: getPlayers,
+  });
 }
 
 export function useCreatePlayer() {
   const queryClient = useQueryClient();
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: createPlayer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });
     },
   });
-  return mutation;
 }
 
 export function useDeletePlayer() {
   const queryClient = useQueryClient();
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: deletePlayer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });
     },
   });
-  return mutation;
 }
