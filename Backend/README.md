@@ -21,9 +21,161 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+# Tournament Management System - Backend
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is the backend API for the Tournament Management System, which provides functionality for organizing sports tournaments, managing teams, players, and fixture generation.
+
+## Technologies
+
+The backend is built using:
+
+- **[NestJS](https://nestjs.com/)**: A progressive Node.js framework for building efficient and scalable server-side applications
+- **[TypeScript](https://www.typescriptlang.org/)**: Typed JavaScript that compiles to plain JavaScript
+- **[MongoDB](https://www.mongodb.com/)**: NoSQL database used for data persistence
+- **[Mongoose](https://mongoosejs.com/)**: MongoDB object modeling tool designed to work in an asynchronous environment
+- **[JWT](https://jwt.io/)**: JSON Web Token for secure authentication
+- **REST API**: For standardized HTTP communication between frontend and backend
+- **[Class-validator](https://github.com/typestack/class-validator)**: Decorator-based property validation for classes
+- **[Swagger/OpenAPI](https://swagger.io/)**: API documentation
+
+## Project Structure
+
+The project follows a modular structure based on NestJS conventions:
+
+```
+Backend/
+├── src/
+│   ├── auth/                  # Authentication module (login, register, etc.)
+│   ├── users/                 # User management
+│   ├── tournaments/           # Tournament management
+│   ├── phases/                # Tournament phases (groups, knockouts, etc.)
+│   ├── matchdays/             # Match days within phases
+│   ├── matches/               # Individual matches
+│   ├── teams/                 # Team management
+│   ├── registrations/         # Team registrations in tournaments
+│   ├── players/               # Player management
+│   ├── common/                # Shared utilities, guards, filters, etc.
+│   ├── app.module.ts          # Main application module
+│   ├── main.ts                # Application entry point
+├── test/                      # Tests
+├── nest-cli.json              # NestJS CLI configuration
+├── package.json               # Node.js dependencies
+├── tsconfig.json              # TypeScript configuration
+```
+
+## Entity Relationships
+
+The system is based on the following entity relationships:
+
+1. **Tournament**: The main competition entity
+
+   - Has multiple Phases
+   - Has many Teams through Registrations
+
+2. **Phase**: A stage of the tournament (e.g., group stage, knockout stage)
+
+   - Belongs to a Tournament
+   - Has multiple Matchdays
+   - Has a type (GROUP, KNOCKOUT, LEAGUE, etc.)
+
+3. **Matchday**: A round or specific date of matches
+
+   - Belongs to a Phase
+   - Has multiple Matches
+   - Has an order number (1, 2, 3, etc.)
+
+4. **Match**: A game between two teams
+
+   - Belongs to a Matchday
+   - References two Teams (teamA and teamB)
+   - Has optional result information
+
+5. **Team**: A participating team in tournaments
+
+   - Has many Players
+   - Participates in many Tournaments through Registrations
+   - Created by a User
+
+6. **Registration**: Represents a team's participation in a tournament
+
+   - Links a Team to a Tournament (many-to-many)
+   - Has registration date information
+
+7. **User**: A system user (including players, admins)
+   - Has a role (ADMIN, MODERATOR, PLAYER)
+   - Can be associated with Teams (as a player)
+
+## Entity Relationship Diagram
+
+```
+Tournament 1──┐
+              │
+              ▼
+         N┌───────┐
+Registration│ M    │
+         ▲  └───────┘
+         │         │1
+         │         │
+         │         ▼
+         │    N┌───────┐
+Team ────┘     │ Phase │
+ │             └───────┘
+ │                 │1
+ │                 │
+ │                 ▼
+ │            N┌───────┐
+ │             │Matchday│
+ │             └───────┘
+ │                 │1
+ │                 │
+ │                 ▼
+ │            N┌───────┐
+ └──────────┐  │ Match │
+ └──────────┘  └───────┘
+
+User ─────────┐
+              │
+              ▼
+         N┌───────┐
+          │ Player│
+          └───────┘
+```
+
+## API Endpoints
+
+The API provides the following main endpoints:
+
+- `/auth`: Authentication endpoints (login, register)
+- `/users`: User management
+- `/tournaments`: Tournament CRUD operations
+- `/phases`: Tournament phase management
+- `/matchdays`: Matchday management
+- `/matches`: Match management
+- `/teams`: Team CRUD operations
+- `/registrations`: Team tournament registration
+
+## Business Rules
+
+- Teams must be registered in a tournament before they can be included in matches
+- Phases must belong to a tournament
+- Matchdays must be ordered within a phase
+- Matches must include two different teams
+
+## Fixture Generation
+
+The system includes algorithms for fixture generation:
+
+- Round-robin scheduling for league formats
+- Support for home and away matches
+- Options for manual fixture creation
+
+## Validation
+
+Validation is performed at multiple levels:
+
+- DTOs using class-validator decorators
+- Service-layer business rule validation
+- MongoDB schema validation
 
 ## Project setup
 

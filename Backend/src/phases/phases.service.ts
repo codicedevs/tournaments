@@ -82,6 +82,29 @@ export class PhasesService {
       );
     }
 
+    // Find all existing matchdays for this phase
+    const existingMatchdays = await this.matchdayModel
+      .find({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
+
+    // Delete all matches associated with these matchdays
+    for (const matchday of existingMatchdays) {
+      await this.matchModel
+        .deleteMany({
+          matchDayId: matchday._id,
+        })
+        .exec();
+    }
+
+    // Delete all matchdays for this phase
+    await this.matchdayModel
+      .deleteMany({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
+
     // Extract teams from registrations
     const teams = registrations.map((reg) => reg.teamId);
 
@@ -117,10 +140,28 @@ export class PhasesService {
       throw new BadRequestException('Match days amount must be at least 1');
     }
 
-    // Delete existing matchdays for this phase if any
-    await this.matchdayModel.deleteMany({
-      phaseId: new Types.ObjectId(phaseId),
-    });
+    // Find all existing matchdays for this phase
+    const existingMatchdays = await this.matchdayModel
+      .find({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
+
+    // Delete all matches associated with these matchdays
+    for (const matchday of existingMatchdays) {
+      await this.matchModel
+        .deleteMany({
+          matchDayId: matchday._id,
+        })
+        .exec();
+    }
+
+    // Delete all matchdays for this phase
+    await this.matchdayModel
+      .deleteMany({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
 
     const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
     const createdMatchDays: Matchday[] = [];

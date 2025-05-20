@@ -41,6 +41,8 @@ const PhaseFixture: React.FC = () => {
   }>();
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<any>(null);
 
   // Form setup for regular fixture generation
   const {
@@ -105,6 +107,45 @@ const PhaseFixture: React.FC = () => {
       return;
     }
 
+    if (existingMatchDays.length > 0) {
+      // Store the action for after confirmation
+      setPendingAction({
+        type: "auto",
+        data: data,
+      });
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // If no existing matchdays, proceed directly
+    executeGenerateFixture(data);
+  };
+
+  // Handle submission with empty fixture
+  const onSubmitEmptyFixture = (data: EmptyFixtureFormData) => {
+    setError(null);
+
+    if (!phaseId) {
+      setError("ID de fase no encontrado");
+      return;
+    }
+
+    if (existingMatchDays.length > 0) {
+      // Store the action for after confirmation
+      setPendingAction({
+        type: "manual",
+        data: data,
+      });
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // If no existing matchdays, proceed directly
+    executeEmptyFixture(data);
+  };
+
+  // Execute fixture generation after confirmation
+  const executeGenerateFixture = (data: FixtureFormData) => {
     generateFixtures(
       { phaseId, isLocalAway: data.isLocalAway },
       {
@@ -121,17 +162,10 @@ const PhaseFixture: React.FC = () => {
     );
   };
 
-  // Handle submission with empty fixture
-  const onSubmitEmptyFixture = (data: EmptyFixtureFormData) => {
-    setError(null);
-
-    if (!phaseId) {
-      setError("ID de fase no encontrado");
-      return;
-    }
-
+  // Execute empty fixture creation after confirmation
+  const executeEmptyFixture = (data: EmptyFixtureFormData) => {
     if (createEmptyMatchDays && data.matchDaysAmount) {
-      // Create empty matchdays
+      // Create empty matchdays with specified amount
       createLeague(
         {
           phaseId,
@@ -151,9 +185,8 @@ const PhaseFixture: React.FC = () => {
         }
       );
     } else {
-      // Calculate matchdays based on team count and create empty fixture
+      // Calculate matchdays based on team count
       const teamCount = data.teamCount;
-      // For round-robin: n-1 matchdays where n is number of teams
       const calculatedMatchDays = teamCount - 1;
 
       createLeague(
@@ -175,6 +208,21 @@ const PhaseFixture: React.FC = () => {
         }
       );
     }
+  };
+
+  // Handle confirmation dialog result
+  const handleConfirmAction = (confirmed: boolean) => {
+    if (confirmed && pendingAction) {
+      if (pendingAction.type === "auto") {
+        executeGenerateFixture(pendingAction.data);
+      } else {
+        executeEmptyFixture(pendingAction.data);
+      }
+    }
+
+    // Reset dialog state regardless of confirmation
+    setShowConfirmDialog(false);
+    setPendingAction(null);
   };
 
   return (
@@ -200,10 +248,12 @@ const PhaseFixture: React.FC = () => {
 
           <div className="p-6">
             {existingMatchDays.length > 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-md mb-4">
-                <strong>Atención:</strong> Ya existen {existingMatchDays.length}{" "}
-                jornadas para esta fase. Generar un nuevo calendario reemplazará
-                la estructura actual.
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
+                <strong>¡Atención!</strong> Ya existen{" "}
+                {existingMatchDays.length} jornadas para esta fase. Generar un
+                nuevo calendario
+                <span className="font-bold"> eliminará permanentemente </span>
+                todas las jornadas y partidos existentes.
               </div>
             )}
 
@@ -471,6 +521,37 @@ const PhaseFixture: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
+              <h2 className="text-xl font-bold text-red-600 mb-3">
+                Confirmar eliminación
+              </h2>
+              <p className="mb-4">
+                Estás a punto de eliminar {existingMatchDays.length} jornadas y
+                todos sus partidos asociados. Esta acción no se puede deshacer.
+              </p>
+              <p className="mb-6">¿Estás seguro de que deseas continuar?</p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => handleConfirmAction(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleConfirmAction(true)}
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                >
+                  Sí, eliminar y continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
