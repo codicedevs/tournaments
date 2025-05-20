@@ -1,5 +1,3 @@
-# Mi Proyecto
-
 <p align="center">
   <img src="/Backend/static/logoDeballComplete.png" alt="Descripción de la imagen" width="300"/>
 </p>
