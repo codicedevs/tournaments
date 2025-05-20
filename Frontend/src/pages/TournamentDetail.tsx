@@ -144,7 +144,9 @@ const TournamentDetail: React.FC = () => {
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/phases/${phase._id}/fixtures/new`);
+                      navigate(
+                        `/tournaments/${tournamentId}/phases/${phase._id}/fixture`
+                      );
                     }}
                   >
                     Generar Calendario
