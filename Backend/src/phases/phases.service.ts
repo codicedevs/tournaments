@@ -56,41 +56,6 @@ export class PhasesService {
   }
 
   /**
-   * Creates match days for a league phase
-   * @param phaseId ID of the phase to create match days for
-   * @param matchDaysAmount Number of match days to create
-   * @param isLocalAway If true, creates double match days for home and away matches
-   * @returns Array of created match days
-   */
-  async createLeague(
-    phaseId: string,
-    matchDaysAmount: number,
-    isLocalAway: boolean,
-  ): Promise<Matchday[]> {
-    // Verify phase exists
-    const phase = await this.phaseModel.findById(phaseId);
-    if (!phase) {
-      throw new NotFoundException(`Phase with ID ${phaseId} not found`);
-    }
-
-    const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
-    const createdMatchDays: Matchday[] = [];
-
-    for (let i = 1; i <= totalMatchDays; i++) {
-      const matchDay = new this.matchdayModel({
-        order: i,
-        phaseId: new Types.ObjectId(phaseId),
-        // No date is set, it will be defined later
-      });
-
-      const savedMatchDay = await matchDay.save();
-      createdMatchDays.push(savedMatchDay);
-    }
-
-    return createdMatchDays;
-  }
-
-  /**
    * Generates a complete league fixture for teams registered in a tournament
    */
   async generateFixture(
@@ -131,6 +96,47 @@ export class PhasesService {
     );
 
     return result;
+  }
+
+  /**
+   * Creates league match days structure without matches
+   */
+  async createLeague(
+    phaseId: string,
+    matchDaysAmount: number,
+    isLocalAway: boolean,
+  ): Promise<Matchday[]> {
+    // Verify phase exists
+    const phase = await this.phaseModel.findById(phaseId);
+    if (!phase) {
+      throw new NotFoundException(`Phase with ID ${phaseId} not found`);
+    }
+
+    // Input validation
+    if (matchDaysAmount < 1) {
+      throw new BadRequestException('Match days amount must be at least 1');
+    }
+
+    // Delete existing matchdays for this phase if any
+    await this.matchdayModel.deleteMany({
+      phaseId: new Types.ObjectId(phaseId),
+    });
+
+    const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
+    const createdMatchDays: Matchday[] = [];
+
+    for (let i = 1; i <= totalMatchDays; i++) {
+      const matchDay = new this.matchdayModel({
+        order: i,
+        phaseId: new Types.ObjectId(phaseId),
+        // No date is set, it will be defined later
+      });
+
+      const savedMatchDay = await matchDay.save();
+      createdMatchDays.push(savedMatchDay);
+    }
+
+    return createdMatchDays;
   }
 
   /**
