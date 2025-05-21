@@ -2,17 +2,26 @@ import { Team } from "./Team";
 import { Matchday } from "./Matchday";
 
 export enum MatchResult {
-  TEAM_A = "TeamA",
-  TEAM_B = "TeamB",
+  HOME_TEAM = "Home",
+  AWAY_TEAM = "Away",
   DRAW = "Draw",
+}
+
+export enum MatchState {
+  SCHEDULED = "Scheduled",
+  IN_PROGRESS = "In Progress",
+  COMPLETED = "Completed",
 }
 
 export interface Match {
   _id: string;
-  teamA: string | Team;
-  teamB: string | Team;
+  home: Team;
+  away: Team;
   date: Date;
   result?: MatchResult;
+  scoreHome?: number;
+  scoreAway?: number;
+  state: MatchState;
   matchDayId?: string | Matchday;
   location?: string;
 }

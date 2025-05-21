@@ -9,14 +9,7 @@ export class MatchesController {
 
   @Post()
   async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<Match> {
-    const { teamA, teamB, date, result, matchDayId } = createMatchDto;
-    return this.matchesService.createMatch(
-      teamA,
-      teamB,
-      date,
-      result,
-      matchDayId,
-    );
+    return this.matchesService.createMatch(createMatchDto);
   }
 
   @Get()

@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
+import { CreateMatchDto } from './dto/create-match.dto';
 
 @Injectable()
 export class MatchesService {
@@ -9,21 +10,17 @@ export class MatchesService {
     @InjectModel(Match.name) private readonly matchModel: Model<Match>,
   ) {}
 
-  async createMatch(
-    teamA: string,
-    teamB: string,
-    date: Date,
-    result: 'TeamA' | 'TeamB' | 'Draw',
-    matchDayId?: string,
-  ): Promise<Match> {
-    if (!isValidObjectId(teamA) || !isValidObjectId(teamB)) {
+  async createMatch(createMatchDto: CreateMatchDto): Promise<Match> {
+    const { home, away, date, result, matchDayId } = createMatchDto;
+
+    if (!isValidObjectId(home) || !isValidObjectId(away)) {
       throw new BadRequestException('Invalid team IDs');
     }
-    if (teamA === teamB) {
+    if (home === away) {
       throw new BadRequestException('A match must involve two different teams');
     }
 
-    const matchData: any = { teamA, teamB, date, result };
+    const matchData: any = { home, away, date, result };
 
     // Add matchDayId if provided
     if (matchDayId && isValidObjectId(matchDayId)) {
@@ -35,7 +32,7 @@ export class MatchesService {
   }
 
   async findAllMatches(): Promise<Match[]> {
-    return this.matchModel.find().populate('teamA teamB matchDayId').exec();
+    return this.matchModel.find().populate('home away matchDayId').exec();
   }
 
   async findMatchesByMatchDay(matchDayId: string): Promise<Match[]> {
@@ -44,7 +41,7 @@ export class MatchesService {
     }
     return this.matchModel
       .find({ matchDayId: new Types.ObjectId(matchDayId) })
-      .populate('teamA teamB')
+      .populate('home away')
       .exec();
   }
 }
