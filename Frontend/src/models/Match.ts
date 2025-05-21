@@ -9,8 +9,8 @@ export enum MatchResult {
 
 export interface Match {
   _id: string;
-  teamA: string | Team;
-  teamB: string | Team;
+  teamA: Team;
+  teamB: Team;
   date: Date;
   result?: MatchResult;
   matchDayId?: string | Matchday;
