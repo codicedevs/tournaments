@@ -1,7 +1,12 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
+import { UpdateMatchDto } from './dto/update-match.dto';
 
 @Injectable()
 export class MatchesService {
@@ -46,5 +51,29 @@ export class MatchesService {
       .find({ matchDayId: new Types.ObjectId(matchDayId) })
       .populate('teamA teamB')
       .exec();
+  }
+
+  async findAll(): Promise<Match[]> {
+    return this.matchModel.find().exec();
+  }
+
+  async findOne(id: string): Promise<Match> {
+    const match = await this.matchModel.findById(id).exec();
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+    return match;
+  }
+
+  async upgrade(id: string, updateMatchDto: UpdateMatchDto): Promise<Match> {
+    const existingMatch = await this.matchModel
+      .findByIdAndUpdate(id, updateMatchDto, { new: true })
+      .exec();
+
+    if (!existingMatch) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+
+    return existingMatch;
   }
 }

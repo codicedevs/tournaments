@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Patch } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { Match } from './entities/match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
+import { UpdateMatchDto } from './dto/update-match.dto';
 
 @Controller('matches')
 export class MatchesController {
@@ -29,5 +30,18 @@ export class MatchesController {
     @Param('matchDayId') matchDayId: string,
   ): Promise<Match[]> {
     return this.matchesService.findMatchesByMatchDay(matchDayId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string): Promise<Match> {
+    return this.matchesService.findOne(id);
+  }
+
+  @Patch(':id')
+  upgrade(
+    @Param('id') id: string,
+    @Body() updateMatchDto: UpdateMatchDto,
+  ): Promise<Match> {
+    return this.matchesService.upgrade(id, updateMatchDto);
   }
 }
