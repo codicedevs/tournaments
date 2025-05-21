@@ -1,9 +1,7 @@
-import { MatchResult } from '../entities/match.entity';
-
 export class CreateMatchDto {
-  home: string;
-  away: string;
+  teamA: string;
+  teamB: string;
   date: Date;
-  result: MatchResult;
+  result: 'TeamA' | 'TeamB' | 'Draw';
   matchDayId?: string;
 }
