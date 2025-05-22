@@ -4,4 +4,5 @@ export class CreateMatchDto {
   date: Date;
   result: 'TeamA' | 'TeamB' | 'Draw';
   matchDayId?: string;
+  completed?: boolean;
 }
