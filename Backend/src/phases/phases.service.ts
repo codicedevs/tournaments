@@ -300,6 +300,250 @@ export class PhasesService {
     return { matchDays: createdMatchDays, matches: createdMatches };
   }
 
+  /**
+   * Creates the first round of a knockout tournament
+   */
+  async createKnockout(
+    phaseId: string,
+  ): Promise<{ matchday: Matchday; matches: Match[] }> {
+    // Find the phase
+    const phase = await this.phaseModel.findById(phaseId);
+    if (!phase) {
+      throw new NotFoundException(`Phase with ID ${phaseId} not found`);
+    }
+
+    // Get all teams registered for the tournament
+    const registrations = await this.registrationModel
+      .find({
+        tournamentId: phase.tournamentId,
+      })
+      .populate('teamId')
+      .exec();
+
+    if (registrations.length < 2) {
+      throw new BadRequestException(
+        'Not enough teams registered to create a knockout tournament (minimum 2)',
+      );
+    }
+
+    // Extract teams from registrations
+    const teams = registrations.map((reg) => reg.teamId);
+
+    // Shuffle teams randomly
+    const shuffledTeams = this.shuffleArray([...teams]);
+
+    // Delete existing matchdays and matches for this phase (if any)
+    const existingMatchdays = await this.matchdayModel
+      .find({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
+
+    for (const matchday of existingMatchdays) {
+      await this.matchModel
+        .deleteMany({
+          matchDayId: matchday._id,
+        })
+        .exec();
+    }
+
+    await this.matchdayModel
+      .deleteMany({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .exec();
+
+    // Create a new matchday with order=1
+    const matchday = new this.matchdayModel({
+      order: 1,
+      phaseId: new Types.ObjectId(phaseId),
+      name: `Round of ${shuffledTeams.length}`,
+    });
+    const savedMatchday = await matchday.save();
+
+    // Create matches for the first round
+    const matches: Match[] = [];
+    const pairCount = Math.floor(shuffledTeams.length / 2);
+
+    for (let i = 0; i < pairCount; i++) {
+      const match = new this.matchModel({
+        teamA: shuffledTeams[i * 2]._id,
+        teamB: shuffledTeams[i * 2 + 1]._id,
+        date: new Date(), // Default date, can be updated later
+        matchDayId: savedMatchday._id,
+        completed: false,
+      });
+
+      const savedMatch = await match.save();
+      matches.push(savedMatch);
+    }
+
+    // If odd number of teams, the last team gets a bye
+    if (shuffledTeams.length % 2 !== 0) {
+      const byeTeam = shuffledTeams[shuffledTeams.length - 1];
+      // Create a match with a bye (null opponent)
+      const byeMatch = new this.matchModel({
+        teamA: byeTeam._id,
+        teamB: null, // No opponent (bye)
+        date: new Date(),
+        matchDayId: savedMatchday._id,
+        completed: true, // Auto-complete this match
+        result: 'TeamA', // Team with bye automatically advances
+      });
+
+      const savedByeMatch = await byeMatch.save();
+      matches.push(savedByeMatch);
+    }
+
+    return {
+      matchday: savedMatchday,
+      matches: matches,
+    };
+  }
+
+  /**
+   * Advances to the next round of a knockout tournament
+   */
+  async advanceKnockoutRound(
+    phaseId: string,
+  ): Promise<{ matchday: Matchday; matches: Match[] }> {
+    // Find the phase
+    const phase = await this.phaseModel.findById(phaseId);
+    if (!phase) {
+      throw new NotFoundException(`Phase with ID ${phaseId} not found`);
+    }
+
+    // Find the latest matchday in this phase
+    const latestMatchday = await this.matchdayModel
+      .findOne({
+        phaseId: new Types.ObjectId(phaseId),
+      })
+      .sort({ order: -1 })
+      .exec();
+
+    if (!latestMatchday) {
+      throw new NotFoundException(`No matchdays found for phase ${phaseId}`);
+    }
+
+    // Get all matches from the latest matchday
+    const matches = await this.matchModel
+      .find({
+        matchDayId: latestMatchday._id,
+      })
+      .exec();
+
+    if (matches.length === 0) {
+      throw new BadRequestException('No matches found in the current round');
+    }
+
+    // Check if all matches have results
+    const incompleteMatches = matches.filter(
+      (match) => !match.completed || !match.result,
+    );
+    if (incompleteMatches.length > 0) {
+      throw new BadRequestException(
+        'All matches must be completed before advancing to the next round',
+      );
+    }
+
+    // Collect winners from previous round
+    const winners: Types.ObjectId[] = [];
+    for (const match of matches) {
+      if (match.result === 'TeamA') {
+        winners.push(match.teamA);
+      } else if (match.result === 'TeamB') {
+        winners.push(match.teamB);
+      } else {
+        throw new BadRequestException('Knockout matches cannot end in a draw');
+      }
+    }
+
+    // Check if we have a winner (tournament completed)
+    if (winners.length <= 1) {
+      throw new BadRequestException(
+        'Tournament is already completed with a winner',
+      );
+    }
+
+    // Create a new matchday for the next round
+    const newMatchday = new this.matchdayModel({
+      order: latestMatchday.order + 1,
+      phaseId: new Types.ObjectId(phaseId),
+      name: this.getKnockoutRoundName(winners.length),
+    });
+    const savedMatchday = await newMatchday.save();
+
+    // Create new matches by pairing winners
+    const newMatches: Match[] = [];
+    const pairCount = Math.floor(winners.length / 2);
+
+    for (let i = 0; i < pairCount; i++) {
+      const match = new this.matchModel({
+        teamA: winners[i * 2],
+        teamB: winners[i * 2 + 1],
+        date: new Date(), // Default date, can be updated later
+        matchDayId: savedMatchday._id,
+        completed: false,
+      });
+
+      const savedMatch = await match.save();
+      newMatches.push(savedMatch);
+    }
+
+    // If odd number of winners, one gets a bye
+    if (winners.length % 2 !== 0) {
+      const byeTeam = winners[winners.length - 1];
+      // Create a match with a bye (null opponent)
+      const byeMatch = new this.matchModel({
+        teamA: byeTeam,
+        teamB: null, // No opponent (bye)
+        date: new Date(),
+        matchDayId: savedMatchday._id,
+        completed: true, // Auto-complete this match
+        result: 'TeamA', // Team with bye automatically advances
+      });
+
+      const savedByeMatch = await byeMatch.save();
+      newMatches.push(savedByeMatch);
+    }
+
+    return {
+      matchday: savedMatchday,
+      matches: newMatches,
+    };
+  }
+
+  /**
+   * Helper method to get round name based on number of teams
+   */
+  private getKnockoutRoundName(teamsCount: number): string {
+    switch (teamsCount) {
+      case 2:
+        return 'Final';
+      case 4:
+        return 'Semi-finals';
+      case 8:
+        return 'Quarter-finals';
+      case 16:
+        return 'Round of 16';
+      case 32:
+        return 'Round of 32';
+      default:
+        return `Round of ${teamsCount}`;
+    }
+  }
+
+  /**
+   * Helper method to shuffle an array (Fisher-Yates algorithm)
+   */
+  private shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
   async remove(id: string): Promise<Phase | null> {
     const phase = await this.phaseModel.findById(id);
     if (!phase) {

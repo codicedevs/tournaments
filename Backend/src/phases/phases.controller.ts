@@ -66,4 +66,22 @@ export class PhasesController {
   ) {
     return this.phasesService.generateFixture(id, isLocalAway === 'true');
   }
+
+  /**
+   * Creates the initial round of a knockout tournament
+   * @param id Phase ID
+   */
+  @Post(':id/knockout/create')
+  createKnockout(@Param('id') id: string) {
+    return this.phasesService.createKnockout(id);
+  }
+
+  /**
+   * Advances to the next round of a knockout tournament
+   * @param id Phase ID
+   */
+  @Post(':id/knockout/advance')
+  advanceKnockoutRound(@Param('id') id: string) {
+    return this.phasesService.advanceKnockoutRound(id);
+  }
 }

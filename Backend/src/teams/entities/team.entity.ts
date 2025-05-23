@@ -9,16 +9,16 @@ export class Team extends Document {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true })
-  coach: string;
+  @Prop({ required: false })
+  coach?: string;
 
   @Prop()
-  profileImage: string;
+  profileImage?: string;
 
   @Prop({ default: Date.now })
   createdAt: Date;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   createdById: User;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })

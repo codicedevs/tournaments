@@ -17,6 +17,9 @@ export class Match extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'Matchday', required: false })
   matchDayId: Types.ObjectId;
+
+  @Prop({ type: Boolean, default: false })
+  completed: boolean;
 }
 
 export const MatchSchema = SchemaFactory.createForClass(Match);
