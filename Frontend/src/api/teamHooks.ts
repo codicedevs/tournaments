@@ -24,7 +24,7 @@ export const createTeam = async (data: any): Promise<Team> => {
     formData.append("file", data.profileImage);
 
     // Upload the file
-    const uploadRes = await axios.post(`${API_BASE}/upload`, formData, {
+    const uploadRes = await axios.post(`${API_BASE}/teams/upload`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -69,9 +69,13 @@ export const getTeam = async (id: string): Promise<Team> => {
   const res = await axios.get(`${API_BASE}/teams/${id}`);
   return res.data;
 };
+export const getTeams = async (): Promise<Team[]> => {
+  const res = await axios.get(`${API_BASE}/teams`);
+  return res.data;
+};
 
 export function useTeams() {
-  return useQuery<Team[]>({ queryKey: ["teams"], queryFn: getTeams });
+  return useQuery<Team[]>({ queryKey: ["teams"], queryFn: () => getTeams() });
 }
 
 export function useTeam(id: string) {

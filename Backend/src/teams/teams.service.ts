@@ -119,4 +119,12 @@ export class TeamsService {
       .find({ createdById: new Types.ObjectId(userId) })
       .exec();
   }
+
+  async checkNameExists(name: string): Promise<boolean> {
+    console.log('entro');
+    const team = await this.teamModel.findOne({
+      name: { $regex: new RegExp(`^${name}$`, 'i') },
+    });
+    return !!team;
+  }
 }
