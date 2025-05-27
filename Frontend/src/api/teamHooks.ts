@@ -4,12 +4,40 @@ import { Team } from "../models";
 
 const API_BASE = "http://localhost:3000";
 
-export const getTeams = async (): Promise<Team[]> => {
-  const res = await axios.get(`${API_BASE}/teams`);
+// Function to check if team name exists
+export const checkTeamName = async (
+  name: string
+): Promise<{ exists: boolean }> => {
+  if (!name || name.length < 3) return { exists: false };
+  const res = await axios.get(
+    `${API_BASE}/teams/check-name?name=${encodeURIComponent(name)}`
+  );
   return res.data;
 };
 
-export const createTeam = async (data: Partial<Team>): Promise<Team> => {
+// Modified to handle file uploads
+export const createTeam = async (data: any): Promise<Team> => {
+  // Check if profileImage is a File object
+  if (data.profileImage instanceof File) {
+    // Create form data for the file
+    const formData = new FormData();
+    formData.append("file", data.profileImage);
+
+    // Upload the file
+    const uploadRes = await axios.post(`${API_BASE}/upload`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Replace the File object with the returned URL
+    data = {
+      ...data,
+      profileImage: uploadRes.data.url,
+    };
+  }
+
+  // Create the team with the processed data
   const res = await axios.post(`${API_BASE}/teams`, data);
   return res.data;
 };
@@ -51,6 +79,15 @@ export function useTeam(id: string) {
     queryKey: ["teams", id],
     queryFn: () => getTeam(id),
     enabled: !!id,
+  });
+}
+
+export function useCheckTeamName(name: string) {
+  return useQuery({
+    queryKey: ["checkTeamName", name],
+    queryFn: () => checkTeamName(name),
+    enabled: !!name && name.length >= 3,
+    staleTime: 10000,
   });
 }
 
