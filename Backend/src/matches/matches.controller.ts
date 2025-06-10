@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Body, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Patch,
+  BadRequestException,
+} from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { Match } from './entities/match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -10,14 +18,7 @@ export class MatchesController {
 
   @Post()
   async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<Match> {
-    const { teamA, teamB, date, result, matchDayId } = createMatchDto;
-    return this.matchesService.createMatch(
-      teamA,
-      teamB,
-      date,
-      result,
-      matchDayId,
-    );
+    return this.matchesService.createMatch(createMatchDto);
   }
 
   @Get()
@@ -38,10 +39,37 @@ export class MatchesController {
   }
 
   @Patch(':id')
-  upgrade(
+  async update(
     @Param('id') id: string,
     @Body() updateMatchDto: UpdateMatchDto,
   ): Promise<Match> {
-    return this.matchesService.upgrade(id, updateMatchDto);
+    // Validar que si se envían ambos scores, sean números válidos
+    if (
+      (updateMatchDto.homeScore !== undefined &&
+        updateMatchDto.awayScore === undefined) ||
+      (updateMatchDto.homeScore === undefined &&
+        updateMatchDto.awayScore !== undefined)
+    ) {
+      throw new BadRequestException(
+        'Debe proporcionar ambos scores para actualizar el resultado',
+      );
+    }
+
+    // Si se proporcionan ambos scores, calcular el resultado
+    if (
+      updateMatchDto.homeScore !== undefined &&
+      updateMatchDto.awayScore !== undefined
+    ) {
+      if (updateMatchDto.homeScore > updateMatchDto.awayScore) {
+        updateMatchDto.result = 'TeamA';
+      } else if (updateMatchDto.homeScore < updateMatchDto.awayScore) {
+        updateMatchDto.result = 'TeamB';
+      } else {
+        updateMatchDto.result = 'Draw';
+      }
+      updateMatchDto.completed = true;
+    }
+
+    return this.matchesService.update(id, updateMatchDto);
   }
 }

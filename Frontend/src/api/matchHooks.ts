@@ -13,10 +13,25 @@ export const createMatch = async (data: {
   teamA: string;
   teamB: string;
   date: Date;
+  homeScore?: number;
+  awayScore?: number;
   result?: MatchResult;
   matchDayId?: string;
 }): Promise<Match> => {
   const res = await axios.post(`${API_BASE}/matches`, data);
+  return res.data;
+};
+
+export const updateMatch = async (
+  matchId: string,
+  data: {
+    homeScore?: number;
+    awayScore?: number;
+    result?: MatchResult;
+    completed?: boolean;
+  }
+): Promise<Match> => {
+  const res = await axios.patch(`${API_BASE}/matches/${matchId}`, data);
   return res.data;
 };
 
@@ -40,6 +55,18 @@ export function useCreateMatch() {
     mutationFn: createMatch,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
+    },
+  });
+}
+
+export function useUpdateMatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ matchId, data }: { matchId: string; data: any }) =>
+      updateMatch(matchId, data),
+    onSuccess: (_, { matchId }) => {
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["matches", "matchday"] });
     },
   });
 }

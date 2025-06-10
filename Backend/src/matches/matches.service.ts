@@ -7,6 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
 import { UpdateMatchDto } from './dto/update-match.dto';
+import { CreateMatchDto } from './dto/create-match.dto';
 
 @Injectable()
 export class MatchesService {
@@ -14,13 +15,10 @@ export class MatchesService {
     @InjectModel(Match.name) private readonly matchModel: Model<Match>,
   ) {}
 
-  async createMatch(
-    teamA: string,
-    teamB: string,
-    date: Date,
-    result: 'TeamA' | 'TeamB' | 'Draw',
-    matchDayId?: string,
-  ): Promise<Match> {
+  async createMatch(createMatchDto: CreateMatchDto): Promise<Match> {
+    const { teamA, teamB, date, homeScore, awayScore, matchDayId } =
+      createMatchDto;
+
     if (!isValidObjectId(teamA) || !isValidObjectId(teamB)) {
       throw new BadRequestException('Invalid team IDs');
     }
@@ -28,7 +26,15 @@ export class MatchesService {
       throw new BadRequestException('A match must involve two different teams');
     }
 
-    const matchData: any = { teamA, teamB, date, result };
+    // Validar que los scores no sean negativos
+    if (homeScore !== undefined && homeScore < 0) {
+      throw new BadRequestException('Home score cannot be negative');
+    }
+    if (awayScore !== undefined && awayScore < 0) {
+      throw new BadRequestException('Away score cannot be negative');
+    }
+
+    const matchData: any = { teamA, teamB, date, homeScore, awayScore };
 
     // Add matchDayId if provided
     if (matchDayId && isValidObjectId(matchDayId)) {
@@ -65,7 +71,17 @@ export class MatchesService {
     return match;
   }
 
-  async upgrade(id: string, updateMatchDto: UpdateMatchDto): Promise<Match> {
+  async update(id: string, updateMatchDto: UpdateMatchDto): Promise<Match> {
+    const { homeScore, awayScore } = updateMatchDto;
+
+    // Validar que los scores no sean negativos
+    if (homeScore !== undefined && homeScore < 0) {
+      throw new BadRequestException('Home score cannot be negative');
+    }
+    if (awayScore !== undefined && awayScore < 0) {
+      throw new BadRequestException('Away score cannot be negative');
+    }
+
     const existingMatch = await this.matchModel
       .findByIdAndUpdate(id, updateMatchDto, { new: true })
       .exec();

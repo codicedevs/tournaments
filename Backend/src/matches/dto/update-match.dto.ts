@@ -1,11 +1,47 @@
-import { IsEnum, IsOptional } from 'class-validator';
-import { CreateMatchDto } from './create-match.dto';
-import { PartialType } from '@nestjs/mapped-types';
+import {
+  IsDate,
+  IsEnum,
+  IsMongoId,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class UpdateMatchDto extends PartialType(CreateMatchDto) {
-  @IsEnum(['TeamA', 'TeamB', 'Draw'], {
-    message: 'Result must be TeamA, TeamB, or Draw',
-  })
+export class UpdateMatchDto {
   @IsOptional()
+  @IsMongoId()
+  teamA?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  teamB?: string;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  date?: Date;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  homeScore?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  awayScore?: number;
+
+  @IsOptional()
+  @IsEnum(['TeamA', 'TeamB', 'Draw'])
   result?: 'TeamA' | 'TeamB' | 'Draw';
+
+  @IsOptional()
+  @IsMongoId()
+  matchDayId?: string;
+
+  @IsOptional()
+  completed?: boolean;
 }
