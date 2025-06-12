@@ -7,14 +7,18 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId, Types } from 'mongoose';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { Team } from './entities/team.entity';
+import { Team, TeamDocument } from './entities/team.entity';
 import { UsersService } from '../users/users.service';
+import { Match } from '../matches/entities/match.entity';
+import { Matchday } from '../matchdays/entities/matchday.entity';
 
 @Injectable()
 export class TeamsService {
   constructor(
-    @InjectModel(Team.name) private readonly teamModel: Model<Team>,
+    @InjectModel(Team.name) private readonly teamModel: Model<TeamDocument>,
     private readonly usersService: UsersService,
+    @InjectModel(Match.name) private matchModel: Model<Match>,
+    @InjectModel(Matchday.name) private matchdayModel: Model<Matchday>,
   ) {}
 
   async create(createTeamDto: CreateTeamDto): Promise<Team> {
@@ -22,12 +26,11 @@ export class TeamsService {
     return newTeam.save();
   }
 
-  async findAll(populate: boolean): Promise<Team[]> {
-    const query = this.teamModel.find();
-    if (populate) {
-      query.populate('players');
+  async findAll(shouldPopulate = false): Promise<Team[]> {
+    if (shouldPopulate) {
+      return this.teamModel.find().populate('tournaments').exec();
     }
-    return query.exec();
+    return this.teamModel.find().exec();
   }
 
   async findOne(id: string, populate: boolean): Promise<Team | null> {
@@ -126,5 +129,32 @@ export class TeamsService {
       name: { $regex: new RegExp(`^${name}$`, 'i') },
     });
     return !!team;
+  }
+
+  async getTeamsByPhase(phaseId: string) {
+    // Primero obtener todos los matchdays de la fase
+    const matchdays = await this.matchdayModel.find({ phaseId });
+    const matchdayIds = matchdays.map((matchday) => matchday._id);
+
+    // Obtener todos los partidos de la fase
+    const matches = await this.matchModel
+      .find({
+        matchDayId: { $in: matchdayIds },
+      })
+      .populate('teamA teamB');
+
+    // Obtener todos los equipos únicos que participan en la fase
+    const teamIds = new Set();
+    matches.forEach((match) => {
+      teamIds.add(match.teamA.toString());
+      teamIds.add(match.teamB.toString());
+    });
+
+    // Obtener los equipos con sus estadísticas
+    const teams = await this.teamModel.find({
+      _id: { $in: Array.from(teamIds) },
+    });
+
+    return teams;
   }
 }

@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
+import { Team } from './entities/team.entity';
 
 @Controller('teams')
 export class TeamsController {
@@ -54,9 +55,8 @@ export class TeamsController {
   }
 
   @Get()
-  findAll(@Query('populate') populate: string) {
-    const shouldPopulate = populate === 'true';
-    return this.teamsService.findAll(shouldPopulate);
+  async findAll(): Promise<Team[]> {
+    return this.teamsService.findAll();
   }
 
   @Get(':id')
@@ -86,5 +86,10 @@ export class TeamsController {
     @Param('playerId') playerId: string,
   ) {
     return this.teamsService.removePlayer(teamId, playerId);
+  }
+
+  @Get('phase/:phaseId')
+  async getTeamsByPhase(@Param('phaseId') phaseId: string) {
+    return this.teamsService.getTeamsByPhase(phaseId);
   }
 }

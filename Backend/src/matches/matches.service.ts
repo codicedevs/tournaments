@@ -8,11 +8,20 @@ import { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { CreateMatchDto } from './dto/create-match.dto';
+import { Team } from '../teams/entities/team.entity';
+import { Registration } from '../registrations/entities/registration.entity';
+import { Matchday } from '../matchdays/entities/matchday.entity';
+import { Phase } from '../phases/entities/phase.entity';
 
 @Injectable()
 export class MatchesService {
   constructor(
     @InjectModel(Match.name) private readonly matchModel: Model<Match>,
+    @InjectModel(Team.name) private readonly teamModel: Model<Team>,
+    @InjectModel(Registration.name)
+    private readonly registrationModel: Model<Registration>,
+    @InjectModel(Matchday.name) private readonly matchdayModel: Model<Matchday>,
+    @InjectModel(Phase.name) private readonly phaseModel: Model<Phase>,
   ) {}
 
   async createMatch(createMatchDto: CreateMatchDto): Promise<Match> {
@@ -91,5 +100,114 @@ export class MatchesService {
     }
 
     return existingMatch;
+  }
+
+  async addEvent(
+    id: string,
+    event: { type: 'goal'; minute: number; team: 'TeamA' | 'TeamB' },
+  ): Promise<Match> {
+    const match = await this.findOne(id);
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+    // Agregar el evento
+    match.events.push(event);
+    console.log('match', match);
+    // Actualizar los scores basados en los eventos
+    const teamAGoals = match.events.filter((e) => e.team === 'TeamA').length;
+    const teamBGoals = match.events.filter((e) => e.team === 'TeamB').length;
+
+    match.homeScore = teamAGoals;
+    match.awayScore = teamBGoals;
+
+    // Actualizar el resultado
+    if (teamAGoals > teamBGoals) {
+      match.result = 'TeamA';
+    } else if (teamBGoals > teamAGoals) {
+      match.result = 'TeamB';
+    } else {
+      match.result = 'Draw';
+    }
+
+    // Actualizar estadísticas de los equipos en sus registros
+    if (event.type === 'goal') {
+      // Obtener el torneo del matchday
+      const matchday = await this.matchdayModel.findById(match.matchDayId);
+      if (!matchday) {
+        throw new NotFoundException('Matchday not found');
+      }
+      const phase = await this.phaseModel.findById(matchday.phaseId);
+      if (!phase) {
+        throw new NotFoundException('Phase not found');
+      }
+      console.log('match', match);
+      const teamAId = match.teamA;
+
+      const tournamentId = phase.tournamentId;
+
+      if (event.team === 'TeamA') {
+        // Actualizar registro de TeamA
+        const teamAStats = await this.registrationModel.findOneAndUpdate(
+          { teamId: teamAId.toString(), tournamentId: tournamentId.toString() },
+          {
+            $inc: {
+              'stats.goalsFor': 1,
+              'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
+              'stats.draws': teamAGoals === teamBGoals ? 1 : 0,
+              'stats.losses': teamAGoals < teamBGoals ? 1 : 0,
+            },
+          },
+        );
+        console.log('adentro del if', teamAStats);
+        // Actualizar registro de TeamB
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId: match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          {
+            $inc: {
+              'stats.goalsAgainst': 1,
+              'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
+              'stats.draws': teamBGoals === teamAGoals ? 1 : 0,
+              'stats.losses': teamBGoals < teamAGoals ? 1 : 0,
+            },
+          },
+        );
+      } else {
+        // Actualizar registro de TeamB
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId: match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          {
+            $inc: {
+              'stats.goalsFor': 1,
+              'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
+              'stats.draws': teamBGoals === teamAGoals ? 1 : 0,
+              'stats.losses': teamBGoals < teamAGoals ? 1 : 0,
+            },
+          },
+        );
+        // Actualizar registro de TeamA
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId: match.teamA.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          {
+            $inc: {
+              'stats.goalsAgainst': 1,
+              'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
+              'stats.draws': teamAGoals === teamBGoals ? 1 : 0,
+              'stats.losses': teamAGoals < teamBGoals ? 1 : 0,
+            },
+          },
+        );
+      }
+    }
+
+    return match.save();
   }
 }

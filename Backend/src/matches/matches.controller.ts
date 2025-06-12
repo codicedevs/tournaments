@@ -72,4 +72,12 @@ export class MatchesController {
 
     return this.matchesService.update(id, updateMatchDto);
   }
+
+  @Post(':id/events')
+  async addEvent(
+    @Param('id') id: string,
+    @Body() event: { type: 'goal'; minute: number; team: 'TeamA' | 'TeamB' },
+  ): Promise<Match> {
+    return this.matchesService.addEvent(id, event);
+  }
 }

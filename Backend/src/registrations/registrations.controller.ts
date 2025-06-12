@@ -52,4 +52,9 @@ export class RegistrationsController {
   remove(@Param('id') id: string) {
     return this.registrationsService.remove(id);
   }
+
+  @Post('reset-stats/:tournamentId')
+  resetStats(@Param('tournamentId') tournamentId: string) {
+    return this.registrationsService.resetStats(tournamentId);
+  }
 }

@@ -1,5 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Team, TeamDocument } from '../../teams/entities/team.entity';
+
+@Schema()
+class MatchEvent {
+  @Prop({ required: true })
+  type: 'goal';
+
+  @Prop({ required: true })
+  minute: number;
+
+  @Prop({ required: true, enum: ['TeamA', 'TeamB'] })
+  team: 'TeamA' | 'TeamB';
+}
 
 @Schema({
   toJSON: { virtuals: true },
@@ -29,16 +42,12 @@ export class Match extends Document {
 
   @Prop({ type: Boolean, default: false })
   completed: boolean;
+
+  @Prop({ type: [MatchEvent], default: [] })
+  events: MatchEvent[];
 }
 
 export const MatchSchema = SchemaFactory.createForClass(Match);
-
-// Método virtual para determinar el resultado basado en los scores
-MatchSchema.virtual('determineResult').get(function () {
-  if (this.homeScore === null || this.awayScore === null) {
-    return null;
-  }
-});
 
 // Middleware para actualizar el resultado cuando se actualizan los scores
 MatchSchema.pre('save', function (next) {

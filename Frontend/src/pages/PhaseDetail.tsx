@@ -5,14 +5,20 @@ import {
   CalendarIcon,
   EyeIcon,
   PlusIcon,
-  CheckIcon,
-  XIcon,
+  TrashIcon,
 } from "lucide-react";
 import Header from "../components/layout/Header";
 import { usePhase } from "../api/phaseHooks";
 import { useTournament } from "../api/tournamentHooks";
 import { usePhaseMatchdays, useMatchdayMatches } from "../api/fixtureHooks";
 import { useRegistrationsByTournament } from "../api/registrationHooks";
+
+import { useResetTeamStats } from "../api/teamHooks";
+import {
+  MatchEventEditor,
+  MatchEventsList,
+} from "../components/matches/MatchEventEditor";
+import { Match, MatchEvent } from "../models/Match";
 import { useUpdateMatch } from "../api/matchHooks";
 
 const PhaseDetail: React.FC = () => {
@@ -32,6 +38,8 @@ const PhaseDetail: React.FC = () => {
     usePhaseMatchdays(phaseId);
   const { data: registrations = [] } =
     useRegistrationsByTournament(tournamentId);
+  console.log("regis", registrations);
+  const { mutate: resetStats } = useResetTeamStats();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;
 
@@ -51,6 +59,16 @@ const PhaseDetail: React.FC = () => {
 
   const handleViewFixture = () => {
     navigate(`/tournaments/${tournamentId}/phases/${phaseId}/matchdays`);
+  };
+
+  const handleResetStats = () => {
+    if (
+      window.confirm(
+        "¿Estás seguro que deseas resetear todas las estadísticas? Esta acción no se puede deshacer."
+      )
+    ) {
+      resetStats(tournamentId!);
+    }
   };
 
   if (isLoading) {
@@ -105,126 +123,164 @@ const PhaseDetail: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">{phase?.name}</h1>
             <p className="text-gray-600">{tournament?.name}</p>
           </div>
+          <div className="ml-auto">
+            <button
+              onClick={handleResetStats}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 border border-red-600 rounded-md hover:bg-red-50"
+            >
+              <TrashIcon size={16} />
+              Resetear Estadísticas
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sección superior: Datos del torneo y tabla de posiciones */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Información de la fase */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">
-                Detalles de la Fase
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">
-                    Tipo
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">{phase?.type}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">
-                    Equipos Registrados
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {registrations.length} equipos
-                  </p>
-                </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-medium text-gray-800 mb-4">
+              Detalles de la Fase
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Tipo
+                </label>
+                <p className="mt-1 text-sm text-gray-900">{phase?.type}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600">
+                  Equipos Registrados
+                </label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {registrations.length} equipos
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Lista de jornadas y partidos */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
-                <h2 className="text-lg font-medium text-gray-800">
-                  Calendario
-                </h2>
-                <button
-                  onClick={handleGenerateFixture}
-                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <PlusIcon size={16} className="mr-1" />
-                  Generar Calendario
-                </button>
-              </div>
+          {/* Tabla de Estadísticas */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-medium text-gray-800 mb-4">
+              Tabla de Posiciones
+            </h2>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Equipo
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    PJ
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    G
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    E
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    P
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    GF
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    GC
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    DG
+                  </th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Pts
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {registrations.map((registration) => {
+                  const teamStats = registration.stats;
+                  console.log("teamStats", teamStats);
+                  const stats = {
+                    wins: teamStats.wins || 0,
+                    draws: teamStats.draws || 0,
+                    losses: teamStats.losses || 0,
+                    goalsFor: teamStats.goalsFor || 0,
+                    goalsAgainst: teamStats.goalsAgainst || 0,
+                  };
+                  const played = stats.wins + stats.draws + stats.losses;
+                  const points = stats.wins * 3 + stats.draws;
+                  const goalDiff = stats.goalsFor - stats.goalsAgainst;
 
-              {sortedMatchdays.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-gray-500 mb-4">
-                    No hay jornadas definidas para esta fase.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {sortedMatchdays.map((matchday) => (
-                    <MatchdayItem
-                      key={matchday._id}
-                      matchday={matchday}
-                      isExpanded={!!expandedMatchdays[matchday._id]}
-                      onToggle={() => toggleMatchday(matchday._id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+                  return (
+                    <tr key={registration.teamId._id}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {registration.teamId.name}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {played}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {stats.wins}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {stats.draws}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {stats.losses}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {stats.goalsFor}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {stats.goalsAgainst}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                        {goalDiff}
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-medium text-gray-900">
+                        {points}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
+        </div>
+
+        {/* Sección inferior: Lista de jornadas y partidos */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
+            <h2 className="text-lg font-medium text-gray-800">Calendario</h2>
+            <button
+              onClick={handleGenerateFixture}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <PlusIcon size={16} className="mr-1" />
+              Generar Calendario
+            </button>
+          </div>
+
+          {sortedMatchdays.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="text-gray-500 mb-4">
+                No hay jornadas definidas para esta fase.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {sortedMatchdays.map((matchday) => (
+                <MatchdayItem
+                  key={matchday._id}
+                  matchday={matchday}
+                  isExpanded={!!expandedMatchdays[matchday._id]}
+                  onToggle={() => toggleMatchday(matchday._id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </main>
-    </div>
-  );
-};
-
-// Componente para editar scores
-interface ScoreEditorProps {
-  match: any;
-  onSave: (homeScore: number, awayScore: number) => void;
-  onCancel: () => void;
-}
-
-const ScoreEditor: React.FC<ScoreEditorProps> = ({
-  match,
-  onSave,
-  onCancel,
-}) => {
-  const [homeScore, setHomeScore] = useState(match.homeScore || 0);
-  const [awayScore, setAwayScore] = useState(match.awayScore || 0);
-
-  const handleSave = () => {
-    onSave(homeScore, awayScore);
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <input
-        type="number"
-        min="0"
-        value={homeScore}
-        onChange={(e) => setHomeScore(parseInt(e.target.value) || 0)}
-        className="w-16 px-2 py-1 border rounded text-center"
-      />
-      <span className="text-gray-500">-</span>
-      <input
-        type="number"
-        min="0"
-        value={awayScore}
-        onChange={(e) => setAwayScore(parseInt(e.target.value) || 0)}
-        className="w-16 px-2 py-1 border rounded text-center"
-      />
-      <button
-        onClick={handleSave}
-        className="p-1 text-green-600 hover:text-green-800"
-        title="Guardar"
-      >
-        <CheckIcon size={16} />
-      </button>
-      <button
-        onClick={onCancel}
-        className="p-1 text-red-600 hover:text-red-800"
-        title="Cancelar"
-      >
-        <XIcon size={16} />
-      </button>
     </div>
   );
 };
@@ -247,15 +303,11 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
   const { mutate: updateMatch } = useUpdateMatch();
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
 
-  const handleUpdateScore = (
-    matchId: string,
-    homeScore: number,
-    awayScore: number
-  ) => {
+  const handleAddEvent = (matchId: string, event: MatchEvent) => {
     updateMatch(
       {
         matchId,
-        data: { homeScore, awayScore },
+        event,
       },
       {
         onSuccess: () => {
@@ -294,7 +346,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
             </p>
           ) : (
             <div className="space-y-3">
-              {matches.map((match) => (
+              {matches.map((match: Match) => (
                 <div
                   key={match._id}
                   className="bg-white p-3 rounded-md shadow-sm"
@@ -307,33 +359,28 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                     </div>
                     <div className="flex items-center gap-4">
                       {editingMatchId === match._id ? (
-                        <ScoreEditor
+                        <MatchEventEditor
                           match={match}
-                          onSave={(homeScore, awayScore) =>
-                            handleUpdateScore(match._id, homeScore, awayScore)
-                          }
+                          onSave={(event) => handleAddEvent(match._id, event)}
                           onCancel={() => setEditingMatchId(null)}
                         />
                       ) : (
                         <>
                           <div className="text-sm">
-                            {match.homeScore !== null &&
-                            match.awayScore !== null ? (
-                              <span className="font-medium">
-                                {match.homeScore} - {match.awayScore}
-                              </span>
-                            ) : (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingMatchId(match._id);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 text-sm"
-                              >
-                                Agregar resultado
-                              </button>
-                            )}
+                            <span className="font-medium">
+                              {match.homeScore !== null ? match.homeScore : 0} -{" "}
+                              {match.awayScore !== null ? match.awayScore : 0}
+                            </span>
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingMatchId(match._id);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Agregar evento
+                          </button>
                           {match.result && (
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                               {match.result === "TeamA"
@@ -347,6 +394,14 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {match.events && match.events.length > 0 && (
+                    <MatchEventsList
+                      events={match.events}
+                      teamA={match.teamA}
+                      teamB={match.teamB}
+                    />
+                  )}
 
                   {match.date && (
                     <div className="text-xs text-gray-500 mt-1">

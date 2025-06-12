@@ -8,12 +8,21 @@ import { Model, Types } from 'mongoose';
 import { Registration } from './entities/registration.entity';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { UpdateRegistrationDto } from './dto/update-registration.dto';
+import { Phase } from '../phases/entities/phase.entity';
+import { Matchday } from '../matchdays/entities/matchday.entity';
+import { Match } from '../matches/entities/match.entity';
 
 @Injectable()
 export class RegistrationsService {
   constructor(
     @InjectModel(Registration.name)
     private readonly registrationModel: Model<Registration>,
+    @InjectModel(Phase.name)
+    private readonly phaseModel: Model<Phase>,
+    @InjectModel(Matchday.name)
+    private readonly matchdayModel: Model<Matchday>,
+    @InjectModel(Match.name)
+    private readonly matchModel: Model<Match>,
   ) {}
 
   async create(
@@ -82,5 +91,44 @@ export class RegistrationsService {
     }
 
     return this.registrationModel.findByIdAndDelete(id).exec();
+  }
+
+  async resetStats(tournamentId: string): Promise<void> {
+    // Resetear estadísticas de los registros
+    await this.registrationModel.updateMany(
+      { tournamentId },
+      {
+        $set: {
+          'stats.wins': 0,
+          'stats.draws': 0,
+          'stats.losses': 0,
+          'stats.goalsFor': 0,
+          'stats.goalsAgainst': 0,
+        },
+      },
+    );
+
+    // Obtener todas las fases del torneo
+    const phases = await this.phaseModel.find({ tournamentId });
+    const phaseIds = phases.map((phase) => phase._id);
+
+    // Obtener todos los matchdays de las fases
+    const matchdays = await this.matchdayModel.find({
+      phaseId: { $in: phaseIds },
+    });
+    const matchdayIds = matchdays.map((matchday) => matchday._id);
+
+    // Resetear todos los partidos
+    await this.matchModel.updateMany(
+      { matchDayId: { $in: matchdayIds } },
+      {
+        $set: {
+          homeScore: 0,
+          awayScore: 0,
+          result: null,
+          events: [],
+        },
+      },
+    );
   }
 }

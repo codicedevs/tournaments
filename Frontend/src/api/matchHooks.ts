@@ -4,6 +4,12 @@ import { Match, MatchResult } from "../models";
 
 const API_BASE = "http://localhost:3000";
 
+interface MatchEvent {
+  type: "goal";
+  minute: number;
+  team: "TeamA" | "TeamB";
+}
+
 export const getMatches = async (): Promise<Match[]> => {
   const res = await axios.get(`${API_BASE}/matches`);
   return res.data;
@@ -62,11 +68,28 @@ export function useCreateMatch() {
 export function useUpdateMatch() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ matchId, data }: { matchId: string; data: any }) =>
-      updateMatch(matchId, data),
-    onSuccess: (_, { matchId }) => {
+    mutationFn: async ({
+      matchId,
+      event,
+    }: {
+      matchId: string;
+      event: MatchEvent;
+    }) => {
+      const response = await axios.post(
+        `${API_BASE}/matches/${matchId}/events`,
+        event
+      );
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      queryClient.invalidateQueries({ queryKey: ["matches", "matchday"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      // Invalidar las consultas de registros del torneo
+      queryClient.invalidateQueries({ queryKey: ["registrations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["registrations", "tournament"],
+      });
     },
   });
 }

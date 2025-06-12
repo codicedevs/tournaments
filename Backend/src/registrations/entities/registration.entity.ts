@@ -4,6 +4,24 @@ import { Document, Types } from 'mongoose';
 export type RegistrationDocument = Registration & Document;
 
 @Schema()
+class TeamStats {
+  @Prop({ default: 0 })
+  wins: number;
+
+  @Prop({ default: 0 })
+  draws: number;
+
+  @Prop({ default: 0 })
+  losses: number;
+
+  @Prop({ default: 0 })
+  goalsFor: number;
+
+  @Prop({ default: 0 })
+  goalsAgainst: number;
+}
+
+@Schema()
 export class Registration extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Team', required: true })
   teamId: Types.ObjectId;
@@ -13,6 +31,9 @@ export class Registration extends Document {
 
   @Prop({ default: Date.now })
   registrationDate: Date;
+
+  @Prop({ type: TeamStats, default: () => ({}) })
+  stats: TeamStats;
 }
 
 export const RegistrationSchema = SchemaFactory.createForClass(Registration);

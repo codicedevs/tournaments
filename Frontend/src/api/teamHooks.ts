@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Team } from "../models";
+import { Team } from "../models/Team";
 
 const API_BASE = "http://localhost:3000";
 
@@ -135,3 +135,36 @@ export function useDeleteTeams() {
     },
   });
 }
+
+export const useTeamsByPhase = (phaseId: string) => {
+  return useQuery({
+    queryKey: ["teams", "phase", phaseId],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE}/teams/phase/${phaseId}`);
+      return response.data;
+    },
+    enabled: !!phaseId,
+  });
+};
+
+export const useResetTeamStats = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (tournamentId: string) => {
+      const response = await axios.post(
+        `${API_BASE}/registrations/reset-stats/${tournamentId}`
+      );
+      return response.data;
+    },
+    onSuccess: (_, tournamentId) => {
+      // Invalidar todas las consultas relacionadas
+      queryClient.invalidateQueries({ queryKey: ["registrations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["registrations", "tournament", tournamentId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["matchdays"] });
+      queryClient.invalidateQueries({ queryKey: ["phases"] });
+    },
+  });
+};
