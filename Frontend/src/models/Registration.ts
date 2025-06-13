@@ -7,6 +7,9 @@ export interface TeamStats {
   losses: number;
   goalsFor: number;
   goalsAgainst: number;
+  yellowCards: number;
+  blueCards: number;
+  redCards: number;
 }
 
 export interface Registration {
