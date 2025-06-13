@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Team, TeamDocument } from '../../teams/entities/team.entity';
+import { MatchEventType } from '../enums/match-event-type.enum';
 
 @Schema()
-class MatchEvent {
-  @Prop({ required: true })
-  type: 'goal';
+export class MatchEvent {
+  @Prop({ required: true, enum: MatchEventType })
+  type: MatchEventType;
 
   @Prop({ required: true })
   minute: number;
@@ -28,16 +29,16 @@ export class Match extends Document {
   @Prop({ type: Date, required: true })
   date: Date;
 
-  @Prop({ type: Number, required: false, default: null })
+  @Prop({ type: Number, default: 0 })
   homeScore: number;
 
-  @Prop({ type: Number, required: false, default: null })
+  @Prop({ type: Number, default: 0 })
   awayScore: number;
 
-  @Prop({ type: String, enum: ['TeamA', 'TeamB', 'Draw'], required: false })
-  result: 'TeamA' | 'TeamB' | 'Draw';
+  @Prop({ type: String, enum: ['TeamA', 'TeamB', 'Draw'], default: null })
+  result: 'TeamA' | 'TeamB' | 'Draw' | null;
 
-  @Prop({ type: Types.ObjectId, ref: 'Matchday', required: false })
+  @Prop({ type: Types.ObjectId, ref: 'Matchday' })
   matchDayId: Types.ObjectId;
 
   @Prop({ type: Boolean, default: false })
@@ -47,6 +48,7 @@ export class Match extends Document {
   events: MatchEvent[];
 }
 
+export type MatchDocument = Match & Document;
 export const MatchSchema = SchemaFactory.createForClass(Match);
 
 // Middleware para actualizar el resultado cuando se actualizan los scores
@@ -60,7 +62,6 @@ MatchSchema.pre('save', function (next) {
       } else {
         this.result = 'Draw';
       }
-      this.completed = true;
     }
   }
   next();

@@ -12,6 +12,8 @@ import { Team } from '../teams/entities/team.entity';
 import { Registration } from '../registrations/entities/registration.entity';
 import { Matchday } from '../matchdays/entities/matchday.entity';
 import { Phase } from '../phases/entities/phase.entity';
+import { MatchEventType } from './enums/match-event-type.enum';
+import { MatchEventDto } from './dto/match-event.dto';
 
 @Injectable()
 export class MatchesService {
@@ -102,20 +104,31 @@ export class MatchesService {
     return existingMatch;
   }
 
-  async addEvent(
-    id: string,
-    event: { type: 'goal'; minute: number; team: 'TeamA' | 'TeamB' },
-  ): Promise<Match> {
+  async addEvent(id: string, event: MatchEventDto): Promise<Match> {
     const match = await this.findOne(id);
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
+
+    if (match.completed) {
+      throw new BadRequestException('Cannot add events to a completed match');
+    }
+
+    // Validar que el evento tenga todos los campos requeridos
+    if (!event.type || !event.minute || !event.team) {
+      throw new BadRequestException('All event fields are required');
+    }
+
     // Agregar el evento
     match.events.push(event);
-    console.log('match', match);
+
     // Actualizar los scores basados en los eventos
-    const teamAGoals = match.events.filter((e) => e.team === 'TeamA').length;
-    const teamBGoals = match.events.filter((e) => e.team === 'TeamB').length;
+    const teamAGoals = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.GOAL,
+    ).length;
+    const teamBGoals = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.GOAL,
+    ).length;
 
     match.homeScore = teamAGoals;
     match.awayScore = teamBGoals;
@@ -130,84 +143,293 @@ export class MatchesService {
     }
 
     // Actualizar estadísticas de los equipos en sus registros
-    if (event.type === 'goal') {
-      // Obtener el torneo del matchday
-      const matchday = await this.matchdayModel.findById(match.matchDayId);
-      if (!matchday) {
-        throw new NotFoundException('Matchday not found');
-      }
-      const phase = await this.phaseModel.findById(matchday.phaseId);
-      if (!phase) {
-        throw new NotFoundException('Phase not found');
-      }
-      console.log('match', match);
-      const teamAId = match.teamA;
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) {
+      throw new NotFoundException('Matchday not found');
+    }
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) {
+      throw new NotFoundException('Phase not found');
+    }
+    const teamAId = match.teamA;
+    const tournamentId = phase.tournamentId;
 
-      const tournamentId = phase.tournamentId;
+    // Actualizar estadísticas según el tipo de evento
+    switch (event.type) {
+      case MatchEventType.GOAL:
+        if (event.team === 'TeamA') {
+          // Actualizar registro de TeamA
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: teamAId.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            {
+              $inc: {
+                'stats.goalsFor': 1,
+              },
+              $push: {
+                'stats.goals': {
+                  matchId: match._id,
+                  minute: event.minute,
+                },
+              },
+            },
+          );
+          // Actualizar registro de TeamB
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            {
+              $inc: {
+                'stats.goalsAgainst': 1,
+              },
+            },
+          );
+        } else {
+          // Actualizar registro de TeamB
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            {
+              $inc: {
+                'stats.goalsFor': 1,
+              },
+              $push: {
+                'stats.goals': {
+                  matchId: match._id,
+                  minute: event.minute,
+                },
+              },
+            },
+          );
+          // Actualizar registro de TeamA
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamA.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            {
+              $inc: {
+                'stats.goalsAgainst': 1,
+              },
+            },
+          );
+        }
+        break;
 
-      if (event.team === 'TeamA') {
-        // Actualizar registro de TeamA
-        const teamAStats = await this.registrationModel.findOneAndUpdate(
-          { teamId: teamAId.toString(), tournamentId: tournamentId.toString() },
-          {
-            $inc: {
-              'stats.goalsFor': 1,
-              'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
-              'stats.draws': teamAGoals === teamBGoals ? 1 : 0,
-              'stats.losses': teamAGoals < teamBGoals ? 1 : 0,
-            },
-          },
-        );
-        console.log('adentro del if', teamAStats);
-        // Actualizar registro de TeamB
+      case MatchEventType.YELLOW_CARD:
         await this.registrationModel.findOneAndUpdate(
           {
-            teamId: match.teamB.toString(),
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
             tournamentId: tournamentId.toString(),
           },
           {
             $inc: {
-              'stats.goalsAgainst': 1,
-              'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
-              'stats.draws': teamBGoals === teamAGoals ? 1 : 0,
-              'stats.losses': teamBGoals < teamAGoals ? 1 : 0,
+              'stats.yellowCards': 1,
             },
           },
         );
-      } else {
-        // Actualizar registro de TeamB
+        break;
+
+      case MatchEventType.RED_CARD:
         await this.registrationModel.findOneAndUpdate(
           {
-            teamId: match.teamB.toString(),
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
             tournamentId: tournamentId.toString(),
           },
           {
             $inc: {
-              'stats.goalsFor': 1,
-              'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
-              'stats.draws': teamBGoals === teamAGoals ? 1 : 0,
-              'stats.losses': teamBGoals < teamAGoals ? 1 : 0,
+              'stats.redCards': 1,
             },
           },
         );
-        // Actualizar registro de TeamA
+        break;
+
+      case MatchEventType.BLUE_CARD:
         await this.registrationModel.findOneAndUpdate(
           {
-            teamId: match.teamA.toString(),
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
             tournamentId: tournamentId.toString(),
           },
           {
             $inc: {
-              'stats.goalsAgainst': 1,
-              'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
-              'stats.draws': teamAGoals === teamBGoals ? 1 : 0,
-              'stats.losses': teamAGoals < teamBGoals ? 1 : 0,
+              'stats.blueCards': 1,
             },
           },
         );
-      }
+        break;
     }
 
     return match.save();
+  }
+
+  async completeMatch(id: string): Promise<Match> {
+    const match = await this.findOne(id);
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+
+    if (match.completed) {
+      throw new BadRequestException('Match is already completed');
+    }
+
+    // Obtener el torneo del matchday
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) {
+      throw new NotFoundException('Matchday not found');
+    }
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) {
+      throw new NotFoundException('Phase not found');
+    }
+
+    const tournamentId = phase.tournamentId;
+
+    // Actualizar estadísticas de los equipos
+    const teamAGoals = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.GOAL,
+    ).length;
+    const teamBGoals = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.GOAL,
+    ).length;
+
+    // Actualizar registro de TeamA
+    await this.registrationModel.findOneAndUpdate(
+      { teamId: match.teamA.toString(), tournamentId: tournamentId.toString() },
+      {
+        $inc: {
+          'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
+          'stats.draws': teamAGoals === teamBGoals ? 1 : 0,
+          'stats.losses': teamAGoals < teamBGoals ? 1 : 0,
+          'stats.played': 1,
+          'stats.points':
+            teamAGoals > teamBGoals ? 3 : teamAGoals === teamBGoals ? 1 : 0,
+        },
+      },
+    );
+
+    // Actualizar registro de TeamB
+    await this.registrationModel.findOneAndUpdate(
+      { teamId: match.teamB.toString(), tournamentId: tournamentId.toString() },
+      {
+        $inc: {
+          'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
+          'stats.draws': teamBGoals === teamAGoals ? 1 : 0,
+          'stats.losses': teamBGoals < teamAGoals ? 1 : 0,
+          'stats.played': 1,
+          'stats.points':
+            teamBGoals > teamAGoals ? 3 : teamBGoals === teamAGoals ? 1 : 0,
+        },
+      },
+    );
+
+    // Marcar el partido como completado
+    match.completed = true;
+    return match.save();
+  }
+
+  async remove(id: string): Promise<void> {
+    const match = await this.findOne(id);
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+
+    // Obtener el torneo del matchday
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) {
+      throw new NotFoundException('Matchday not found');
+    }
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) {
+      throw new NotFoundException('Phase not found');
+    }
+
+    const tournamentId = phase.tournamentId;
+
+    // Revertir las estadísticas de los equipos
+    const teamAGoals = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.GOAL,
+    ).length;
+    const teamBGoals = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.GOAL,
+    ).length;
+
+    const teamAYellowCards = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.YELLOW_CARD,
+    ).length;
+    const teamBYellowCards = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.YELLOW_CARD,
+    ).length;
+
+    const teamARedCards = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.RED_CARD,
+    ).length;
+    const teamBRedCards = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.RED_CARD,
+    ).length;
+
+    const teamABlueCards = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.BLUE_CARD,
+    ).length;
+    const teamBBlueCards = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.BLUE_CARD,
+    ).length;
+
+    // Actualizar registro de TeamA
+    await this.registrationModel.findOneAndUpdate(
+      { teamId: match.teamA.toString(), tournamentId: tournamentId.toString() },
+      {
+        $inc: {
+          'stats.goalsFor': -teamAGoals,
+          'stats.goalsAgainst': -teamBGoals,
+          'stats.wins': teamAGoals > teamBGoals ? -1 : 0,
+          'stats.draws': teamAGoals === teamBGoals ? -1 : 0,
+          'stats.losses': teamAGoals < teamBGoals ? -1 : 0,
+          'stats.yellowCards': -teamAYellowCards,
+          'stats.redCards': -teamARedCards,
+          'stats.blueCards': -teamABlueCards,
+        },
+        $pull: {
+          'stats.goals': { matchId: match._id },
+        },
+      },
+    );
+
+    // Actualizar registro de TeamB
+    await this.registrationModel.findOneAndUpdate(
+      { teamId: match.teamB.toString(), tournamentId: tournamentId.toString() },
+      {
+        $inc: {
+          'stats.goalsFor': -teamBGoals,
+          'stats.goalsAgainst': -teamAGoals,
+          'stats.wins': teamBGoals > teamAGoals ? -1 : 0,
+          'stats.draws': teamBGoals === teamAGoals ? -1 : 0,
+          'stats.losses': teamBGoals < teamAGoals ? -1 : 0,
+          'stats.yellowCards': -teamBYellowCards,
+          'stats.redCards': -teamBRedCards,
+          'stats.blueCards': -teamBBlueCards,
+        },
+        $pull: {
+          'stats.goals': { matchId: match._id },
+        },
+      },
+    );
+
+    // Eliminar el partido
+    await this.matchModel.findByIdAndDelete(id);
   }
 }

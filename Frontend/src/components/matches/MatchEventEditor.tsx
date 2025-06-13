@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { CheckIcon, XIcon } from "lucide-react";
-import { Match } from "../../models/Match";
-
-interface MatchEvent {
-  type: "goal";
-  minute: number;
-  team: "TeamA" | "TeamB";
-}
+import { Match, MatchEvent, MatchEventType } from "../../models/Match";
 
 interface MatchEventEditorProps {
   match: Match;
@@ -21,15 +15,32 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
 }) => {
   const [minute, setMinute] = useState<number>(0);
   const [selectedTeam, setSelectedTeam] = useState<"TeamA" | "TeamB">("TeamA");
+  const [selectedType, setSelectedType] = useState<MatchEventType>(
+    MatchEventType.GOAL
+  );
 
   const handleSave = () => {
     if (minute > 0) {
-      onSave({ type: "goal", minute, team: selectedTeam });
+      onSave({
+        type: selectedType,
+        minute,
+        team: selectedTeam,
+      });
     }
   };
 
   return (
     <div className="flex items-center gap-2">
+      <select
+        value={selectedType}
+        onChange={(e) => setSelectedType(e.target.value as MatchEventType)}
+        className="px-2 py-1 border rounded"
+      >
+        <option value={MatchEventType.GOAL}>⚽ Gol</option>
+        <option value={MatchEventType.YELLOW_CARD}>🟨 Tarjeta Amarilla</option>
+        <option value={MatchEventType.RED_CARD}>🟥 Tarjeta Roja</option>
+        <option value={MatchEventType.BLUE_CARD}>🟦 Tarjeta Azul</option>
+      </select>
       <select
         value={selectedTeam}
         onChange={(e) => setSelectedTeam(e.target.value as "TeamA" | "TeamB")}
@@ -75,16 +86,42 @@ export const MatchEventsList: React.FC<MatchEventsListProps> = ({
   teamA,
   teamB,
 }) => {
+  const getEventIcon = (type: MatchEventType) => {
+    switch (type) {
+      case MatchEventType.GOAL:
+        return "⚽";
+      case MatchEventType.YELLOW_CARD:
+        return "🟨";
+      case MatchEventType.RED_CARD:
+        return "🟥";
+      case MatchEventType.BLUE_CARD:
+        return "🟦";
+      default:
+        return "";
+    }
+  };
+
+  const getEventText = (event: MatchEvent) => {
+    const teamName = event.team === "TeamA" ? teamA.name : teamB.name;
+    switch (event.type) {
+      case MatchEventType.GOAL:
+        return `Gol para ${teamName}`;
+      case MatchEventType.YELLOW_CARD:
+        return `Tarjeta Amarilla para ${teamName}`;
+      case MatchEventType.RED_CARD:
+        return `Tarjeta Roja para ${teamName}`;
+      case MatchEventType.BLUE_CARD:
+        return `Tarjeta Azul para ${teamName}`;
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="mt-2 space-y-1">
       {events.map((event, index) => (
         <div key={index} className="text-sm text-gray-600">
-          {event.type === "goal" && (
-            <span>
-              ⚽ {event.minute}' - Gol para{" "}
-              {event.team === "TeamA" ? teamA.name : teamB.name}
-            </span>
-          )}
+          {getEventIcon(event.type)} {event.minute}' - {getEventText(event)}
         </div>
       ))}
     </div>

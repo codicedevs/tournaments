@@ -1,14 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Match, MatchResult } from "../models";
+import { Match, MatchResult, MatchEvent } from "../models";
 
 const API_BASE = "http://localhost:3000";
-
-interface MatchEvent {
-  type: "goal";
-  minute: number;
-  team: "TeamA" | "TeamB";
-}
 
 export const getMatches = async (): Promise<Match[]> => {
   const res = await axios.get(`${API_BASE}/matches`);
@@ -99,5 +93,17 @@ export function useMatchesByMatchday(matchdayId: string | undefined) {
     queryKey: ["matches", "matchday", matchdayId],
     queryFn: () => (matchdayId ? getMatchesByMatchday(matchdayId) : []),
     enabled: !!matchdayId,
+  });
+}
+
+export function useCompleteMatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ matchId }: { matchId: string }) => {
+      const response = await axios.post(
+        `${API_BASE}/matches/${matchId}/complete`
+      );
+      return response.data;
+    },
   });
 }

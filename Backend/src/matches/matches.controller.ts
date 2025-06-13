@@ -6,11 +6,13 @@ import {
   Param,
   Patch,
   BadRequestException,
+  Delete,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { Match } from './entities/match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
+import { MatchEventDto } from './dto/match-event.dto';
 
 @Controller('matches')
 export class MatchesController {
@@ -67,17 +69,26 @@ export class MatchesController {
       } else {
         updateMatchDto.result = 'Draw';
       }
-      updateMatchDto.completed = true;
     }
 
     return this.matchesService.update(id, updateMatchDto);
   }
 
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.matchesService.remove(id);
+  }
+
   @Post(':id/events')
   async addEvent(
     @Param('id') id: string,
-    @Body() event: { type: 'goal'; minute: number; team: 'TeamA' | 'TeamB' },
+    @Body() event: MatchEventDto,
   ): Promise<Match> {
     return this.matchesService.addEvent(id, event);
+  }
+
+  @Post(':id/complete')
+  completeMatch(@Param('id') id: string) {
+    return this.matchesService.completeMatch(id);
   }
 }
