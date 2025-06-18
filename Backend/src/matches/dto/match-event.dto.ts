@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsIn } from 'class-validator';
+import { IsEnum, IsNumber, IsIn, IsMongoId } from 'class-validator';
 import { MatchEventType } from '../enums/match-event-type.enum';
 
 export class MatchEventDto {
@@ -10,4 +10,7 @@ export class MatchEventDto {
 
   @IsIn(['TeamA', 'TeamB'])
   team: 'TeamA' | 'TeamB';
+
+  @IsMongoId()
+  playerId: string;
 }

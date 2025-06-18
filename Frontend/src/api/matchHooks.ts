@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Match, MatchResult, MatchEvent } from "../models";
+import { Match, MatchResult } from "../models";
+import type { MatchEvent } from "../models/Match";
 
 const API_BASE = "http://localhost:3000";
 
@@ -69,21 +70,26 @@ export function useUpdateMatch() {
       matchId: string;
       event: MatchEvent;
     }) => {
+      const playerId = event.playerId || "6851bd6c2001ffcdaa4d462e";
       const response = await axios.post(
         `${API_BASE}/matches/${matchId}/events`,
-        event
+        {
+          type: event.type,
+          minute: event.minute,
+          team: event.team,
+          playerId,
+        }
       );
       return response.data;
     },
     onSuccess: (data, variables) => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
-      // Invalidar las consultas de registros del torneo
       queryClient.invalidateQueries({ queryKey: ["registrations"] });
       queryClient.invalidateQueries({
         queryKey: ["registrations", "tournament"],
       });
+      queryClient.invalidateQueries({ queryKey: ["players"] });
     },
   });
 }

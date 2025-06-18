@@ -15,6 +15,7 @@ export interface MatchEvent {
   type: MatchEventType;
   minute: number;
   team: "TeamA" | "TeamB";
+  playerId: string;
 }
 
 export interface Match {

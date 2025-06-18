@@ -9,6 +9,7 @@ import { TournamentsModule } from './tournaments/tournaments.module';
 import { PhasesModule } from './phases/phases.module';
 import { MatchdaysModule } from './matchdays/matchdays.module';
 import { RegistrationsModule } from './registrations/registrations.module';
+import { PlayersModule } from './players/players.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -43,6 +44,7 @@ import { extname } from 'path';
     PhasesModule,
     MatchdaysModule,
     RegistrationsModule,
+    PlayersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

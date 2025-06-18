@@ -23,6 +23,7 @@ import PlayerForm from "./pages/PlayerForm";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import EditTeamForm from "./pages/EditTeamForm";
+import RegisterPlayer from "./pages/RegisterPlayer";
 
 const queryClient = new QueryClient();
 
@@ -141,6 +142,14 @@ export function App() {
                 element={
                   <ProtectedRoute>
                     <EditTeamForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/teams/:teamId/players/register"
+                element={
+                  <ProtectedRoute>
+                    <RegisterPlayer />
                   </ProtectedRoute>
                 }
               />

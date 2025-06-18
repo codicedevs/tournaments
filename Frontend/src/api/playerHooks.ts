@@ -9,6 +9,11 @@ export const getPlayers = async (): Promise<User[]> => {
   return res.data;
 };
 
+export const getPlayersByTeam = async (teamId: string): Promise<User[]> => {
+  const res = await axios.get(`${API_BASE}/players/team/${teamId}`);
+  return res.data;
+};
+
 export const createPlayer = async (data: {
   name: string;
   email: string;
@@ -49,3 +54,27 @@ export function useDeletePlayer() {
     },
   });
 }
+
+export interface RegisterPlayerData {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  teamId: string;
+  profilePicture?: File;
+}
+
+export const useRegisterPlayer = () => {
+  return useMutation({
+    mutationFn: async (data: RegisterPlayerData) => {
+      const response = await axios.post(`${API_BASE}/players`, {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        phone: data.phone,
+        teamId: data.teamId,
+      });
+      return response.data;
+    },
+  });
+};

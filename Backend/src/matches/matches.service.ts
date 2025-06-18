@@ -14,6 +14,7 @@ import { Matchday } from '../matchdays/entities/matchday.entity';
 import { Phase } from '../phases/entities/phase.entity';
 import { MatchEventType } from './enums/match-event-type.enum';
 import { MatchEventDto } from './dto/match-event.dto';
+import { Player } from '../players/entities/player.entity';
 
 @Injectable()
 export class MatchesService {
@@ -24,6 +25,7 @@ export class MatchesService {
     private readonly registrationModel: Model<Registration>,
     @InjectModel(Matchday.name) private readonly matchdayModel: Model<Matchday>,
     @InjectModel(Phase.name) private readonly phaseModel: Model<Phase>,
+    @InjectModel(Player.name) private readonly playerModel: Model<Player>,
   ) {}
 
   async createMatch(createMatchDto: CreateMatchDto): Promise<Match> {
@@ -115,8 +117,22 @@ export class MatchesService {
     }
 
     // Validar que el evento tenga todos los campos requeridos
-    if (!event.type || !event.minute || !event.team) {
+    if (!event.type || !event.minute || !event.team || !event.playerId) {
       throw new BadRequestException('All event fields are required');
+    }
+
+    // Verificar que el jugador existe
+    const player = await this.playerModel.findById(event.playerId);
+    if (!player) {
+      throw new NotFoundException(`Player with ID ${event.playerId} not found`);
+    }
+
+    // Verificar que el jugador pertenece al equipo correcto
+    const teamId = event.team === 'TeamA' ? match.teamA : match.teamB;
+    if (player.teamId.toString() !== teamId.toString()) {
+      throw new BadRequestException(
+        'Player does not belong to the specified team',
+      );
     }
 
     // Agregar el evento
@@ -220,6 +236,10 @@ export class MatchesService {
             },
           );
         }
+        // Actualizar estadísticas del jugador
+        await this.playerModel.findByIdAndUpdate(event.playerId, {
+          $inc: { 'stats.goals': 1 },
+        });
         break;
 
       case MatchEventType.YELLOW_CARD:
@@ -237,6 +257,10 @@ export class MatchesService {
             },
           },
         );
+        // Actualizar estadísticas del jugador
+        await this.playerModel.findByIdAndUpdate(event.playerId, {
+          $inc: { 'stats.yellowCards': 1 },
+        });
         break;
 
       case MatchEventType.RED_CARD:
@@ -254,6 +278,10 @@ export class MatchesService {
             },
           },
         );
+        // Actualizar estadísticas del jugador
+        await this.playerModel.findByIdAndUpdate(event.playerId, {
+          $inc: { 'stats.redCards': 1 },
+        });
         break;
 
       case MatchEventType.BLUE_CARD:
@@ -271,6 +299,10 @@ export class MatchesService {
             },
           },
         );
+        // Actualizar estadísticas del jugador
+        await this.playerModel.findByIdAndUpdate(event.playerId, {
+          $inc: { 'stats.blueCards': 1 },
+        });
         break;
     }
 

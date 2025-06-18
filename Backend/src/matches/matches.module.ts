@@ -13,6 +13,7 @@ import {
   MatchdaySchema,
 } from '../matchdays/entities/matchday.entity';
 import { Phase, PhaseSchema } from '../phases/entities/phase.entity';
+import { Player, PlayerSchema } from '../players/entities/player.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { Phase, PhaseSchema } from '../phases/entities/phase.entity';
       { name: Registration.name, schema: RegistrationSchema },
       { name: Matchday.name, schema: MatchdaySchema },
       { name: Phase.name, schema: PhaseSchema },
+      { name: Player.name, schema: PlayerSchema },
     ]),
   ],
   controllers: [MatchesController],

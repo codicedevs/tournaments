@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import { PlusIcon, ArrowLeftIcon, Trash2Icon, PencilIcon } from "lucide-react";
+import {
+  PlusIcon,
+  ArrowLeftIcon,
+  Trash2Icon,
+  PencilIcon,
+  UserPlusIcon,
+  UsersIcon,
+} from "lucide-react";
 import { useTeams, useDeleteTeam, useDeleteTeams } from "../api/teamHooks";
 import { Team } from "../models";
 
@@ -14,8 +21,8 @@ const TeamList: React.FC = () => {
   const { data: teams = [], isLoading, isError } = useTeams();
 
   // Delete mutations
-  const { mutate: deleteTeam, isLoading: isDeleteLoading } = useDeleteTeam();
-  const { mutate: deleteTeams, isLoading: isBatchDeleteLoading } =
+  const { mutate: deleteTeam, isPending: isDeleteLoading } = useDeleteTeam();
+  const { mutate: deleteTeams, isPending: isBatchDeleteLoading } =
     useDeleteTeams();
 
   // Handle checkbox change
@@ -181,6 +188,26 @@ const TeamList: React.FC = () => {
                       {team.coach || "Sin entrenador"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      <button
+                        onClick={() => navigate(`/teams/${team._id}/players`)}
+                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 mr-3"
+                        title="Ver jugadores"
+                      >
+                        <UsersIcon size={16} />
+                        <span>Ver Jugadores</span>
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          navigate(`/teams/${team._id}/players/register`)
+                        }
+                        className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 mr-3"
+                        title="Registrar jugadores"
+                      >
+                        <UserPlusIcon size={16} />
+                        <span>Registrar Jugadores</span>
+                      </button>
+
                       <button
                         onClick={() => navigate(`/teams/${team._id}/edit`)}
                         className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 mr-3"
