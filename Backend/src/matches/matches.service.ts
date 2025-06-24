@@ -120,9 +120,13 @@ export class MatchesService {
     if (!event.type || !event.minute || !event.team || !event.playerId) {
       throw new BadRequestException('All event fields are required');
     }
+    //ESTO LO PODRIA VALIDAR EN EL DTO
 
     // Verificar que el jugador existe
-    const player = await this.playerModel.findById(event.playerId);
+    const player = await this.playerModel.findById(
+      new Types.ObjectId(event.playerId),
+    );
+
     if (!player) {
       throw new NotFoundException(`Player with ID ${event.playerId} not found`);
     }
@@ -243,20 +247,22 @@ export class MatchesService {
         break;
 
       case MatchEventType.YELLOW_CARD:
-        await this.registrationModel.findOneAndUpdate(
-          {
-            teamId:
-              event.team === 'TeamA'
-                ? match.teamA.toString()
-                : match.teamB.toString(),
-            tournamentId: tournamentId.toString(),
-          },
-          {
-            $inc: {
-              'stats.yellowCards': 1,
+        {
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId:
+                event.team === 'TeamA'
+                  ? match.teamA.toString()
+                  : match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
             },
-          },
-        );
+            {
+              $inc: {
+                'stats.yellowCards': 1,
+              },
+            },
+          );
+        }
         // Actualizar estadísticas del jugador
         await this.playerModel.findByIdAndUpdate(event.playerId, {
           $inc: { 'stats.yellowCards': 1 },
@@ -305,6 +311,44 @@ export class MatchesService {
         });
         break;
     }
+
+    // Obtener el registro actualizado del equipo
+    const registration = await this.registrationModel.findOne({
+      teamId: teamId.toString(),
+      tournamentId: tournamentId.toString(),
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Registration not found');
+    }
+
+    // Calcular los nuevos valores
+    const fairPlayScore =
+      (registration.stats.yellowCards || 0) * -1 +
+      (registration.stats.blueCards || 0) * -2 +
+      (registration.stats.redCards || 0) * -3;
+    const goalDifference =
+      (registration.stats.goalsFor || 0) -
+      (registration.stats.goalsAgainst || 0);
+    const scoreWeight =
+      (registration.stats.points || 0) * 10_000_000 +
+      (100_000 + fairPlayScore) * 1_000 +
+      goalDifference;
+
+    // Actualizar los campos en el registro
+    await this.registrationModel.findOneAndUpdate(
+      {
+        teamId: teamId.toString(),
+        tournamentId: tournamentId.toString(),
+      },
+      {
+        $set: {
+          'stats.fairPlayScore': fairPlayScore,
+          'stats.goalDifference': goalDifference,
+          'stats.scoreWeight': scoreWeight,
+        },
+      },
+    );
 
     return match.save();
   }

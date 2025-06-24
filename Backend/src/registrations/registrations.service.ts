@@ -56,10 +56,13 @@ export class RegistrationsService {
   }
 
   async findByTournament(tournamentId: string): Promise<Registration[]> {
-    return this.registrationModel
+    const res = await this.registrationModel
       .find({ tournamentId })
+      .sort({ 'stats.scoreWeight': -1 })
       .populate('teamId')
       .exec();
+    console.log('res', res[0].stats);
+    return res;
   }
 
   async findByTeam(teamId: string): Promise<Registration[]> {
@@ -100,10 +103,19 @@ export class RegistrationsService {
       {
         $set: {
           'stats.wins': 0,
+          'stats.points': 0,
+          'stats.gamesPlayed': 0,
           'stats.draws': 0,
           'stats.losses': 0,
           'stats.goalsFor': 0,
           'stats.goalsAgainst': 0,
+          'stats.yellowCards': 0,
+          'stats.redCards': 0,
+          'stats.blueCards': 0,
+          'stats.goals': [0],
+          'stats.fairPlayScore': 0,
+          'stats.goalDifference': 0,
+          'stats.scoreWeight': 0,
         },
       },
     );

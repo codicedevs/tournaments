@@ -1,5 +1,8 @@
 # Reglas Técnicas del Proyecto
 
+- No asumas nada si no te lo digo explicitamente
+- No cambies nada si no estas 100% seguro
+
 ## Backend (NestJS + MongoDB)
 
 ### Estructura de Carpetas
@@ -181,77 +184,3 @@ const useEntity = (id: string) => {
 
 - Usar agregaciones para consultas complejas
 - Implementar paginación
-- Optimizar consultas con índices
-
-## Testing
-
-### Backend
-
-- Usar Jest para pruebas unitarias
-- Implementar pruebas e2e con Supertest
-- Mockear servicios externos
-
-### Frontend
-
-- Usar React Testing Library
-- Implementar pruebas de componentes
-- Mockear llamadas API
-
-## Git
-
-### Convenciones
-
-- Usar Conventional Commits
-- Mantener ramas feature/ por funcionalidad
-- Revisar código antes de merge
-
-### Workflow
-
-1. Crear rama feature/
-2. Desarrollar funcionalidad
-3. Crear PR
-4. Revisión de código
-5. Merge a main
-
-## Despliegue
-
-### Backend
-
-- Usar Docker para contenedorización
-- Implementar CI/CD
-- Configurar variables de entorno
-
-### Frontend
-
-- Build estático
-- Despliegue en CDN
-- Configurar variables de entorno
-
-## Seguridad
-
-### Backend
-
-- Implementar rate limiting
-- Sanitizar inputs
-- Usar HTTPS
-- Manejar CORS
-
-### Frontend
-
-- Sanitizar datos
-- Implementar CSRF protection
-- Manejar tokens de forma segura
-
-## Performance
-
-### Backend
-
-- Implementar caché
-- Optimizar consultas
-- Usar compresión
-
-### Frontend
-
-- Lazy loading
-- Code splitting
-- Optimizar assets

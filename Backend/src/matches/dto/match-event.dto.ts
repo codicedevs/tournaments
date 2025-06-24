@@ -1,5 +1,6 @@
 import { IsEnum, IsNumber, IsIn, IsMongoId } from 'class-validator';
 import { MatchEventType } from '../enums/match-event-type.enum';
+import { Types } from 'mongoose';
 
 export class MatchEventDto {
   @IsEnum(MatchEventType)
@@ -12,5 +13,5 @@ export class MatchEventDto {
   team: 'TeamA' | 'TeamB';
 
   @IsMongoId()
-  playerId: string;
+  playerId: Types.ObjectId;
 }

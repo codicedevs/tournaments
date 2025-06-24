@@ -13,6 +13,9 @@ export class MatchEvent {
 
   @Prop({ required: true, enum: ['TeamA', 'TeamB'] })
   team: 'TeamA' | 'TeamB';
+
+  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
+  playerId: Types.ObjectId;
 }
 
 @Schema({

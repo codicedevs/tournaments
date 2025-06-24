@@ -6,14 +6,14 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Role, User } from '../users/entities/user.entity';
-import { Player, PlayerDocument } from './entities/player.entity';
+import { Player } from './entities/player.entity';
 import { RegisterPlayerDto } from './dto/register-player.dto';
 import { Team } from '../teams/entities/team.entity';
 
 @Injectable()
 export class PlayersService {
   constructor(
-    @InjectModel(Player.name) private playerModel: Model<PlayerDocument>,
+    @InjectModel(Player.name) private playerModel: Model<Player>,
     @InjectModel(Team.name) private teamModel: Model<Team>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}

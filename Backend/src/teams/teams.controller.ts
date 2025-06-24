@@ -75,9 +75,9 @@ export class TeamsController {
     return this.teamsService.remove(id);
   }
 
-  @Post(':id/players/:playerId')
-  addPlayer(@Param('id') teamId: string, @Param('playerId') playerId: string) {
-    return this.teamsService.addPlayer(teamId, playerId);
+  @Post(':id/addPlayersToTeam')
+  addPlayer(@Param('id') teamId: string, @Body() playerData: any) {
+    return this.teamsService.addPlayer(teamId, playerData);
   }
 
   @Delete(':id/players/:playerId')
@@ -91,5 +91,10 @@ export class TeamsController {
   @Get('phase/:phaseId')
   async getTeamsByPhase(@Param('phaseId') phaseId: string) {
     return this.teamsService.getTeamsByPhase(phaseId);
+  }
+
+  @Get(':id/players')
+  async getPlayersByTeam(@Param('id') teamId: string) {
+    return this.teamsService.getPlayersByTeam(teamId);
   }
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CheckIcon, XIcon } from "lucide-react";
 import { Match, MatchEvent, MatchEventType } from "../../models/Match";
+import { useTeamPlayers } from "../../api/teamHooks";
 
 interface MatchEventEditorProps {
   match: Match;
@@ -18,16 +19,36 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
   const [selectedType, setSelectedType] = useState<MatchEventType>(
     MatchEventType.GOAL
   );
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+
+  // Obtener jugadores de cada equipo
+  const { data: teamAPlayers = [] } = useTeamPlayers(match.teamA._id);
+  const { data: teamBPlayers = [] } = useTeamPlayers(match.teamB._id);
+
+  // Ahora cada player tiene playerId y user
+  const playersA = teamAPlayers;
+  const playersB = teamBPlayers;
+  // Filtrar jugadores según el equipo seleccionado
+  const currentTeamPlayers = selectedTeam === "TeamA" ? playersA : playersB;
 
   const handleSave = () => {
-    if (minute > 0) {
+    if (minute > 0 && selectedPlayerId) {
       onSave({
         type: selectedType,
         minute,
         team: selectedTeam,
+        playerId: selectedPlayerId, // Se envía el playerId al backend
       });
     }
   };
+
+  if (teamAPlayers.length === 0 && teamBPlayers.length === 0) {
+    return (
+      <div className="text-red-600 text-sm">
+        No hay jugadores registrados en ninguno de los equipos
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -43,11 +64,27 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
       </select>
       <select
         value={selectedTeam}
-        onChange={(e) => setSelectedTeam(e.target.value as "TeamA" | "TeamB")}
+        onChange={(e) => {
+          setSelectedTeam(e.target.value as "TeamA" | "TeamB");
+          setSelectedPlayerId(""); // Resetear selección de jugador al cambiar equipo
+        }}
         className="px-2 py-1 border rounded"
       >
         <option value="TeamA">{match.teamA.name}</option>
         <option value="TeamB">{match.teamB.name}</option>
+      </select>
+      <select
+        value={selectedPlayerId}
+        onChange={(e) => setSelectedPlayerId(e.target.value)}
+        className="px-2 py-1 border rounded"
+        disabled={currentTeamPlayers.length === 0}
+      >
+        <option value="">Seleccionar jugador</option>
+        {currentTeamPlayers.map((player: any) => (
+          <option key={player.playerId} value={player.playerId}>
+            {player.user?.name}
+          </option>
+        ))}
       </select>
       <input
         type="number"
@@ -61,6 +98,7 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
         onClick={handleSave}
         className="p-1 text-green-600 hover:text-green-800"
         title="Guardar"
+        disabled={!selectedPlayerId || minute <= 0}
       >
         <CheckIcon size={16} />
       </button>

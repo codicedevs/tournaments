@@ -2,15 +2,14 @@ import React, { useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon, UploadIcon } from "lucide-react";
-import { useTeams } from "../api/teamHooks";
-import { useRegisterPlayer } from "../api/playerHooks";
-import type { RegisterPlayerData } from "../api/playerHooks";
+import { useTeams, useAddPlayerToTeam } from "../api/teamHooks";
+import { RegisterPlayerData } from "../api/playerHooks";
 
 const RegisterPlayer: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
   const { data: teams = [] } = useTeams();
-  const { mutate: registerPlayer, isPending } = useRegisterPlayer();
+  const { mutate: addPlayerToTeam, isPending } = useAddPlayerToTeam();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<RegisterPlayerData>({
@@ -32,15 +31,21 @@ const RegisterPlayer: React.FC = () => {
       return;
     }
 
-    registerPlayer(formData, {
-      onSuccess: () => {
-        navigate(-1);
-      },
-      onError: (error) => {
-        console.error("Error registering player:", error);
-        alert("Error al registrar el jugador");
-      },
-    });
+    addPlayerToTeam(
+      { teamId: formData.teamId, playerData: formData },
+      {
+        onSuccess: () => {
+          navigate(`/teams/${teamId}/players`);
+        },
+        onError: (error) => {
+          console.error(
+            "Error registrando y agregando jugador al equipo:",
+            error
+          );
+          alert("Error al registrar el jugador");
+        },
+      }
+    );
   };
 
   const handleChange = (

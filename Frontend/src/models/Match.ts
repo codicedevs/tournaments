@@ -26,6 +26,7 @@ export interface Match {
   homeScore: number;
   awayScore: number;
   result: "TeamA" | "TeamB" | "Draw" | null;
+  completed: boolean;
   matchDayId: string;
   events: MatchEvent[];
 }

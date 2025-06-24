@@ -82,7 +82,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                       <div className="font-medium">{match.teamB.name}</div>
                     </div>
                     <div className="flex items-center gap-4">
-                      {editingMatchId === match._id ? (
+                      {editingMatchId === match._id && !match.completed ? (
                         <MatchEventEditor
                           match={match}
                           onSave={(event) => handleAddEvent(match._id, event)}
@@ -96,26 +96,30 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                               {match.awayScore !== null ? match.awayScore : 0}
                             </span>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingMatchId(match._id);
-                            }}
-                            className="text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            Agregar evento
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingMatchId(match._id);
-                              handleCompleteMatch(match._id);
-                            }}
-                            className="text-red-600 hover:text-red-800 text-sm"
-                          >
-                            Finalizar partido
-                          </button>
-                          {match.result && (
+                          {!match.completed && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMatchId(match._id);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              Agregar evento
+                            </button>
+                          )}
+                          {!match.completed && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingMatchId(match._id);
+                                handleCompleteMatch(match._id);
+                              }}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Finalizar partido
+                            </button>
+                          )}
+                          {match.result && match.completed && (
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                               {match.result === "TeamA"
                                 ? `Victoria ${match.teamA.name}`

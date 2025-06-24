@@ -11,6 +11,8 @@ import {
   Matchday,
   MatchdaySchema,
 } from 'src/matchdays/entities/matchday.entity';
+import { Player, PlayerSchema } from 'src/players/entities/player.entity';
+import { PlayersModule } from 'src/players/players.module';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import {
       { name: Matchday.name, schema: MatchdaySchema },
     ]),
     UsersModule,
+    PlayersModule,
   ],
   controllers: [TeamsController],
   providers: [TeamsService],

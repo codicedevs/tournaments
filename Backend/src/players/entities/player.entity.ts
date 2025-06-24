@@ -3,10 +3,8 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { User } from '../../users/entities/user.entity';
 import { Team } from 'src/teams/entities/team.entity';
 
-export type PlayerDocument = Player & Document;
-
 @Schema({ timestamps: true })
-export class Player {
+export class Player extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   userId: User;
 

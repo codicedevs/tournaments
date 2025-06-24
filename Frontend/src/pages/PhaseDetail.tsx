@@ -10,6 +10,7 @@ import StandingsTable from "../components/tournaments/StandingsTable";
 import PhaseDetails from "../components/tournaments/PhaseDetails";
 import CalendarSection from "../components/tournaments/CalendarSection";
 import { useResetTeamStats } from "../api/teamHooks";
+import PlayersTable from "../components/tournaments/PlayersTable";
 
 const PhaseDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const PhaseDetail: React.FC = () => {
     usePhaseMatchdays(phaseId);
   const { data: registrations = [] } =
     useRegistrationsByTournament(tournamentId);
+
   const { mutate: resetStats } = useResetTeamStats();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;
@@ -119,16 +121,20 @@ const PhaseDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección superior: Datos del torneo y tabla de posiciones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Información de la fase */}
-          <PhaseDetails
-            phase={phase}
-            registrationsCount={registrations.length}
-          />
+        {/* Sección superior: PhaseDetails centrado */}
+        <div className="flex justify-center mb-8">
+          <div className="w-full md:w-2/3 lg:w-1/2">
+            <PhaseDetails
+              phase={phase}
+              registrationsCount={registrations.length}
+            />
+          </div>
+        </div>
 
-          {/* Tabla de Estadísticas */}
+        {/* Nueva fila: StandingsTable y PlayersTable a la par */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StandingsTable registrations={registrations} />
+          <PlayersTable registrations={registrations} />
         </div>
 
         {/* Sección inferior: Lista de jornadas y partidos */}

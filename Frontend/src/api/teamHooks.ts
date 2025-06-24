@@ -168,3 +168,42 @@ export const useResetTeamStats = () => {
     },
   });
 };
+
+export const getTeamPlayers = async (teamId: string) => {
+  const res = await axios.get(`${API_BASE}/teams/${teamId}/players`);
+  console.log("res", res.data);
+  return res.data;
+};
+
+export function useTeamPlayers(teamId: string | undefined) {
+  return useQuery({
+    queryKey: ["teams", teamId, "players"],
+    queryFn: () => (teamId ? getTeamPlayers(teamId) : []),
+    enabled: !!teamId,
+  });
+}
+
+// Añadir jugador a un equipo (creación y asociación en un solo paso)
+export const addPlayerToTeam = async ({
+  teamId,
+  playerData,
+}: {
+  teamId: string;
+  playerData: any;
+}) => {
+  const res = await axios.post(
+    `${API_BASE}/teams/${teamId}/addPlayersToTeam`,
+    playerData
+  );
+  return res.data;
+};
+
+export function useAddPlayerToTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addPlayerToTeam,
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "players"] });
+    },
+  });
+}

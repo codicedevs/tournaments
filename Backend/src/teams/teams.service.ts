@@ -11,12 +11,16 @@ import { Team, TeamDocument } from './entities/team.entity';
 import { UsersService } from '../users/users.service';
 import { Match } from '../matches/entities/match.entity';
 import { Matchday } from '../matchdays/entities/matchday.entity';
+import { PlayersService } from 'src/players/players.service';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { Player } from 'src/players/entities/player.entity';
 
 @Injectable()
 export class TeamsService {
   constructor(
     @InjectModel(Team.name) private readonly teamModel: Model<TeamDocument>,
     private readonly usersService: UsersService,
+    private readonly playerService: PlayersService,
     @InjectModel(Match.name) private matchModel: Model<Match>,
     @InjectModel(Matchday.name) private matchdayModel: Model<Matchday>,
   ) {}
@@ -53,39 +57,51 @@ export class TeamsService {
     return this.teamModel.findByIdAndDelete(id).exec();
   }
 
-  async addPlayer(teamId: string, playerId: string): Promise<Team> {
+  async addPlayer(teamId: string, userDto: any): Promise<Player> {
     if (!isValidObjectId(teamId)) {
       throw new BadRequestException(`Invalid team ID: ${teamId}`);
     }
-    if (!isValidObjectId(playerId)) {
-      throw new BadRequestException(`Invalid player ID: ${playerId}`);
+
+    // Validar que los campos requeridos estén presentes
+    const requiredFields = ['name', 'email', 'password', 'phone'];
+    for (const field of requiredFields) {
+      if (!userDto[field]) {
+        throw new BadRequestException(
+          `El campo '${field}' es obligatorio para registrar un jugador.`,
+        );
+      }
     }
 
-    const team = await this.teamModel
-      .findById(teamId)
-      .populate('players')
+    // Construir el DTO que espera register
+    const registerPlayerDto = {
+      name: userDto.name,
+      email: userDto.email,
+      password: userDto.password,
+      phone: userDto.phone,
+      teamId: new Types.ObjectId(teamId),
+    };
+
+    const player = await this.playerService.register(registerPlayerDto);
+
+    // Verificar si el jugador ya está en algún equipo
+    const existingTeam = await this.teamModel
+      .findOne({ players: player._id })
       .exec();
+    if (existingTeam) {
+      throw new BadRequestException(
+        `Player with ID ${player._id} already belongs to a team`,
+      );
+    }
+
+    // Agregar el jugador al equipo
+    const team = await this.teamModel.findById(teamId).exec();
     if (!team) {
       throw new NotFoundException(`Team with ID ${teamId} not found`);
     }
 
-    const player = await this.usersService.findOne(playerId);
-    if (!player) {
-      throw new NotFoundException(`Player with ID ${playerId} not found`);
-    }
-
-    const existingTeam = await this.teamModel
-      .findOne({ players: playerId })
-      .exec();
-    if (existingTeam) {
-      throw new BadRequestException(
-        `Player with ID ${playerId} already belongs to a team`,
-      );
-    }
-
-    team.players.push(new Types.ObjectId(playerId));
-    console.log('Team after adding player:', team);
-    return team.save();
+    team.players.push(player._id as Types.ObjectId);
+    await team.save();
+    return player;
   }
 
   async removePlayer(teamId: string, playerId: string): Promise<Team> {
@@ -105,7 +121,7 @@ export class TeamsService {
     }
 
     const playerIndex = team.players.findIndex((player) =>
-      (player._id as Types.ObjectId).equals(playerId),
+      new Types.ObjectId(playerId).equals(playerId),
     );
     if (playerIndex === -1) {
       throw new BadRequestException(
@@ -156,5 +172,35 @@ export class TeamsService {
     });
 
     return teams;
+  }
+
+  async getPlayersByTeam(teamId: string) {
+    const team = await this.teamModel
+      .findById(teamId)
+      .populate({
+        path: 'players',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profilePicture role',
+        },
+      })
+      .exec();
+
+    if (!team) {
+      throw new NotFoundException('Equipo no encontrado');
+    }
+
+    // Mapear los jugadores para renombrar userId a user y eliminar userId
+    const teamPlayers = team.players.map((player: any) => {
+      const playerObj = player.toObject ? player.toObject() : player;
+      const { userId, _id, ...rest } = playerObj;
+      return {
+        playerId: _id,
+        ...rest,
+        user: userId,
+      };
+    });
+
+    return teamPlayers;
   }
 }

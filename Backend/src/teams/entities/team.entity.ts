@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { User, UserDocument } from 'src/users/entities/user.entity';
-
+import { Player } from 'src/players/entities/player.entity';
+import { User } from 'src/users/entities/user.entity';
+import mongoose from 'mongoose';
+import { Schema as MongooseSchema } from 'mongoose';
 export type TeamDocument = Team & Document;
 
 @Schema()
@@ -21,8 +23,8 @@ export class Team extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   createdById: User;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
-  players: (User | UserDocument | Types.ObjectId)[];
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Player' }] })
+  players: (Player | Types.ObjectId | string)[];
 }
 
 export const TeamSchema = SchemaFactory.createForClass(Team);

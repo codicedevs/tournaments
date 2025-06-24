@@ -28,6 +28,13 @@ export const deletePlayer = async (id: string): Promise<void> => {
   await axios.delete(`${API_BASE}/users/${id}`);
 };
 
+export const deletePlayerFromTeam = async (
+  teamId: string,
+  playerId: string
+): Promise<void> => {
+  await axios.delete(`${API_BASE}/teams/${teamId}/players/${playerId}`);
+};
+
 export function usePlayers() {
   return useQuery<User[]>({
     queryKey: ["players"],
@@ -51,6 +58,17 @@ export function useDeletePlayer() {
     mutationFn: deletePlayer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}
+
+export function useDeletePlayerFromTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, playerId }: { teamId: string; playerId: string }) =>
+      deletePlayerFromTeam(teamId, playerId),
+    onSuccess: (_, { teamId }) => {
+      queryClient.invalidateQueries({ queryKey: ["teams", teamId, "players"] });
     },
   });
 }

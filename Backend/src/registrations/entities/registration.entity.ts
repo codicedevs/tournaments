@@ -15,10 +15,31 @@ class TeamStats {
   losses: number;
 
   @Prop({ default: 0 })
+  points: number;
+
+  @Prop({ default: 0 })
   goalsFor: number;
 
   @Prop({ default: 0 })
   goalsAgainst: number;
+
+  @Prop({ default: 0 })
+  yellowCards: number;
+
+  @Prop({ default: 0 })
+  redCards: number;
+
+  @Prop({ default: 0 })
+  blueCards: number;
+
+  @Prop({ default: 0 })
+  fairPlayScore: number;
+
+  @Prop({ default: 0 })
+  goalDifference: number;
+
+  @Prop({ default: 0 })
+  scoreWeight: number;
 }
 
 @Schema()
