@@ -13,7 +13,7 @@ export const getMatches = async (): Promise<Match[]> => {
 export const createMatch = async (data: {
   teamA: string;
   teamB: string;
-  date: Date;
+  date: string;
   homeScore?: number;
   awayScore?: number;
   result?: MatchResult;

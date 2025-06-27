@@ -140,7 +140,6 @@ export class TeamsService {
   }
 
   async checkNameExists(name: string): Promise<boolean> {
-    console.log('entro');
     const team = await this.teamModel.findOne({
       name: { $regex: new RegExp(`^${name}$`, 'i') },
     });

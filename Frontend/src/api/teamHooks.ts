@@ -171,7 +171,6 @@ export const useResetTeamStats = () => {
 
 export const getTeamPlayers = async (teamId: string) => {
   const res = await axios.get(`${API_BASE}/teams/${teamId}/players`);
-  console.log("res", res.data);
   return res.data;
 };
 

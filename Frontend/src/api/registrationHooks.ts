@@ -17,7 +17,6 @@ export const getRegistrationsByTournament = async (
   const res = await axios.get(
     `${API_BASE}/registrations/tournament/${tournamentId}`
   );
-  console.log("res.data", res.data);
   return res.data;
 };
 

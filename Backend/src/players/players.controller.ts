@@ -36,6 +36,11 @@ export class PlayersController {
     return this.playersService.findOne(id);
   }
 
+  @Get('by-tournament/:tournamentId')
+  async findByTournament(@Param('tournamentId') tournamentId: string) {
+    return this.playersService.findPlayersByTournament(tournamentId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

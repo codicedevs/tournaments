@@ -9,6 +9,7 @@ import { Role, User } from '../users/entities/user.entity';
 import { Player } from './entities/player.entity';
 import { RegisterPlayerDto } from './dto/register-player.dto';
 import { Team } from '../teams/entities/team.entity';
+import { Registration } from '../registrations/entities/registration.entity';
 
 @Injectable()
 export class PlayersService {
@@ -133,5 +134,21 @@ export class PlayersService {
     if (!result) {
       throw new NotFoundException(`Player with ID ${id} not found`);
     }
+  }
+
+  async findPlayersByTournament(tournamentId: string): Promise<Player[]> {
+    // 1. Buscar los equipos registrados en el torneo
+    const registrations = await this.teamModel.db
+      .model('Registration')
+      .find({ tournamentId });
+    const teamIds = registrations.map((reg: any) => reg.teamId);
+
+    // 2. Buscar los jugadores de esos equipos y ordenar por goles
+    return this.playerModel
+      .find({ teamId: { $in: teamIds } })
+      .populate('userId')
+      .populate('teamId')
+      .sort({ 'stats.goals': -1 })
+      .exec();
   }
 }

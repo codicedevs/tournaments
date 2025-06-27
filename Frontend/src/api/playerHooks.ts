@@ -14,6 +14,15 @@ export const getPlayersByTeam = async (teamId: string): Promise<User[]> => {
   return res.data;
 };
 
+export const getPlayersByTournament = async (
+  tournamentId: string
+): Promise<User[]> => {
+  const res = await axios.get(
+    `${API_BASE}/players/by-tournament/${tournamentId}`
+  );
+  return res.data;
+};
+
 export const createPlayer = async (data: {
   name: string;
   email: string;
@@ -39,6 +48,14 @@ export function usePlayers() {
   return useQuery<User[]>({
     queryKey: ["players"],
     queryFn: getPlayers,
+  });
+}
+
+export function usePlayersByTournament(tournamentId: string) {
+  return useQuery<User[]>({
+    queryKey: ["players", "tournament", tournamentId],
+    queryFn: () => getPlayersByTournament(tournamentId),
+    enabled: !!tournamentId,
   });
 }
 

@@ -134,7 +134,7 @@ const PhaseDetail: React.FC = () => {
         {/* Nueva fila: StandingsTable y PlayersTable a la par */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <StandingsTable registrations={registrations} />
-          <PlayersTable registrations={registrations} />
+          <PlayersTable tournamentId={tournamentId!} />
         </div>
 
         {/* Sección inferior: Lista de jornadas y partidos */}

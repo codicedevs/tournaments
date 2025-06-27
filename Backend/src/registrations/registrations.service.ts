@@ -61,7 +61,6 @@ export class RegistrationsService {
       .sort({ 'stats.scoreWeight': -1 })
       .populate('teamId')
       .exec();
-    console.log('res', res[0].stats);
     return res;
   }
 
