@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import { Matchday } from "../../models/Matchday";
 import { Match, MatchEvent, MatchEventType } from "../../models/Match";
 import { useMatchdayMatches } from "../../api/fixtureHooks";
-import { useCompleteMatch, useUpdateMatch } from "../../api/matchHooks";
-import { MatchEventEditor, MatchEventsList } from "../matches/MatchEventEditor";
+import {
+  useCompleteMatch,
+  useUpdateMatch,
+  MatchUpdateData,
+} from "../../api/matchHooks";
+import { MatchEventsList } from "../matches/MatchEventEditor";
+import { useUsers } from "../../api/userHooks";
 
 interface MatchdayItemProps {
   matchday: Matchday;
@@ -22,6 +27,38 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
   const { mutate: updateMatch } = useUpdateMatch();
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const { mutate: completeMatch } = useCompleteMatch();
+  const { data: users = [] } = useUsers();
+  const [fieldValues, setFieldValues] = useState<
+    Record<
+      string,
+      { fieldNumber?: string; viewerId?: string; refereeId?: string }
+    >
+  >({});
+
+  const handleFieldChange = (matchId: string, field: string, value: string) => {
+    setFieldValues((prev) => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSave = (match: Match) => {
+    const values = fieldValues[match._id] || {};
+    const data: MatchUpdateData = {
+      matchId: match._id,
+      viewerId: values.viewerId,
+      refereeId: values.refereeId,
+      fieldNumber: values.fieldNumber,
+    };
+    updateMatch(data, {
+      onSuccess: () => {
+        setEditingMatchId(null);
+      },
+    });
+  };
 
   const handleAddEvent = (matchId: string, event: MatchEvent) => {
     updateMatch(
@@ -39,6 +76,13 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
 
   const handleCompleteMatch = (matchId: string) => {
     completeMatch({ matchId });
+  };
+
+  // Helper para mostrar nombre de usuario por id
+  const getUserName = (userId?: string) => {
+    if (!userId) return "-";
+    const user = users.find((u) => u._id === userId);
+    return user ? user.name : "-";
   };
 
   return (
@@ -83,18 +127,104 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                     </div>
                     <div className="flex items-center gap-4">
                       {editingMatchId === match._id && !match.completed ? (
-                        <MatchEventEditor
-                          match={match}
-                          onSave={(event) => handleAddEvent(match._id, event)}
-                          onCancel={() => setEditingMatchId(null)}
-                        />
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2 items-center">
+                            <label className="text-xs">N° Cancha:</label>
+                            <input
+                              type="text"
+                              className="border rounded px-2 py-1 text-xs"
+                              value={fieldValues[match._id]?.fieldNumber || ""}
+                              onChange={(e) =>
+                                handleFieldChange(
+                                  match._id,
+                                  "fieldNumber",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <label className="text-xs">Veedor:</label>
+                            <select
+                              className="border rounded px-2 py-1 text-xs"
+                              value={fieldValues[match._id]?.viewerId || ""}
+                              onChange={(e) =>
+                                handleFieldChange(
+                                  match._id,
+                                  "viewerId",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              <option value="">Seleccionar</option>
+                              {users
+                                .filter((u) => u.role === "Viewer")
+                                .map((u) => (
+                                  <option key={u._id} value={u._id}>
+                                    {u.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <label className="text-xs">Referee:</label>
+                            <select
+                              className="border rounded px-2 py-1 text-xs"
+                              value={fieldValues[match._id]?.refereeId || ""}
+                              onChange={(e) =>
+                                handleFieldChange(
+                                  match._id,
+                                  "refereeId",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              <option value="">Seleccionar</option>
+                              {users
+                                .filter((u) => u.role === "Referee")
+                                .map((u) => (
+                                  <option key={u._id} value={u._id}>
+                                    {u.name}
+                                  </option>
+                                ))}
+                            </select>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-xs"
+                              onClick={() => handleSave(match)}
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs"
+                              onClick={() => setEditingMatchId(null)}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
                       ) : (
                         <>
-                          <div className="text-sm">
+                          <div className="text-sm mb-1">
                             <span className="font-medium">
                               {match.homeScore !== null ? match.homeScore : 0} -{" "}
                               {match.awayScore !== null ? match.awayScore : 0}
                             </span>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-700 mb-1">
+                            <div>
+                              <span className="font-semibold">N° Cancha:</span>{" "}
+                              {match.fieldNumber || "-"}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Veedor:</span>{" "}
+                              {getUserName(match.viewerId)}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Referee:</span>{" "}
+                              {getUserName(match.refereeId)}
+                            </div>
                           </div>
                           {!match.completed && (
                             <button
@@ -104,19 +234,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                               }}
                               className="text-blue-600 hover:text-blue-800 text-sm"
                             >
-                              Agregar evento
-                            </button>
-                          )}
-                          {!match.completed && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingMatchId(match._id);
-                                handleCompleteMatch(match._id);
-                              }}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              Finalizar partido
+                              Editar datos
                             </button>
                           )}
                           {match.result && match.completed && (

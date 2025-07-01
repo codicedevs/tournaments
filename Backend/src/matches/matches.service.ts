@@ -140,7 +140,10 @@ export class MatchesService {
     }
 
     // Agregar el evento
-    match.events.push(event);
+    match.events.push({
+      ...event,
+      timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
+    });
 
     // Actualizar los scores basados en los eventos
     const teamAGoals = match.events.filter(

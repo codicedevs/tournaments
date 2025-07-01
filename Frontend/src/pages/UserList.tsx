@@ -2,11 +2,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { PlusIcon, ArrowLeftIcon } from "lucide-react";
-import { usePlayers } from "../api/playerHooks";
+import { useUsers } from "../api/userHooks";
 
-const PlayerList: React.FC = () => {
+const UserList: React.FC = () => {
   const navigate = useNavigate();
-  const { data: players = [], isLoading, isError } = usePlayers();
+  const { data: users = [], isLoading, isError } = useUsers();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,21 +22,29 @@ const PlayerList: React.FC = () => {
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Jugadores</h1>
-            <p className="text-gray-600">Gestiona los jugadores disponibles</p>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Lista de usuarios
+            </h1>
+            <p className="text-gray-600">
+              Aquí se muestran todos los usuarios del sistema y su rol.
+            </p>
           </div>
         </div>
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Jugadores</h1>
-            <p className="text-gray-600">Gestiona los jugadores disponibles</p>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Lista de usuarios
+            </h1>
+            <p className="text-gray-600">
+              Aquí se muestran todos los usuarios del sistema y su rol.
+            </p>
           </div>
           <button
-            onClick={() => navigate("/players/new")}
+            onClick={() => navigate("/users/new")}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
           >
             <PlusIcon size={18} />
-            <span>Crear Jugador</span>
+            <span>Crear Usuario</span>
           </button>
         </div>
         {isLoading ? (
@@ -47,11 +55,11 @@ const PlayerList: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-red-600 mb-4">Error al cargar jugadores.</p>
           </div>
-        ) : players.length === 0 ? (
+        ) : users.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">No hay jugadores disponibles.</p>
             <button
-              onClick={() => navigate("/players/new")}
+              onClick={() => navigate("/users/new")}
               className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
             >
               <PlusIcon size={18} />
@@ -78,19 +86,23 @@ const PlayerList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {players.map((player: any) => (
-                  <tr key={player._id}>
+                {users.map((user: any) => (
+                  <tr
+                    key={user._id}
+                    className="cursor-pointer hover:bg-blue-50"
+                    onClick={() => navigate(`/users/${user._id}/edit`)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {player._id}
+                      {user._id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {player.name}
+                      {user.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {player.email}
+                      {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {player.role}
+                      {user.role}
                     </td>
                   </tr>
                 ))}
@@ -103,4 +115,4 @@ const PlayerList: React.FC = () => {
   );
 };
 
-export default PlayerList;
+export default UserList;

@@ -44,4 +44,15 @@ export class UpdateMatchDto {
 
   @IsOptional()
   completed?: boolean;
+
+  @IsOptional()
+  @IsMongoId()
+  viewerId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  refereeId?: string;
+
+  @IsOptional()
+  fieldNumber?: string;
 }

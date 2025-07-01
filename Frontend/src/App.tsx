@@ -14,8 +14,8 @@ import PhaseForm from "./pages/PhaseForm";
 
 import TeamList from "./pages/TeamList";
 import TeamForm from "./pages/TeamForm";
-import PlayerList from "./pages/PlayerList";
-import PlayerForm from "./pages/PlayerForm";
+import UserList from "./pages/UserList";
+import UserCreate from "./pages/UserCreate";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import RegisterPlayer from "./pages/RegisterPlayer";
@@ -27,6 +27,7 @@ import PhaseDetail from "./pages/PhaseDetail";
 import PhaseFixture from "./pages/PhaseFixture";
 import MatchdayList from "./pages/MatchdayList";
 import EditTeamForm from "./pages/EditTeamForm";
+import UserEdit from "./pages/UserEdit";
 
 const queryClient = new QueryClient();
 
@@ -87,8 +88,9 @@ const router = createBrowserRouter([
     element: <TeamPlayers />,
     loader: authLoader,
   },
-  { path: "/players", element: <PlayerList />, loader: authLoader },
-  { path: "/players/new", element: <PlayerForm />, loader: authLoader },
+  { path: "/users", element: <UserList />, loader: authLoader },
+  { path: "/users/new", element: <UserCreate />, loader: authLoader },
+  { path: "/users/:id/edit", element: <UserEdit />, loader: authLoader },
   { path: "/", element: <Navigate to="/login" replace /> },
 ]);
 

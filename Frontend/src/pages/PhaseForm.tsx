@@ -31,7 +31,7 @@ const PhaseForm: React.FC = () => {
   } = useForm<PhaseFormData>({
     resolver: zodResolver(phaseSchema),
     defaultValues: {
-      type: PhaseType.GROUP,
+      type: PhaseType.LEAGUE,
     },
   });
 
@@ -130,11 +130,20 @@ const PhaseForm: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 disabled={isLoading}
               >
-                {Object.values(PhaseType).map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                {Object.values(PhaseType).map((type) => {
+                  const typeLabels: Record<string, string> = {
+                    GROUP: "Grupos",
+                    KNOCKOUT: "Eliminatoria",
+                    LEAGUE: "Liga",
+                    FINAL: "Final",
+                    QUALIFYING: "Clasificatoria",
+                  };
+                  return (
+                    <option key={type} value={type}>
+                      {typeLabels[type] || type}
+                    </option>
+                  );
+                })}
               </select>
               {errors.type && (
                 <p className="mt-1 text-sm text-red-600">

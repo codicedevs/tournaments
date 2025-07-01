@@ -14,4 +14,6 @@ export class MatchEventDto {
 
   @IsMongoId()
   playerId: Types.ObjectId;
+
+  timestamp?: Date;
 }

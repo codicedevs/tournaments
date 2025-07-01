@@ -30,6 +30,10 @@ export const createPhase = async (data: {
   return res.data;
 };
 
+export const deletePhase = async (id: string): Promise<void> => {
+  await axios.delete(`${API_BASE}/phases/${id}`);
+};
+
 export function usePhases() {
   return useQuery<Phase[]>({
     queryKey: ["phases"],
@@ -62,6 +66,17 @@ export function useCreatePhase() {
       queryClient.invalidateQueries({
         queryKey: ["phases", "tournament", data.tournamentId],
       });
+    },
+  });
+}
+
+export function useDeletePhase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deletePhase,
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["phases"] });
+      queryClient.invalidateQueries({ queryKey: ["phases", "tournament"] });
     },
   });
 }

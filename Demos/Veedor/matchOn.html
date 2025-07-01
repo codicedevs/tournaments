@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Control de Partido - Propuesta Final</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px 40px;
+        position: relative;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header-info h1 {
+        font-size: 2rem;
+        font-weight: 300;
+        margin-bottom: 5px;
+      }
+
+      .header-info .match-details {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .back-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .content-wrapper {
+        padding: 40px;
+      }
+
+      /* Primera fila - Botón iniciar o marcador */
+      .score-row {
+        margin-bottom: 30px;
+      }
+
+      .score-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Botón de inicio (antes del partido) */
+      .start-match-section {
+        text-align: center;
+      }
+
+      .start-match-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+      }
+
+      .start-match-subtitle {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin-bottom: 30px;
+      }
+
+      .start-match-btn {
+        padding: 25px 50px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+      }
+
+      .start-match-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+      }
+
+      /* Marcador (después de iniciar) */
+      .score-display {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 30px;
+        align-items: center;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .score-display.hidden {
+        display: none;
+      }
+
+      .start-match-section.hidden {
+        display: none;
+      }
+
+      .team-section {
+        text-align: center;
+        padding: 30px 20px;
+        border-radius: 16px;
+        border: 3px solid;
+      }
+
+      .team-section.home {
+        border-color: #007bff;
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce7ff 100%);
+      }
+
+      .team-section.away {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #ffe6e7 0%, #ffccce 100%);
+      }
+
+      .team-name-large {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+      }
+
+      .score-large {
+        font-size: 4rem;
+        font-weight: 700;
+        color: #2c3e50;
+      }
+
+      .vs-large {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #6c757d;
+      }
+
+      /* Segunda fila - Solo cronómetro y eventos */
+      .controls-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      .controls-row.hidden {
+        display: none;
+      }
+
+      .timer-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .timer-display {
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-family: "Courier New", monospace;
+      }
+
+      .period-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+        display: inline-block;
+      }
+
+      .timer-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .timer-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+      }
+
+      .timer-btn.start {
+        background: #28a745;
+        color: white;
+      }
+
+      .timer-btn.pause {
+        background: #ffc107;
+        color: white;
+      }
+
+      .timer-btn.reset {
+        background: #6c757d;
+        color: white;
+      }
+
+      .timer-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .actions-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .actions-title {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 25px;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .action-btn {
+        padding: 15px 20px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .action-btn.goal {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+      }
+
+      .action-btn.card {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
+      }
+
+      .action-btn.period {
+        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        color: white;
+      }
+
+      .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Tercera fila - Solo eventos */
+      .events-row {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .events-row.hidden {
+        display: none;
+      }
+
+      .events-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+      }
+
+      .events-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        text-align: center;
+      }
+
+      .events-container {
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 10px;
+      }
+
+      .event-item {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        border-left: 5px solid #e9ecef;
+        transition: all 0.3s ease;
+      }
+
+      .event-item.goal.home {
+        border-left-color: #007bff;
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce7ff 100%);
+      }
+
+      .event-item.goal.away {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #ffe6e7 0%, #ffccce 100%);
+      }
+
+      .event-item.card.home {
+        border-left-color: #007bff;
+        background: linear-gradient(135deg, #fff8dc 0%, #fff3cd 100%);
+      }
+
+      .event-item.card.away {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #fff8dc 0%, #fff3cd 100%);
+      }
+
+      .event-item.period {
+        border-left-color: #6c757d;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      }
+
+      .event-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .event-time {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #495057;
+        background: white;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+      }
+
+      .event-type {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+
+      .event-type.goal {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .event-type.card {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .event-type.period {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .event-description {
+        font-size: 0.95rem;
+        color: #495057;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .empty-events {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 40px 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
+      }
+
+      /* Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        transform: scale(0.9);
+        transition: all 0.3s ease;
+      }
+
+      .modal-overlay.active .modal {
+        transform: scale(1);
+      }
+
+      .modal-header {
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .modal-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+      }
+
+      .teams-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 25px;
+      }
+
+      .team-tab {
+        padding: 12px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        background: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .team-tab.active.home {
+        border-color: #007bff;
+        background: #e7f3ff;
+        color: #007bff;
+      }
+
+      .team-tab.active.away {
+        border-color: #dc3545;
+        background: #ffe6e7;
+        color: #dc3545;
+      }
+
+      .players-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 25px;
+      }
+
+      .player-option {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .player-option:hover {
+        border-color: #667eea;
+        background: #f0f4ff;
+      }
+
+      .player-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .player-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .player-number {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .card-type-selection {
+        display: none;
+        margin-bottom: 20px;
+      }
+
+      .card-type-selection.active {
+        display: block;
+      }
+
+      .card-types {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+      }
+
+      .card-type-btn {
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .card-type-btn:hover {
+        border-color: #ffc107;
+        background: #fff3cd;
+      }
+
+      .card-type-btn.selected {
+        border-color: #ffc107;
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      .modal-btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .modal-btn.cancel {
+        background: #6c757d;
+        color: white;
+      }
+
+      .modal-btn.confirm {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+      }
+
+      .modal-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .controls-row {
+          grid-template-columns: 1fr;
+        }
+
+        .score-display {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .teams-tabs {
+          grid-template-columns: 1fr;
+        }
+
+        .card-types {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="header-content">
+          <div class="header-info">
+            <h1>Control de Partido</h1>
+            <div class="match-details">
+              Los Tigres FC vs Águilas Doradas - Cancha 3
+            </div>
+          </div>
+          <button class="back-btn" id="back-btn" onclick="volverAJugadores()">
+            ← Gestión Jugadores
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <!-- Primera fila - Botón de inicio o Marcador -->
+        <div class="score-row">
+          <div class="score-card">
+            <!-- Botón de inicio (visible antes de comenzar) -->
+            <div class="start-match-section" id="start-section">
+              <div class="start-match-title">¿Listo para comenzar?</div>
+              <div class="start-match-subtitle">
+                Los Tigres FC vs Águilas Doradas
+              </div>
+              <button class="start-match-btn" onclick="iniciarPartido()">
+                ⚽ Iniciar Partido
+              </button>
+            </div>
+
+            <!-- Marcador (visible después de iniciar) -->
+            <div class="score-display hidden" id="score-section">
+              <div class="team-section home">
+                <div class="team-name-large">Los Tigres FC</div>
+                <div class="score-large" id="score-home">0</div>
+              </div>
+              <div class="vs-large">VS</div>
+              <div class="team-section away">
+                <div class="team-name-large">Águilas Doradas</div>
+                <div class="score-large" id="score-away">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda fila - Cronómetro y Acciones (SIEMPRE VISIBLE) -->
+        <div class="controls-row" id="controls-section">
+          <!-- Cronómetro -->
+          <div class="timer-card">
+            <div class="period-info" id="period-label">Primer Tiempo</div>
+            <div class="timer-display" id="timer-display">00:00</div>
+            <div class="timer-controls">
+              <button
+                class="timer-btn start"
+                id="start-btn"
+                onclick="startTimer()"
+              >
+                Iniciar
+              </button>
+              <button
+                class="timer-btn pause"
+                id="pause-btn"
+                onclick="pauseTimer()"
+              >
+                Pausar
+              </button>
+              <button
+                class="timer-btn reset"
+                id="reset-btn"
+                onclick="resetTimer()"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Acciones y Control -->
+          <div class="actions-card">
+            <div class="actions-title">Control del Partido</div>
+            <div class="action-buttons">
+              <button class="action-btn goal" onclick="openEventModal('goal')">
+                ⚽ Registrar Gol
+              </button>
+              <button class="action-btn card" onclick="openEventModal('card')">
+                🟨 Registrar Tarjeta
+              </button>
+              <button
+                class="action-btn period"
+                id="period-action-btn"
+                onclick="endPeriod()"
+              >
+                Terminar Primer Tiempo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tercera fila - Eventos (SIEMPRE VISIBLE) -->
+        <div class="events-row" id="events-section">
+          <div class="events-header">
+            <div class="events-title">Registro de Eventos</div>
+          </div>
+          <div class="events-container">
+            <div id="events-list">
+              <div class="empty-events">No hay eventos registrados</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para seleccionar jugador -->
+    <div class="modal-overlay" id="event-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-title">Registrar Gol</div>
+          <div class="modal-subtitle" id="modal-subtitle">
+            Selecciona el jugador
+          </div>
+        </div>
+
+        <div class="teams-tabs">
+          <div class="team-tab home" id="home-tab" onclick="selectTeam('home')">
+            Los Tigres FC
+          </div>
+          <div class="team-tab away" id="away-tab" onclick="selectTeam('away')">
+            Águilas Doradas
+          </div>
+        </div>
+
+        <div class="card-type-selection" id="card-type-selection">
+          <div class="card-types">
+            <div class="card-type-btn" onclick="selectCardType('yellow')">
+              🟨 Amarilla
+            </div>
+            <div class="card-type-btn" onclick="selectCardType('blue')">
+              🟦 Azul
+            </div>
+            <div class="card-type-btn" onclick="selectCardType('red')">
+              🟥 Roja
+            </div>
+          </div>
+        </div>
+
+        <div class="players-list" id="players-list">
+          <!-- Jugadores se cargarán aquí -->
+        </div>
+
+        <div class="modal-actions">
+          <button class="modal-btn cancel" onclick="closeEventModal()">
+            Cancelar
+          </button>
+          <button
+            class="modal-btn confirm"
+            id="confirm-btn"
+            onclick="confirmEvent()"
+            disabled
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let timer = 0;
+      let timerInterval = null;
+      let currentPeriod = 1;
+      let matchStarted = false;
+      let secondHalfStarted = false;
+      let homeScore = 0;
+      let awayScore = 0;
+      let events = [];
+
+      // Datos de jugadores (simulados)
+      const playersData = {
+        home: [
+          { id: 1, name: "Juan Pérez", number: 10 },
+          { id: 2, name: "Carlos González", number: 7 },
+          { id: 3, name: "Luis Martínez", number: 5 },
+          { id: 4, name: "Diego López", number: 3 },
+          { id: 5, name: "Fernando García", number: 11 },
+        ],
+        away: [
+          { id: 6, name: "José Hernández", number: 9 },
+          { id: 7, name: "Ricardo Vargas", number: 6 },
+          { id: 8, name: "Manuel Torres", number: 4 },
+          { id: 9, name: "Sergio Jiménez", number: 8 },
+          { id: 10, name: "Pablo Mendoza", number: 2 },
+        ],
+      };
+
+      // Variables del modal
+      let currentEventType = "";
+      let selectedTeam = "";
+      let selectedPlayer = null;
+      let selectedCardType = "";
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, "0")}:${secs
+          .toString()
+          .padStart(2, "0")}`;
+      }
+
+      function updateTimerDisplay() {
+        document.getElementById("timer-display").textContent =
+          formatTime(timer);
+      }
+
+      // Nueva función para iniciar el partido
+      function iniciarPartido() {
+        // Solo cambiar el contenido de la card del resultado
+        document.getElementById("start-section").classList.add("hidden");
+        document.getElementById("score-section").classList.remove("hidden");
+
+        // Marcar como partido iniciado
+        matchStarted = true;
+        updateBackButton();
+
+        // Obtener hora actual de Argentina (UTC-3)
+        const now = new Date();
+        const argentinaTime = new Intl.DateTimeFormat("es-AR", {
+          timeZone: "America/Argentina/Buenos_Aires",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(now);
+
+        // Agregar evento de inicio con hora
+        addEvent(
+          "system",
+          `Inicio del Primer Tiempo - ${argentinaTime}`,
+          "period"
+        );
+
+        // Iniciar cronómetro automáticamente
+        startTimer();
+      }
+
+      function startTimer() {
+        if (!timerInterval) {
+          timerInterval = setInterval(() => {
+            timer++;
+            updateTimerDisplay();
+
+            if (timer >= 1200) {
+              // 20 minutos
+              pauseTimer();
+              if (currentPeriod === 1) {
+                alert("¡Primer tiempo terminado automáticamente!");
+              } else {
+                alert("¡Segundo tiempo terminado automáticamente!");
+              }
+            }
+          }, 1000);
+        }
+      }
+
+      function pauseTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function resetTimer() {
+        pauseTimer();
+        timer = 0;
+        updateTimerDisplay();
+      }
+
+      function endPeriod() {
+        pauseTimer();
+
+        if (currentPeriod === 1) {
+          // Obtener hora actual de Argentina
+          const now = new Date();
+          const argentinaTime = new Intl.DateTimeFormat("es-AR", {
+            timeZone: "America/Argentina/Buenos_Aires",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }).format(now);
+
+          addEvent(
+            "system",
+            `Fin del Primer Tiempo - ${homeScore}-${awayScore}`,
+            "period"
+          );
+          currentPeriod = 2;
+          secondHalfStarted = true;
+          timer = 0;
+          updateTimerDisplay();
+          document.getElementById("period-label").textContent =
+            "Segundo Tiempo";
+          document.getElementById("period-action-btn").textContent =
+            "Terminar Segundo Tiempo";
+          updateBackButton();
+
+          // Agregar evento de inicio del segundo tiempo con hora
+          setTimeout(() => {
+            const now2 = new Date();
+            const argentinaTime2 = new Intl.DateTimeFormat("es-AR", {
+              timeZone: "America/Argentina/Buenos_Aires",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }).format(now2);
+            addEvent(
+              "system",
+              `Inicio del Segundo Tiempo - ${argentinaTime2}`,
+              "period"
+            );
+            // NO iniciar el cronómetro automáticamente
+            // El usuario debe presionar 'Iniciar'
+          }, 100);
+        } else {
+          addEvent(
+            "system",
+            `Fin del Partido - Resultado Final: ${homeScore}-${awayScore}`,
+            "period"
+          );
+          document.getElementById("period-label").textContent =
+            "Partido Finalizado";
+          document.getElementById("period-action-btn").style.display = "none";
+          document.getElementById("start-btn").disabled = true;
+          document.querySelector(".action-buttons").style.display = "none";
+          // Redirigir a matchFile.html
+          window.location.href = "matchFile.html";
+        }
+      }
+
+      function updateBackButton() {
+        const backBtn = document.getElementById("back-btn");
+        if (secondHalfStarted) {
+          backBtn.disabled = true;
+          backBtn.textContent = "← No disponible";
+        }
+      }
+
+      function openEventModal(eventType) {
+        currentEventType = eventType;
+        selectedTeam = "";
+        selectedPlayer = null;
+        selectedCardType = "";
+
+        const modal = document.getElementById("event-modal");
+        const title = document.getElementById("modal-title");
+        const subtitle = document.getElementById("modal-subtitle");
+        const cardTypeSelection = document.getElementById(
+          "card-type-selection"
+        );
+
+        if (eventType === "goal") {
+          title.textContent = "Registrar Gol";
+          subtitle.textContent = "Selecciona el equipo y jugador que anotó";
+          cardTypeSelection.classList.remove("active");
+        } else {
+          title.textContent = "Registrar Tarjeta";
+          subtitle.textContent =
+            "Selecciona el equipo, jugador y tipo de tarjeta";
+          cardTypeSelection.classList.add("active");
+        }
+
+        // Limpiar selecciones
+        document
+          .querySelectorAll(".team-tab")
+          .forEach((tab) => tab.classList.remove("active"));
+        document
+          .querySelectorAll(".card-type-btn")
+          .forEach((btn) => btn.classList.remove("selected"));
+        document.getElementById("confirm-btn").disabled = true;
+
+        modal.classList.add("active");
+      }
+
+      function closeEventModal() {
+        document.getElementById("event-modal").classList.remove("active");
+      }
+
+      function selectTeam(team) {
+        selectedTeam = team;
+        selectedPlayer = null;
+
+        // Actualizar tabs
+        document
+          .querySelectorAll(".team-tab")
+          .forEach((tab) => tab.classList.remove("active"));
+        document.getElementById(`${team}-tab`).classList.add("active", team);
+
+        // Cargar jugadores
+        loadPlayers(team);
+
+        updateConfirmButton();
+      }
+
+      function loadPlayers(team) {
+        const playersList = document.getElementById("players-list");
+        const players = playersData[team];
+
+        playersList.innerHTML = players
+          .map(
+            (player) => `
+                <div class="player-option" onclick="selectPlayer(${player.id}, '${player.name}', ${player.number})">
+                    <div class="player-info">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-number">Número ${player.number}</div>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function selectPlayer(playerId, playerName, playerNumber) {
+        selectedPlayer = {
+          id: playerId,
+          name: playerName,
+          number: playerNumber,
+        };
+
+        // Destacar jugador seleccionado
+        document.querySelectorAll(".player-option").forEach((option) => {
+          option.style.borderColor = "#e9ecef";
+          option.style.background = "#f8f9fa";
+        });
+
+        event.target.closest(".player-option").style.borderColor = "#667eea";
+        event.target.closest(".player-option").style.background = "#f0f4ff";
+
+        updateConfirmButton();
+      }
+
+      function selectCardType(cardType) {
+        selectedCardType = cardType;
+
+        // Actualizar selección visual
+        document
+          .querySelectorAll(".card-type-btn")
+          .forEach((btn) => btn.classList.remove("selected"));
+        event.target.classList.add("selected");
+
+        updateConfirmButton();
+      }
+
+      function updateConfirmButton() {
+        const confirmBtn = document.getElementById("confirm-btn");
+
+        if (currentEventType === "goal") {
+          confirmBtn.disabled = !(selectedTeam && selectedPlayer);
+        } else {
+          confirmBtn.disabled = !(
+            selectedTeam &&
+            selectedPlayer &&
+            selectedCardType
+          );
+        }
+      }
+
+      function confirmEvent() {
+        if (!selectedTeam || !selectedPlayer) return;
+
+        const currentTime = formatTime(timer);
+        const teamName =
+          selectedTeam === "home" ? "Los Tigres FC" : "Águilas Doradas";
+
+        if (currentEventType === "goal") {
+          // Actualizar marcador
+          if (selectedTeam === "home") {
+            homeScore++;
+            document.getElementById("score-home").textContent = homeScore;
+          } else {
+            awayScore++;
+            document.getElementById("score-away").textContent = awayScore;
+          }
+
+          // Agregar evento
+          addEvent(
+            selectedTeam,
+            `⚽ Gol de ${selectedPlayer.name} (#${selectedPlayer.number})`,
+            "goal"
+          );
+        } else if (currentEventType === "card") {
+          const cardEmojis = {
+            yellow: "🟨",
+            blue: "🟦",
+            red: "🟥",
+          };
+
+          const cardNames = {
+            yellow: "Amarilla",
+            blue: "Azul",
+            red: "Roja",
+          };
+
+          addEvent(
+            selectedTeam,
+            `${cardEmojis[selectedCardType]} Tarjeta ${cardNames[selectedCardType]} para ${selectedPlayer.name} (#${selectedPlayer.number})`,
+            "card"
+          );
+        }
+
+        closeEventModal();
+      }
+
+      function addEvent(team, description, type) {
+        const event = {
+          time: formatTime(timer),
+          team: team,
+          description: description,
+          type: type,
+          timestamp: Date.now(),
+        };
+
+        events.unshift(event);
+        // Guardar en localStorage
+        localStorage.setItem("matchOn_events", JSON.stringify(events));
+        updateEventsList();
+      }
+
+      function updateEventsList() {
+        const eventsList = document.getElementById("events-list");
+
+        if (events.length === 0) {
+          eventsList.innerHTML =
+            '<div class="empty-events">No hay eventos registrados</div>';
+          return;
+        }
+
+        eventsList.innerHTML = events
+          .map(
+            (event) => `
+                <div class="event-item ${event.type} ${event.team}">
+                    <div class="event-header">
+                        <span class="event-time">${event.time}</span>
+                        <span class="event-type ${event.type}">
+                            ${
+                              event.type === "goal"
+                                ? "Gol"
+                                : event.type === "card"
+                                ? "Tarjeta"
+                                : "Sistema"
+                            }
+                        </span>
+                    </div>
+                    <div class="event-description">${event.description}</div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function volverAJugadores() {
+        if (secondHalfStarted) {
+          alert(
+            "No se puede volver a la gestión de jugadores después de iniciar el segundo tiempo."
+          );
+          return;
+        }
+
+        if (matchStarted) {
+          if (
+            confirm(
+              "¿Estás seguro de que quieres volver? Se perderá el progreso del partido."
+            )
+          ) {
+            alert("Volviendo a gestión de jugadores");
+          }
+        } else {
+          alert("Volviendo a gestión de jugadores");
+        }
+      }
+
+      // Cerrar modal al hacer clic fuera
+      document
+        .getElementById("event-modal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeEventModal();
+          }
+        });
+
+      // Inicializar
+      updateTimerDisplay();
+      updateEventsList();
+    </script>
+  </body>
+</html>

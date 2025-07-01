@@ -7,6 +7,8 @@ export enum Role {
   Admin = 'Admin',
   Moderator = 'Moderator',
   Player = 'Player',
+  Viewer = 'Viewer',
+  Referee = 'Referee',
 }
 
 @Schema()

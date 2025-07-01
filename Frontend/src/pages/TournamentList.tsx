@@ -2,11 +2,28 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { PlusIcon, ArrowLeftIcon, EyeIcon, UsersIcon } from "lucide-react";
-import { useTournaments } from "../api/tournamentHooks";
+import { useTournaments, useDeleteTournament } from "../api/tournamentHooks";
 
 const TournamentList: React.FC = () => {
   const navigate = useNavigate();
   const { data: tournaments = [], isLoading, isError } = useTournaments();
+  const { mutate: deleteTournament, isPending: isDeleting } =
+    useDeleteTournament();
+  const [selected, setSelected] = React.useState<string[]>([]);
+
+  const handleSelect = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selected.length === 0) return;
+    if (!window.confirm("¿Seguro que deseas borrar los torneos seleccionados?"))
+      return;
+    selected.forEach((id) => deleteTournament(id));
+    setSelected([]);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -31,13 +48,24 @@ const TournamentList: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">Torneos</h1>
             <p className="text-gray-600">Gestiona los torneos disponibles</p>
           </div>
-          <button
-            onClick={() => navigate("/tournaments/new")}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
-          >
-            <PlusIcon size={18} />
-            <span>Crear Torneo</span>
-          </button>
+          <div className="flex gap-2">
+            {selected.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition disabled:opacity-50"
+              >
+                Borrar seleccionados
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/tournaments/new")}
+              className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+            >
+              <PlusIcon size={18} />
+              <span>Crear Torneo</span>
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -67,6 +95,20 @@ const TournamentList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selected.length === tournaments.length &&
+                        tournaments.length > 0
+                      }
+                      onChange={() => {
+                        if (selected.length === tournaments.length)
+                          setSelected([]);
+                        else setSelected(tournaments.map((t) => t._id));
+                      }}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ID
                   </th>
@@ -81,6 +123,13 @@ const TournamentList: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {tournaments.map((tournament) => (
                   <tr key={tournament._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(tournament._id)}
+                        onChange={() => handleSelect(tournament._id)}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {tournament._id}
                     </td>

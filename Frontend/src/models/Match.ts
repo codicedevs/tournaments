@@ -29,6 +29,9 @@ export interface Match {
   completed: boolean;
   matchDayId: string;
   events: MatchEvent[];
+  viewerId?: string;
+  refereeId?: string;
+  fieldNumber?: string;
 }
 
 export interface Team {

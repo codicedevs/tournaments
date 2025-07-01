@@ -47,7 +47,11 @@ export const deletePlayerFromTeam = async (
 export function usePlayers() {
   return useQuery<User[]>({
     queryKey: ["players"],
-    queryFn: getPlayers,
+    queryFn: async () => {
+      const users = await getPlayers();
+      // Filtrar por rol Player
+      return users.filter((u) => u.role === "Player");
+    },
   });
 }
 

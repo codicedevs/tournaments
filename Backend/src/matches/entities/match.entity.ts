@@ -16,6 +16,21 @@ export class MatchEvent {
 
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   playerId: Types.ObjectId;
+
+  @Prop({ type: Date, default: Date.now })
+  timestamp: Date;
+}
+
+@Schema()
+export class PlayerMatch {
+  @Prop({ type: Types.ObjectId, ref: 'Player', required: true })
+  playerId: Types.ObjectId;
+
+  @Prop({ required: true })
+  jerseyNumber: number;
+
+  @Prop({ default: true })
+  enableToPlay: boolean;
 }
 
 @Schema({
@@ -49,6 +64,18 @@ export class Match extends Document {
 
   @Prop({ type: [MatchEvent], default: [] })
   events: MatchEvent[];
+
+  @Prop({ type: [PlayerMatch], default: [] })
+  playerMatches: PlayerMatch[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  viewerId?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  refereeId?: Types.ObjectId;
+
+  @Prop({ type: String, required: false })
+  fieldNumber?: string;
 }
 
 export type MatchDocument = Match & Document;

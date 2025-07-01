@@ -60,27 +60,43 @@ export function useCreateMatch() {
   });
 }
 
+export interface MatchUpdateData {
+  matchId: string;
+  event?: MatchEvent;
+  viewerId?: string;
+  refereeId?: string;
+  fieldNumber?: string;
+}
+
 export function useUpdateMatch() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      matchId,
-      event,
-    }: {
-      matchId: string;
-      event: MatchEvent;
-    }) => {
-      const playerId = event.playerId || "6851bd6c2001ffcdaa4d462e";
-      const response = await axios.post(
-        `${API_BASE}/matches/${matchId}/events`,
-        {
-          type: event.type,
-          minute: event.minute,
-          team: event.team,
-          playerId,
-        }
-      );
-      return response.data;
+    mutationFn: async (data: MatchUpdateData) => {
+      const { matchId, event, viewerId, refereeId, fieldNumber } = data;
+      if (event) {
+        const playerId = event.playerId || "6851bd6c2001ffcdaa4d462e";
+        const response = await axios.post(
+          `${API_BASE}/matches/${matchId}/events`,
+          {
+            type: event.type,
+            minute: event.minute,
+            team: event.team,
+            playerId,
+          }
+        );
+        return response.data;
+      } else {
+        // PATCH para actualizar campos generales
+        const patchData: any = {};
+        if (viewerId !== undefined) patchData.viewerId = viewerId;
+        if (refereeId !== undefined) patchData.refereeId = refereeId;
+        if (fieldNumber !== undefined) patchData.fieldNumber = fieldNumber;
+        const response = await axios.patch(
+          `${API_BASE}/matches/${matchId}`,
+          patchData
+        );
+        return response.data;
+      }
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });

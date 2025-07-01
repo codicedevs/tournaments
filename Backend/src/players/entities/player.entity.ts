@@ -30,6 +30,9 @@ export class Player extends Document {
     assists: number;
     matchesPlayed: number;
   };
+
+  @Prop({ default: true })
+  enabled: boolean;
 }
 
 export const PlayerSchema = SchemaFactory.createForClass(Player);

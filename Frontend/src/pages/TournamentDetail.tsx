@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeftIcon, PlusIcon, CalendarIcon, EyeIcon } from "lucide-react";
 import Header from "../components/layout/Header";
 import { useTournament } from "../api/tournamentHooks";
-import { usePhasesByTournament } from "../api/phaseHooks";
+import { usePhasesByTournament, useDeletePhase } from "../api/phaseHooks";
 
 const TournamentDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,8 @@ const TournamentDetail: React.FC = () => {
     isLoading: isPhasesLoading,
     isError: isPhasesError,
   } = usePhasesByTournament(tournamentId);
+
+  const { mutate: deletePhase, isPending: isDeletingPhase } = useDeletePhase();
 
   const isLoading = isTournamentLoading || isPhasesLoading;
   const isError = isTournamentError || isPhasesError;
@@ -139,7 +141,7 @@ const TournamentDetail: React.FC = () => {
                   </h3>
                   <p className="text-gray-600">{phase.type}</p>
                 </div>
-                <div className="bg-gray-50 px-5 py-3 border-t flex justify-end">
+                <div className="bg-gray-50 px-5 py-3 border-t flex justify-end gap-2">
                   <button
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     onClick={(e) => {
@@ -150,6 +152,20 @@ const TournamentDetail: React.FC = () => {
                     }}
                   >
                     Generar Calendario
+                  </button>
+                  <button
+                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    disabled={isDeletingPhase}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (
+                        window.confirm("¿Seguro que deseas borrar esta fase?")
+                      ) {
+                        deletePhase(phase._id);
+                      }
+                    }}
+                  >
+                    Borrar
                   </button>
                 </div>
               </div>

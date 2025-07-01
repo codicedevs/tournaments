@@ -122,13 +122,11 @@ const PhaseDetail: React.FC = () => {
         </div>
 
         {/* Sección superior: PhaseDetails centrado */}
-        <div className="flex justify-center mb-8">
-          <div className="w-full md:w-2/3 lg:w-1/2">
-            <PhaseDetails
-              phase={phase}
-              registrationsCount={registrations.length}
-            />
-          </div>
+        <div className="mb-8">
+          <PhaseDetails
+            phase={phase}
+            registrationsCount={registrations.length}
+          />
         </div>
 
         {/* Nueva fila: StandingsTable y PlayersTable a la par */}
