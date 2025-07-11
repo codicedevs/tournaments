@@ -82,9 +82,9 @@ const PhaseFixture: React.FC = () => {
     usePhaseMatchdays(phaseId);
 
   // Mutations
-  const { mutate: generateFixtures, isLoading: isGenerating } =
+  const { mutate: generateFixtures, isPending: isGenerating } =
     useGenerateFixtures();
-  const { mutate: createLeague, isLoading: isCreatingLeague } =
+  const { mutate: createLeague, isPending: isCreatingLeague } =
     useCreateLeague();
 
   const isLoading =

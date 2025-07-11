@@ -14,4 +14,5 @@ export interface User {
   profilePicture?: string;
   phone?: string;
   isVerified?: boolean;
+  enabled?: boolean;
 }

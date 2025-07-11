@@ -9,6 +9,7 @@ import {
 } from "../../api/matchHooks";
 import { MatchEventsList } from "../matches/MatchEventEditor";
 import { useUsers } from "../../api/userHooks";
+import { MatchEventEditor } from "../matches/MatchEventEditor";
 
 interface MatchdayItemProps {
   matchday: Matchday;
@@ -34,6 +35,9 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
       { fieldNumber?: string; viewerId?: string; refereeId?: string }
     >
   >({});
+  const [editingEventMatchId, setEditingEventMatchId] = useState<string | null>(
+    null
+  );
 
   const handleFieldChange = (matchId: string, field: string, value: string) => {
     setFieldValues((prev) => ({
@@ -251,17 +255,42 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                     </div>
                   </div>
 
-                  {match.events && match.events.length > 0 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <button
+                      className="text-green-600 hover:text-green-800 text-xs"
+                      onClick={() => setEditingEventMatchId(match._id)}
+                      disabled={!!editingEventMatchId}
+                    >
+                      Agregar evento
+                    </button>
+                    {!match.completed && (
+                      <button
+                        className="text-red-600 hover:text-red-800 text-xs"
+                        onClick={() => handleCompleteMatch(match._id)}
+                      >
+                        Finalizar partido
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-2">
                     <MatchEventsList
                       events={match.events}
                       teamA={match.teamA}
                       teamB={match.teamB}
                     />
-                  )}
+                  </div>
 
-                  {match.date && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      {new Date(match.date).toLocaleString()}
+                  {editingEventMatchId === match._id && (
+                    <div className="mt-2">
+                      <MatchEventEditor
+                        match={match}
+                        onSave={(event) => {
+                          handleAddEvent(match._id, event);
+                          setEditingEventMatchId(null);
+                        }}
+                        onCancel={() => setEditingEventMatchId(null)}
+                      />
                     </div>
                   )}
                 </div>

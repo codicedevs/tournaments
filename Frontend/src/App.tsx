@@ -28,6 +28,10 @@ import PhaseFixture from "./pages/PhaseFixture";
 import MatchdayList from "./pages/MatchdayList";
 import EditTeamForm from "./pages/EditTeamForm";
 import UserEdit from "./pages/UserEdit";
+import ViewerMatchList from "./pages/ViewerMatchList";
+import MatchOn from "./pages/MatchOn";
+import ConfirmTeams from "./pages/ComfirmTeams";
+import ViewerMatchFlow from "./pages/ViewerMatchFlow";
 
 const queryClient = new QueryClient();
 
@@ -91,7 +95,17 @@ const router = createBrowserRouter([
   { path: "/users", element: <UserList />, loader: authLoader },
   { path: "/users/new", element: <UserCreate />, loader: authLoader },
   { path: "/users/:id/edit", element: <UserEdit />, loader: authLoader },
+  {
+    path: "/matches/viewer",
+    element: <ViewerMatchList viewerId="685465ed46b6f459e522b19e" />,
+  },
   { path: "/", element: <Navigate to="/login" replace /> },
+  { path: "/match/:matchId/confirm-teams", element: <ConfirmTeams /> },
+  { path: "/match/:matchId/OnMatch", element: <MatchOn /> },
+  {
+    path: "/match/:viewerId/viewerFlow",
+    element: <ViewerMatchFlow />,
+  },
 ]);
 
 export function App() {

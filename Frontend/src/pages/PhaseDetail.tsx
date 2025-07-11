@@ -29,7 +29,7 @@ const PhaseDetail: React.FC = () => {
     usePhaseMatchdays(phaseId);
   const { data: registrations = [] } =
     useRegistrationsByTournament(tournamentId);
-
+  console.log("regis", registrations);
   const { mutate: resetStats } = useResetTeamStats();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;

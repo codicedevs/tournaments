@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { TrophyIcon, UsersIcon, UserIcon } from "lucide-react";
+import PongGame from "./PongGame";
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const menuItems = [
@@ -74,6 +76,18 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+        <div className="mt-10">
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => navigate("/match/asd/viewerFlow")}
+              className="py-2 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow transition text-lg"
+            >
+              Ver partidos por veedor
+            </button>
+          </div>
+          <br />
+          {/* <PongGame /> */}
         </div>
       </main>
     </div>

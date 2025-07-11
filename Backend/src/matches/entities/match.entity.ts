@@ -8,14 +8,14 @@ export class MatchEvent {
   @Prop({ required: true, enum: MatchEventType })
   type: MatchEventType;
 
-  @Prop({ required: true })
-  minute: number;
+  @Prop({ required: false })
+  minute?: number;
 
-  @Prop({ required: true, enum: ['TeamA', 'TeamB'] })
-  team: 'TeamA' | 'TeamB';
+  @Prop({ required: false, enum: ['TeamA', 'TeamB'] })
+  team?: 'TeamA' | 'TeamB';
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
-  playerId: Types.ObjectId;
+  @Prop({ required: false, type: Types.ObjectId, ref: 'Player' })
+  playerId?: Types.ObjectId;
 
   @Prop({ type: Date, default: Date.now })
   timestamp: Date;
@@ -31,6 +31,9 @@ export class PlayerMatch {
 
   @Prop({ default: true })
   enableToPlay: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'Team', required: true })
+  teamId: Types.ObjectId;
 }
 
 @Schema({

@@ -58,10 +58,6 @@ export class MatchesService {
     return match.save();
   }
 
-  async findAllMatches(): Promise<Match[]> {
-    return this.matchModel.find().populate('teamA teamB matchDayId').exec();
-  }
-
   async findMatchesByMatchDay(matchDayId: string): Promise<Match[]> {
     if (!isValidObjectId(matchDayId)) {
       throw new BadRequestException('Invalid matchday ID');
@@ -72,15 +68,67 @@ export class MatchesService {
       .exec();
   }
 
-  async findAll(): Promise<Match[]> {
-    return this.matchModel.find().exec();
+  async findAll(filter: Record<string, string>): Promise<Match[]> {
+    return this.matchModel
+      .find(filter)
+      .populate({
+        path: 'teamA teamB',
+      })
+      .populate({
+        path: 'matchDayId',
+        populate: {
+          path: 'phaseId',
+          populate: {
+            path: 'tournamentId',
+          },
+        },
+      })
+      .exec();
   }
 
-  async findOne(id: string): Promise<Match> {
-    const match = await this.matchModel.findById(id).exec();
+  async findOne(id: string): Promise<any> {
+    const match = await this.matchModel
+      .findById(id)
+      .populate('teamA')
+      .populate('teamB')
+      .lean()
+      .exec();
+
+    // populate manual
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
+    if (match.events && match.events.some((event) => event.playerId)) {
+      const playerIds = match.events
+        .map((event) => event.playerId)
+        .filter((id) => id != null);
+
+      const players = await this.playerModel
+        .find({ _id: { $in: playerIds } })
+        .populate({
+          path: 'userId',
+          select: 'name', // Solo traigo el nombre del usuario
+        })
+        .select('userId') // Solo traigo el userId en el player
+        .lean();
+
+      const playersWithName = players.map((player) => ({
+        _id: player._id,
+        name: player.userId?.name || null,
+      }));
+
+      const playersMap = new Map(
+        playersWithName.map((p) => [p._id.toString(), p]),
+      );
+
+      match.events = match.events.map((event) => ({
+        ...event,
+        player: event.playerId
+          ? (playersMap.get(event.playerId?.toString()) ?? null)
+          : null,
+      }));
+    }
+
     return match;
   }
 
@@ -107,42 +155,75 @@ export class MatchesService {
   }
 
   async addEvent(id: string, event: MatchEventDto): Promise<Match> {
-    const match = await this.findOne(id);
+    const systemEvents = [
+      'start_first_half',
+      'end_first_half',
+      'start_second_half',
+      'end_second_half',
+    ];
+    if (systemEvents.includes(event.type)) {
+      return this.addSystemEvent(id, event);
+    } else {
+      return this.addMatchEvent(id, event);
+    }
+  }
+
+  async addSystemEvent(id: string, event: MatchEventDto): Promise<Match> {
+    const match = await this.matchModel
+      .findById(id)
+      .populate('teamA')
+      .populate('teamB')
+      .exec();
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
-
     if (match.completed) {
       throw new BadRequestException('Cannot add events to a completed match');
     }
-
-    // Validar que el evento tenga todos los campos requeridos
-    if (!event.type || !event.minute || !event.team || !event.playerId) {
-      throw new BadRequestException('All event fields are required');
+    if (!match.events) {
+      match.events = [];
     }
-    //ESTO LO PODRIA VALIDAR EN EL DTO
+    match.events.push({
+      type: event.type,
+      minute: event.minute ?? 0,
+      timestamp: new Date(),
+    });
+    return match.save();
+  }
 
-    // Verificar que el jugador existe
+  async addMatchEvent(id: string, event: MatchEventDto): Promise<Match> {
+    const match = await this.matchModel
+      .findById(id)
+      .populate('teamA')
+      .populate('teamB')
+      .exec();
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+    if (match.completed) {
+      throw new BadRequestException('Cannot add events to a completed match');
+    }
+    // Validación de jugador y equipo
     const player = await this.playerModel.findById(
       new Types.ObjectId(event.playerId),
     );
-
     if (!player) {
       throw new NotFoundException(`Player with ID ${event.playerId} not found`);
     }
-
-    // Verificar que el jugador pertenece al equipo correcto
-    const teamId = event.team === 'TeamA' ? match.teamA : match.teamB;
+    const teamId = event.team === 'TeamA' ? match.teamA._id : match.teamB._id;
     if (player.teamId.toString() !== teamId.toString()) {
       throw new BadRequestException(
         'Player does not belong to the specified team',
       );
     }
-
-    // Agregar el evento
+    if (!match.events) {
+      match.events = [];
+    }
     match.events.push({
       ...event,
-      timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
+      minute: event.minute ?? 0,
+      playerId: new Types.ObjectId(event.playerId),
+      timestamp: new Date(),
     });
 
     // Actualizar los scores basados en los eventos
@@ -510,5 +591,46 @@ export class MatchesService {
 
     // Eliminar el partido
     await this.matchModel.findByIdAndDelete(id);
+  }
+
+  async findByFilters(filters: {
+    refereeId?: string;
+    viewerId?: string;
+    fieldNumber?: string;
+  }): Promise<Match[]> {
+    const query: any = {};
+    if (filters.refereeId) query.refereeId = filters.refereeId;
+    if (filters.viewerId) query.viewerId = filters.viewerId;
+    if (filters.fieldNumber) query.fieldNumber = filters.fieldNumber;
+    return this.matchModel
+      .find(query)
+      .populate({
+        path: 'teamA teamB',
+      })
+      .populate({
+        path: 'matchDayId',
+        populate: {
+          path: 'phaseId',
+          populate: {
+            path: 'tournamentId',
+          },
+        },
+      })
+      .exec();
+  }
+
+  async updatePlayerMatches(
+    matchId: string,
+    playerMatches: any[],
+  ): Promise<Match> {
+    const match = await this.matchModel.findByIdAndUpdate(
+      matchId,
+      { playerMatches },
+      { new: true },
+    );
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${matchId} not found`);
+    }
+    return match;
   }
 }

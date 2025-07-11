@@ -1,19 +1,30 @@
-import { IsEnum, IsNumber, IsIn, IsMongoId } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsIn,
+  IsMongoId,
+  isString,
+  IsString,
+  IsOptional,
+} from 'class-validator';
 import { MatchEventType } from '../enums/match-event-type.enum';
 import { Types } from 'mongoose';
+
+//TODO Chequear porque el MatchEventDto me da error cuando le mando desde el addEvent
 
 export class MatchEventDto {
   @IsEnum(MatchEventType)
   type: MatchEventType;
 
   @IsNumber()
-  minute: number;
+  @IsOptional()
+  minute?: number;
 
   @IsIn(['TeamA', 'TeamB'])
-  team: 'TeamA' | 'TeamB';
+  @IsOptional()
+  team?: 'TeamA' | 'TeamB';
 
-  @IsMongoId()
-  playerId: Types.ObjectId;
-
-  timestamp?: Date;
+  @IsString()
+  @IsOptional()
+  playerId?: string;
 }

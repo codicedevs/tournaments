@@ -7,6 +7,7 @@ import {
   Patch,
   BadRequestException,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { Match } from './entities/match.entity';
@@ -24,8 +25,10 @@ export class MatchesController {
   }
 
   @Get()
-  async findAllMatches(): Promise<Match[]> {
-    return this.matchesService.findAllMatches();
+  async findAllMatches(
+    @Query() filter: Record<string, string>,
+  ): Promise<Match[]> {
+    return this.matchesService.findAll(filter);
   }
 
   @Get('matchday/:matchDayId')
@@ -90,5 +93,13 @@ export class MatchesController {
   @Post(':id/complete')
   completeMatch(@Param('id') id: string) {
     return this.matchesService.completeMatch(id);
+  }
+
+  @Patch(':id/player-matches')
+  async updatePlayerMatches(
+    @Param('id') id: string,
+    @Body('playerMatches') playerMatches: any[],
+  ): Promise<Match> {
+    return this.matchesService.updatePlayerMatches(id, playerMatches);
   }
 }

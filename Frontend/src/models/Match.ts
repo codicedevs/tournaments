@@ -12,10 +12,29 @@ export enum MatchEventType {
 }
 
 export interface MatchEvent {
-  type: MatchEventType;
+  type:
+    | "goal"
+    | "card"
+    | "period"
+    | "system"
+    | "start_first_half"
+    | "end_first_half"
+    | "start_second_half"
+    | "end_second_half";
   minute: number;
-  team: "TeamA" | "TeamB";
-  playerId: string;
+  team?: "TeamA" | "TeamB";
+  playerId?: string;
+}
+
+// Tipado para populate anidado
+interface PopulatedPhase {
+  _id: string;
+  tournamentId?: { _id: string; name: string } | string;
+}
+
+interface PopulatedMatchday {
+  _id: string;
+  phaseId?: PopulatedPhase | string;
 }
 
 export interface Match {
@@ -27,11 +46,13 @@ export interface Match {
   awayScore: number;
   result: "TeamA" | "TeamB" | "Draw" | null;
   completed: boolean;
-  matchDayId: string;
+  matchDayId: string | PopulatedMatchday;
   events: MatchEvent[];
   viewerId?: string;
   refereeId?: string;
   fieldNumber?: string;
+  category?: string;
+  playerMatches?: any[];
 }
 
 export interface Team {

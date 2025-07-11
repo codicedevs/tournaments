@@ -5,8 +5,10 @@ import type { MatchEvent } from "../models/Match";
 
 const API_BASE = "http://localhost:3000";
 
-export const getMatches = async (): Promise<Match[]> => {
-  const res = await axios.get(`${API_BASE}/matches`);
+export const getMatches = async (
+  filter: Record<string, string>
+): Promise<Match[]> => {
+  const res = await axios.get(`${API_BASE}/matches`, { params: filter });
   return res.data;
 };
 
@@ -43,10 +45,11 @@ export const getMatchesByMatchday = async (
   return res.data;
 };
 
-export function useMatches() {
+export function useMatches(filter: Record<string, string> = {}) {
   return useQuery<Match[]>({
-    queryKey: ["matches"],
-    queryFn: getMatches,
+    queryKey: ["matches", filter],
+    queryFn: ({ queryKey }) =>
+      getMatches(queryKey[1] as Record<string, string>),
   });
 }
 
@@ -99,6 +102,7 @@ export function useUpdateMatch() {
       }
     },
     onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["match", variables.matchId] });
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       queryClient.invalidateQueries({ queryKey: ["registrations"] });
@@ -126,6 +130,44 @@ export function useCompleteMatch() {
         `${API_BASE}/matches/${matchId}/complete`
       );
       return response.data;
+    },
+  });
+}
+
+export const getMatchById = async (matchId: string): Promise<Match> => {
+  const res = await axios.get(`${API_BASE}/matches/${matchId}`);
+  return res.data;
+};
+
+export function useMatchById(matchId: string | undefined) {
+  return useQuery<Match>({
+    queryKey: ["match", matchId],
+    queryFn: () => {
+      if (!matchId) throw new Error("No matchId");
+      return getMatchById(matchId);
+    },
+    enabled: !!matchId,
+  });
+}
+
+export function useUpdatePlayerMatches() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      matchId,
+      playerMatches,
+    }: {
+      matchId: string;
+      playerMatches: any[];
+    }) => {
+      const response = await axios.patch(
+        `${API_BASE}/matches/${matchId}/player-matches`,
+        { playerMatches }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match"] });
     },
   });
 }
