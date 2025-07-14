@@ -1,13 +1,21 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon, UploadIcon } from "lucide-react";
 import { useTeams, useAddPlayerToTeam } from "../api/teamHooks";
 import { RegisterPlayerData } from "../api/playerHooks";
 
-const RegisterPlayer: React.FC = () => {
+interface RegisterPlayerProps {
+  teamId?: string;
+  onSuccess?: () => void;
+}
+
+const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
+  teamId: propTeamId,
+  onSuccess,
+}) => {
   const navigate = useNavigate();
-  const { teamId } = useParams<{ teamId: string }>();
+  const { teamId: paramTeamId } = useParams<{ teamId: string }>();
   const { data: teams = [] } = useTeams();
   const { mutate: addPlayerToTeam, isPending } = useAddPlayerToTeam();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -17,9 +25,17 @@ const RegisterPlayer: React.FC = () => {
     email: "",
     password: "",
     phone: "",
-    teamId: teamId || "",
+    teamId: propTeamId || paramTeamId || "",
     profilePicture: undefined,
   });
+
+  // Si la prop teamId cambia, actualiza el formData
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      teamId: propTeamId || paramTeamId || "",
+    }));
+  }, [propTeamId, paramTeamId]);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -35,7 +51,11 @@ const RegisterPlayer: React.FC = () => {
       { teamId: formData.teamId, playerData: formData },
       {
         onSuccess: () => {
-          navigate(`/teams/${teamId}/players`);
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            navigate(`/teams/${formData.teamId}/players`);
+          }
         },
         onError: (error) => {
           console.error(
@@ -79,7 +99,7 @@ const RegisterPlayer: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(`/teams/${teamId}/players`)}
+            onClick={() => navigate(`/teams/${propTeamId}/players`)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />

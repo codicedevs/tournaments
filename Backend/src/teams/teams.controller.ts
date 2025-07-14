@@ -16,6 +16,8 @@ import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { Team } from './entities/team.entity';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('teams')
 export class TeamsController {
@@ -24,6 +26,7 @@ export class TeamsController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log('entro?', file);
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -66,7 +69,28 @@ export class TeamsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTeamDto: UpdateTeamDto) {
+  @UseInterceptors(
+    FileInterceptor('profileImage', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  update(
+    @Param('id') id: string,
+    @Body() updateTeamDto: UpdateTeamDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+      updateTeamDto.profileImage = `${baseUrl}/uploads/${file.filename}`;
+    }
     return this.teamsService.update(id, updateTeamDto);
   }
 

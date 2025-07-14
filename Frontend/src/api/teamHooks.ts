@@ -46,12 +46,21 @@ export const createTeam = async (data: any): Promise<Team> => {
 export const updateTeam = async ({
   id,
   data,
+  isFormData,
 }: {
   id: string;
-  data: Partial<Team>;
+  data: Partial<Team> | FormData;
+  isFormData?: boolean;
 }): Promise<Team> => {
-  const res = await axios.patch(`${API_BASE}/teams/${id}`, data);
-  return res.data;
+  if (isFormData) {
+    const res = await axios.patch(`${API_BASE}/teams/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data;
+  } else {
+    const res = await axios.patch(`${API_BASE}/teams/${id}`, data);
+    return res.data;
+  }
 };
 
 // Delete a team
