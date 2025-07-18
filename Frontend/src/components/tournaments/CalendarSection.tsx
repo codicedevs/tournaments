@@ -36,7 +36,7 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
           </p>
         </div>
       ) : (
-        <div className="divide-y">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
           {matchdays.map((matchday) => (
             <MatchdayItem
               key={matchday._id}

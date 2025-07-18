@@ -14,6 +14,10 @@ import {
 } from '../matchdays/entities/matchday.entity';
 import { Phase, PhaseSchema } from '../phases/entities/phase.entity';
 import { Player, PlayerSchema } from '../players/entities/player.entity';
+import {
+  MatchObservations,
+  MatchObservationsSchema,
+} from './entities/match.entity';
 
 @Module({
   imports: [
@@ -24,6 +28,7 @@ import { Player, PlayerSchema } from '../players/entities/player.entity';
       { name: Matchday.name, schema: MatchdaySchema },
       { name: Phase.name, schema: PhaseSchema },
       { name: Player.name, schema: PlayerSchema },
+      { name: MatchObservations.name, schema: MatchObservationsSchema },
     ]),
   ],
   controllers: [MatchesController],

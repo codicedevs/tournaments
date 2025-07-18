@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTeamPlayers } from "../api/teamHooks";
 import { useMatchById, useUpdatePlayerMatches } from "../api/matchHooks";
 import type { Player, ConfirmTeamsProps } from "../interfaces/interfaces.match";
+import { Modal } from "antd";
+import PlayerFile from "../components/players/playerFile";
 
 const minPlayers = 1;
 
@@ -35,6 +37,8 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle"
   );
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const playerMatches = match?.playerMatches || [];
 
@@ -48,7 +52,6 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
       const selectedBInit: string[] = [];
       const jerseysAInit: { [id: string]: number } = {};
       const jerseysBInit: { [id: string]: number } = {};
-      console.log("asd", playerMatches);
       playerMatches.forEach((pm) => {
         if (pm.teamId === teamAId) {
           selectedAInit.push(pm.playerId);
@@ -208,9 +211,10 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
             </div>
             <button
               className="bg-gray-600 text-white px-3 py-1 rounded-md text-xs hover:bg-gray-700 transition"
-              onClick={() =>
-                alert(`Ver detalles del jugador ${player.user?.name}`)
-              }
+              onClick={() => {
+                setSelectedUserId(player.user?._id);
+                setShowUserModal(true);
+              }}
               type="button"
             >
               Detalles
@@ -475,6 +479,49 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
           )}
         </div>
       </div>
+      <Modal
+        open={showUserModal}
+        onCancel={() => setShowUserModal(false)}
+        footer={null}
+        title="Perfil del Jugador"
+        width={400}
+        destroyOnClose
+      >
+        {selectedUserId &&
+          (() => {
+            const player = [...playersA, ...playersB].find(
+              (p: any) => p.user?._id === selectedUserId
+            );
+            const teamName =
+              player && player.teamId === teamAId
+                ? teamAName
+                : player && player.teamId === teamBId
+                ? teamBName
+                : "";
+            const isCaptain =
+              (player &&
+                player.teamId === teamAId &&
+                match?.teamA?.captain === player.user?._id) ||
+              (player &&
+                player.teamId === teamBId &&
+                match?.teamB?.captain === player.user?._id);
+            if (!player) return <div>No se encontró el jugador.</div>;
+            return (
+              <PlayerFile
+                name={player.user?.name || ""}
+                profilePicture={player.user?.profilePicture}
+                phone={player.user?.phone}
+                teamName={teamName}
+                isCaptain={isCaptain}
+                isVerified={player.enabled}
+                dni={player.user?.dni}
+                onCheckDni={() =>
+                  alert("Funcionalidad de chequeo de DNI próximamente")
+                }
+              />
+            );
+          })()}
+      </Modal>
     </div>
   );
 };

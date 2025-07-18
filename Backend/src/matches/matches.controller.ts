@@ -8,16 +8,24 @@ import {
   BadRequestException,
   Delete,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { MatchesService } from './matches.service';
 import { Match } from './entities/match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { MatchEventDto } from './dto/match-event.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { MatchObservations } from './entities/match.entity';
 
 @Controller('matches')
 export class MatchesController {
-  constructor(private readonly matchesService: MatchesService) {}
+  constructor(
+    private readonly matchesService: MatchesService,
+    @InjectModel(MatchObservations.name)
+    private readonly matchObservationsModel: Model<MatchObservations>,
+  ) {}
 
   @Post()
   async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<Match> {
@@ -41,6 +49,11 @@ export class MatchesController {
   @Get(':id')
   findOne(@Param('id') id: string): Promise<Match> {
     return this.matchesService.findOne(id);
+  }
+
+  @Get(':id/tournament-details')
+  getMatchTournamentDetails(@Param('id') id: string): Promise<any> {
+    return this.matchesService.getMatchTournamentDetails(id);
   }
 
   @Patch(':id')
@@ -101,5 +114,38 @@ export class MatchesController {
     @Body('playerMatches') playerMatches: any[],
   ): Promise<Match> {
     return this.matchesService.updatePlayerMatches(id, playerMatches);
+  }
+
+  // Observaciones del partido
+  @Get(':matchId/observations')
+  async getObservations(@Param('matchId') matchId: string) {
+    const obs = await this.matchObservationsModel.findOne({
+      matchId: new Types.ObjectId(matchId),
+    });
+    if (!obs) throw new NotFoundException('Observations not found');
+    return obs;
+  }
+
+  @Post(':matchId/observations')
+  async createObservations(
+    @Param('matchId') matchId: string,
+    @Body() body: any,
+  ) {
+    // body: { complaints, refereeEvaluation, redCardReport }
+    const created = new this.matchObservationsModel({ ...body, matchId });
+    return created.save();
+  }
+
+  @Patch(':matchId/observations')
+  async updateObservations(
+    @Param('matchId') matchId: string,
+    @Body() body: any,
+  ) {
+    const updated = await this.matchObservationsModel.findOneAndUpdate(
+      { matchId: new Types.ObjectId(matchId) },
+      body,
+      { new: true, upsert: true },
+    );
+    return updated;
   }
 }

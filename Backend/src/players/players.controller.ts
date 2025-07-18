@@ -31,6 +31,11 @@ export class PlayersController {
     return this.playersService.findByUser(req.user.id);
   }
 
+  @Get('by-user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.playersService.findByUser(userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.playersService.findOne(id);

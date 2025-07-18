@@ -8,7 +8,7 @@ const TournamentForm: React.FC = () => {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { mutate: createTournament, isLoading } = useCreateTournament();
+  const { mutate: createTournament, isPending } = useCreateTournament();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +22,13 @@ const TournamentForm: React.FC = () => {
     createTournament(
       { name: name.trim() },
       {
-        onSuccess: () => navigate("/tournaments"),
+        onSuccess: (data) => {
+          if (data && data._id) {
+            navigate(`/tournaments/${data._id}`);
+          } else {
+            navigate("/tournaments");
+          }
+        },
         onError: (error) => {
           console.error("Error creating tournament:", error);
           setError("Error al crear el torneo. Inténtelo de nuevo.");
@@ -66,7 +72,7 @@ const TournamentForm: React.FC = () => {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el nombre del torneo"
-                disabled={isLoading}
+                disabled={isPending}
               />
             </div>
             <div className="flex justify-end gap-3 mt-6">
@@ -74,16 +80,16 @@ const TournamentForm: React.FC = () => {
                 type="button"
                 onClick={() => navigate("/tournaments")}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                disabled={isLoading}
+                disabled={isPending}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-                disabled={isLoading}
+                disabled={isPending}
               >
-                {isLoading ? "Guardando..." : "Guardar"}
+                {isPending ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </form>

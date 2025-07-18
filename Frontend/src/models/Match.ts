@@ -1,3 +1,13 @@
+interface Viewer {
+  _id: string;
+  name: string;
+}
+
+interface Referee {
+  _id: string;
+  name: string;
+}
+
 export enum MatchResult {
   TEAM_A = "TeamA",
   TEAM_B = "TeamB",
@@ -15,6 +25,9 @@ export interface MatchEvent {
   type:
     | "goal"
     | "card"
+    | "yellowCard"
+    | "redCard"
+    | "blueCard"
     | "period"
     | "system"
     | "start_first_half"
@@ -48,8 +61,8 @@ export interface Match {
   completed: boolean;
   matchDayId: string | PopulatedMatchday;
   events: MatchEvent[];
-  viewerId?: string;
-  refereeId?: string;
+  viewerId?: Viewer;
+  refereeId?: Referee;
   fieldNumber?: string;
   category?: string;
   playerMatches?: any[];
@@ -59,4 +72,7 @@ export interface Team {
   _id: string;
   name: string;
   logo?: string;
+  players?: string[];
+  coach?: string;
+  captain?: string;
 }

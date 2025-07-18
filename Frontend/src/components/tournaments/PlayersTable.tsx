@@ -12,6 +12,11 @@ const PlayersTable: React.FC<PlayersTableProps> = ({ tournamentId }) => {
     isError,
   } = usePlayersByTournament(tournamentId);
 
+  // Filtrar jugadores con al menos 1 gol
+  const playersWithGoals = players.filter(
+    (player: any) => (player.stats?.goals ?? 0) > 0
+  );
+
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h2 className="text-lg font-bold mb-4">Tabla de Jugadores</h2>
@@ -23,9 +28,9 @@ const PlayersTable: React.FC<PlayersTableProps> = ({ tournamentId }) => {
         <div className="text-red-500 text-center py-8">
           Error al cargar jugadores.
         </div>
-      ) : players.length === 0 ? (
+      ) : playersWithGoals.length === 0 ? (
         <div className="text-gray-500 text-center py-8">
-          No hay jugadores para este torneo.
+          No hay goles registrados.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -42,7 +47,7 @@ const PlayersTable: React.FC<PlayersTableProps> = ({ tournamentId }) => {
               </tr>
             </thead>
             <tbody>
-              {players.map((player: any, idx: number) => (
+              {playersWithGoals.map((player: any, idx: number) => (
                 <tr key={player._id} className="border-t">
                   <td className="px-2 py-1">{idx + 1}</td>
                   <td className="px-2 py-1">{player.userId?.name || "-"}</td>

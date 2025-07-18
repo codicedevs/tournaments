@@ -198,17 +198,6 @@ const TeamList: React.FC = () => {
                       </button>
 
                       <button
-                        onClick={() =>
-                          navigate(`/teams/${team._id}/players/register`)
-                        }
-                        className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 mr-3"
-                        title="Registrar jugadores"
-                      >
-                        <UserPlusIcon size={16} />
-                        <span>Registrar Jugadores</span>
-                      </button>
-
-                      <button
                         onClick={() => navigate(`/teams/${team._id}/edit`)}
                         className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 mr-3"
                         title="Editar equipo"

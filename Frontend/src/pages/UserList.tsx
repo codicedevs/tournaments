@@ -1,12 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import { PlusIcon, ArrowLeftIcon } from "lucide-react";
-import { useUsers } from "../api/userHooks";
+import { PlusIcon, ArrowLeftIcon, Trash2Icon } from "lucide-react";
+import { useUsers, useDeleteUser, useDeleteUsers } from "../api/userHooks";
+import { UserRole } from "../models/User";
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
   const { data: users = [], isLoading, isError } = useUsers();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+  const deleteUser = useDeleteUser();
+  const deleteUsers = useDeleteUsers();
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selected.length === 0) return;
+    if (
+      window.confirm(`¿Seguro que deseas borrar ${selected.length} usuario(s)?`)
+    ) {
+      deleteUsers.mutate(selected, { onSuccess: () => setSelected([]) });
+    }
+  };
+
+  const handleDeleteOne = (id: string) => {
+    if (window.confirm("¿Seguro que deseas borrar este usuario?")) {
+      deleteUser.mutate(id, {
+        onSuccess: () =>
+          setSelected((prev) => prev.filter((sid) => sid !== id)),
+      });
+    }
+  };
+
+  // Filtrar y ordenar usuarios
+  const filteredUsers = users
+    .filter((user: any) => (roleFilter ? user.role === roleFilter : true))
+    .sort((a: any, b: any) => {
+      if (sortAsc) {
+        return a.role.localeCompare(b.role);
+      } else {
+        return b.role.localeCompare(a.role);
+      }
+    });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,7 +96,7 @@ const UserList: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-red-600 mb-4">Error al cargar jugadores.</p>
           </div>
-        ) : users.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">No hay jugadores disponibles.</p>
             <button
@@ -72,42 +113,81 @@ const UserList: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nombre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Correo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rol
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                    <select
+                      value={roleFilter}
+                      onChange={(e) => setRoleFilter(e.target.value)}
+                      className="w-40 border border-gray-300 rounded px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Todos los roles</option>
+                      {Object.values(UserRole).map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Borrar
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((user: any) => (
+                {filteredUsers.map((user: any) => (
                   <tr
                     key={user._id}
-                    className="cursor-pointer hover:bg-blue-50"
-                    onClick={() => navigate(`/users/${user._id}/edit`)}
+                    className={selected.includes(user._id) ? "bg-blue-50" : ""}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {user._id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      onClick={() => navigate(`/users/${user._id}/edit`)}
+                    >
                       {user.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      onClick={() => navigate(`/users/${user._id}/edit`)}
+                    >
                       {user.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      onClick={() => navigate(`/users/${user._id}/edit`)}
+                    >
                       {user.role}
+                    </td>
+                    <td className="px-2 py-4 text-center">
+                      <button
+                        className="text-red-600 hover:text-red-800"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteOne(user._id);
+                        }}
+                        title="Borrar usuario"
+                      >
+                        <Trash2Icon size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {selected.length > 0 && (
+          <div className="my-4 flex justify-end">
+            <button
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow"
+              onClick={handleDeleteSelected}
+              disabled={deleteUsers.isPending}
+            >
+              Borrar seleccionados ({selected.length})
+            </button>
           </div>
         )}
       </main>

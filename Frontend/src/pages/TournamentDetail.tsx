@@ -99,13 +99,6 @@ const TournamentDetail: React.FC = () => {
               <PlusIcon size={16} />
               <span>Nueva Fase</span>
             </button>
-            <button
-              onClick={() => navigate(`/tournaments/${tournamentId}/fixture`)}
-              className="flex items-center gap-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
-            >
-              <CalendarIcon size={16} />
-              <span>Ver Calendario</span>
-            </button>
           </div>
         </div>
 

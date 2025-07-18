@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Registration, PopulatedRegistration } from "../models/Registration";
-
-const API_BASE = "http://localhost:3000";
+import { API_BASE_URL } from "../config";
+const API_BASE = API_BASE_URL;
 
 // Get all registrations
 export const getRegistrations = async (): Promise<Registration[]> => {
@@ -79,6 +79,9 @@ export function useCreateRegistration() {
       queryClient.invalidateQueries({
         queryKey: ["registrations", "team", data.teamId],
       });
+    },
+    onError: (error) => {
+      console.error("Error creating registration:", error);
     },
   });
 }

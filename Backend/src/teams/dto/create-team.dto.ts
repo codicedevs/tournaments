@@ -4,4 +4,5 @@ export class CreateTeamDto {
   profileImage?: string;
   createdById: string;
   players?: string[];
+  captain?: string;
 }

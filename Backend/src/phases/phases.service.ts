@@ -197,37 +197,22 @@ export class PhasesService {
     const matchesPerRound = adjustedTeams.length / 2;
     const schedule: Array<Array<[Team, Team]>> = [];
 
-    // Create a copy of teams for rotation
-    const teamsCopy = [...adjustedTeams];
-    // Remove the first team which will stay fixed
-    const fixedTeam = teamsCopy.shift();
-
     for (let round = 0; round < rounds; round++) {
       const roundMatches: Array<[any, any]> = [];
-
-      // Fixed team plays against rotating team
-      if (fixedTeam !== null && teamsCopy[round % teamsCopy.length] !== null) {
-        if (round % 2 === 0) {
-          roundMatches.push([fixedTeam, teamsCopy[round % teamsCopy.length]]);
-        } else {
-          roundMatches.push([teamsCopy[round % teamsCopy.length], fixedTeam]);
+      for (let i = 0; i < matchesPerRound; i++) {
+        const homeIdx = (round + i) % (adjustedTeams.length - 1);
+        let awayIdx =
+          (adjustedTeams.length - 1 - i + round) % (adjustedTeams.length - 1);
+        if (i === 0) awayIdx = adjustedTeams.length - 1;
+        const homeTeam = adjustedTeams[homeIdx];
+        const awayTeam = adjustedTeams[awayIdx];
+        // No partido si hay bye
+        if (homeTeam && awayTeam) {
+          roundMatches.push([homeTeam, awayTeam]);
         }
       }
-
-      // Create matches for the rest of the teams
-      for (let i = 0; i < matchesPerRound - 1; i++) {
-        const team1Index = (round + i) % teamsCopy.length;
-        const team2Index =
-          (round + teamsCopy.length - 1 - i) % teamsCopy.length;
-
-        if (teamsCopy[team1Index] !== null && teamsCopy[team2Index] !== null) {
-          roundMatches.push([teamsCopy[team1Index], teamsCopy[team2Index]]);
-        }
-      }
-
       schedule.push(roundMatches);
     }
-
     return schedule;
   }
 

@@ -7,12 +7,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateUser } from "../api/userHooks";
 import { UserRole } from "../models/User";
+import axios from "axios";
+import { API_BASE_URL } from "../config";
 
 const userSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   email: z.string().email("Correo electrónico inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-  role: z.enum(["Admin", "Moderator"]),
+  role: z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -22,6 +24,9 @@ const UserCreate: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null
+  );
   const {
     mutate: createUser,
     isPending,
@@ -36,28 +41,39 @@ const UserCreate: React.FC = () => {
     formState: { errors },
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
-    defaultValues: { role: "Admin" },
+    defaultValues: { role: UserRole.PLAYER },
   });
 
   const onSubmit = (data: UserFormData) => {
-    const formData = new FormData();
-    formData.append("name", data.name);
-    formData.append("email", data.email);
-    formData.append("password", data.password);
-    formData.append("role", data.role);
-    if (avatarFile) {
-      formData.append("avatar", avatarFile);
-    }
-    createUser(formData, {
+    const userData = {
+      ...data,
+      profilePicture: profilePictureUrl || undefined,
+    };
+    createUser(userData, {
       onSuccess: () => navigate("/users"),
     });
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
+      // Subir la imagen al backend
+      const formDataFile = new FormData();
+      formDataFile.append("file", file);
+      try {
+        const res = await axios.post(
+          `${API_BASE_URL}/users/upload`,
+          formDataFile,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        setProfilePictureUrl(res.data.url);
+      } catch (err) {
+        alert("Error subiendo la imagen de perfil");
+      }
     }
   };
 
@@ -177,8 +193,11 @@ const UserCreate: React.FC = () => {
                 {...register("role")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="Admin">Admin</option>
-                <option value="Moderator">Moderador</option>
+                {Object.values(UserRole).map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
               </select>
               {errors.role && (
                 <div className="text-red-600 text-sm mt-1">

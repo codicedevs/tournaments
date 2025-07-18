@@ -32,6 +32,7 @@ import ViewerMatchList from "./pages/ViewerMatchList";
 import MatchOn from "./pages/MatchOn";
 import ConfirmTeams from "./pages/ComfirmTeams";
 import ViewerMatchFlow from "./pages/ViewerMatchFlow";
+import MatchReport from "./pages/MatchReport";
 
 const queryClient = new QueryClient();
 
@@ -103,8 +104,12 @@ const router = createBrowserRouter([
   { path: "/match/:matchId/confirm-teams", element: <ConfirmTeams /> },
   { path: "/match/:matchId/OnMatch", element: <MatchOn /> },
   {
-    path: "/match/:viewerId/viewerFlow",
+    path: "/match/viewerFlow",
     element: <ViewerMatchFlow />,
+  },
+  {
+    path: "/match/:matchId/report",
+    element: <MatchReport confirmedPlayers={[]} />,
   },
 ]);
 

@@ -95,15 +95,21 @@ const MatchdayList: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="divide-y">
-              {sortedMatchdays.map((matchday) => (
-                <MatchdayItem
-                  key={matchday._id}
-                  matchday={matchday}
-                  isExpanded={!!expandedMatchdays[matchday._id]}
-                  onToggle={() => toggleMatchday(matchday._id)}
-                />
-              ))}
+            <div className="w-full max-w-4xl mx-auto px-2">
+              <div className="flex flex-wrap gap-6">
+                {sortedMatchdays.map((matchday) => (
+                  <div
+                    key={matchday._id}
+                    className="w-full sm:w-[calc(50%-0.75rem)] flex-1 min-w-[280px]"
+                  >
+                    <MatchdayItem
+                      matchday={matchday}
+                      isExpanded={!!expandedMatchdays[matchday._id]}
+                      onToggle={() => toggleMatchday(matchday._id)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -117,12 +123,14 @@ interface MatchdayItemProps {
   matchday: any;
   isExpanded: boolean;
   onToggle: () => void;
+  isComplete: boolean;
 }
 
 const MatchdayItem: React.FC<MatchdayItemProps> = ({
   matchday,
   isExpanded,
   onToggle,
+  isComplete,
 }) => {
   const { data: matches = [], isLoading } = useMatchdayMatches(
     isExpanded ? matchday._id : undefined

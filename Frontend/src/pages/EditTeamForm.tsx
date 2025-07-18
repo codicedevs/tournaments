@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Header from "../components/layout/Header";
-import { ArrowLeftIcon, Upload, PlusIcon } from "lucide-react";
+import { ArrowLeftIcon, Upload, PlusIcon, Star } from "lucide-react";
 import { useTeam, useUpdateTeam, useTeamPlayers } from "../api/teamHooks";
 import { useUser } from "../api/userHooks";
 import RegisterPlayer from "./RegisterPlayer";
@@ -25,6 +25,7 @@ const EditTeamForm: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   // Get team data
   const { data: team, isLoading: isTeamLoading } = useTeam(teamId || "");
@@ -122,6 +123,26 @@ const EditTeamForm: React.FC = () => {
     );
   };
 
+  // PATCH para asignar capitán
+  const handleSetCaptain = (userId: string) => {
+    if (!teamId) return;
+    updateTeam(
+      {
+        id: teamId,
+        data: { captain: userId as string },
+        isFormData: false,
+      },
+      {
+        onSuccess: () => {
+          // Refresca la vista automáticamente por react-query
+        },
+        onError: (error) => {
+          setError("Error al asignar capitán");
+        },
+      }
+    );
+  };
+
   const isLoading = isTeamLoading || isUpdating;
 
   return (
@@ -169,7 +190,6 @@ const EditTeamForm: React.FC = () => {
               <h1 className="text-3xl font-bold mb-1">
                 {team?.name || "Equipo"}
               </h1>
-              <p className="text-md text-blue-100">ID: {teamId}</p>
             </div>
           </div>
 
@@ -265,37 +285,79 @@ const EditTeamForm: React.FC = () => {
                     No hay jugadores en este equipo.
                   </div>
                 ) : (
-                  players.map((p: any) => (
-                    <div
-                      key={p.user?._id || p._id}
-                      className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 hover:bg-blue-50 cursor-pointer transition"
-                      onClick={() =>
-                        navigate(
-                          p.user
-                            ? `/users/${p.user._id}/edit`
-                            : `/users/${p._id}/edit`
-                        )
-                      }
-                    >
-                      {p.user?.profilePicture ? (
-                        <img
-                          src={p.user.profilePicture}
-                          alt={p.user.name}
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-500">
-                          {p.user?.name?.charAt(0).toUpperCase() || "?"}
+                  players.map((p: any) => {
+                    const isCaptain = team?.captain === p.user?._id;
+                    const isSelected = selectedPlayerId === p.user?._id;
+                    return (
+                      <div
+                        key={p.user?._id || p._id}
+                        className={`flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 hover:bg-blue-50 cursor-pointer transition relative ${
+                          isSelected ? "ring-2 ring-blue-400" : ""
+                        }`}
+                        onClick={() => setSelectedPlayerId(p.user._id)}
+                      >
+                        {/* Imagen: click navega a ficha */}
+                        {p.user?.profilePicture ? (
+                          <img
+                            src={p.user.profilePicture}
+                            alt={p.user.name}
+                            className="h-8 w-8 rounded-full object-cover cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/users/${p.user._id}/edit`);
+                            }}
+                          />
+                        ) : (
+                          <div
+                            className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/users/${p.user._id}/edit`);
+                            }}
+                          >
+                            {p.user?.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                        )}
+                        {/* Nombre: click navega a ficha */}
+                        <span
+                          className="font-medium text-gray-800 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/users/${p.user._id}/edit`);
+                          }}
+                        >
+                          {p.user ? p.user.name : p.name}
+                        </span>
+                        {/* Icono de capitán alineado a la derecha */}
+                        <div className="ml-auto flex items-center">
+                          {isCaptain && (
+                            <span
+                              title="Capitán"
+                              className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-400 text-white font-bold text-xs"
+                            >
+                              C
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <span className="font-medium text-gray-800">
-                        {p.user ? p.user.name : p.name}
-                      </span>
-                    </div>
-                  ))
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
+            {/* Botón para asignar capitán */}
+            {selectedPlayerId && (
+              <div className="flex justify-end mt-4">
+                <button
+                  type="button"
+                  className="px-4 py-2 rounded bg-yellow-400 text-white font-semibold hover:bg-yellow-500 shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => handleSetCaptain(selectedPlayerId)}
+                  disabled={team?.captain === selectedPlayerId}
+                >
+                  Asignar como Capitán
+                </button>
+              </div>
+            )}
             {/* Botones */}
             <div className="flex justify-end gap-3 mt-6">
               <button
@@ -332,6 +394,7 @@ const EditTeamForm: React.FC = () => {
             setIsModalOpen(false);
             // Opcional: refrescar la lista de jugadores si tienes un método para ello
           }}
+          hideLayout={true}
         />
       </Modal>
     </div>

@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
         <div className="mt-10">
           <div className="flex justify-center mt-6">
             <button
-              onClick={() => navigate("/match/asd/viewerFlow")}
+              onClick={() => navigate("/match/viewerFlow")}
               className="py-2 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow transition text-lg"
             >
               Ver partidos por veedor

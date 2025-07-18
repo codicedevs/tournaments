@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Phase, PhaseType } from "../models/Phase";
-
-const API_BASE = "http://localhost:3000";
+import { API_BASE_URL } from "../config";
+const API_BASE = API_BASE_URL;
 
 export const getPhases = async (): Promise<Phase[]> => {
   const res = await axios.get(`${API_BASE}/phases`);

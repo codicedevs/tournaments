@@ -36,6 +36,21 @@ export class PlayerMatch {
   teamId: Types.ObjectId;
 }
 
+@Schema()
+export class MatchObservations {
+  @Prop({ type: Types.ObjectId, ref: 'Match', required: true })
+  matchId: Types.ObjectId;
+
+  @Prop({ type: String })
+  complaints: string;
+
+  @Prop({ type: String })
+  refereeEvaluation: string;
+
+  @Prop({ type: String })
+  redCardReport: string;
+}
+
 @Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true },
@@ -99,3 +114,6 @@ MatchSchema.pre('save', function (next) {
   }
   next();
 });
+
+export const MatchObservationsSchema =
+  SchemaFactory.createForClass(MatchObservations);

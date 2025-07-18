@@ -24,7 +24,14 @@ export interface ConfirmedPlayer {
 
 export interface Event {
   id: string;
-  type: "goal" | "card" | "period" | "system";
+  type:
+    | "goal"
+    | "card"
+    | "yellowCard"
+    | "redCard"
+    | "blueCard"
+    | "period"
+    | "system";
   team?: "home" | "away";
   player?: Player | ConfirmedPlayer;
   cardType?: "yellow" | "blue" | "red";

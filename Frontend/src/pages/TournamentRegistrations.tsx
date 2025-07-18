@@ -29,6 +29,27 @@ const TournamentRegistrations: React.FC = () => {
   } = useTournament(tournamentId || "");
 
   const { mutate: deleteRegistration } = useDeleteRegistration();
+  const [selected, setSelected] = React.useState<string[]>([]);
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (selected.length === 0) return;
+    if (
+      !window.confirm(
+        `¿Seguro que deseas borrar ${selected.length} registro(s)?`
+      )
+    )
+      return;
+    selected.forEach((id) =>
+      deleteRegistration(id, { onSuccess: () => refetchRegistrations() })
+    );
+    setSelected([]);
+  };
 
   const isLoading = isLoadingRegistrations || isTournamentLoading;
   const isError = isRegistrationsError || isTournamentError;
@@ -144,8 +165,19 @@ const TournamentRegistrations: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selected.length === registrations.length &&
+                        registrations.length > 0
+                      }
+                      onChange={() => {
+                        if (selected.length === registrations.length)
+                          setSelected([]);
+                        else setSelected(registrations.map((r) => r._id));
+                      }}
+                    />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Equipo
@@ -165,9 +197,20 @@ const TournamentRegistrations: React.FC = () => {
                 {registrations.map((registration) => {
                   const team = getTeamInfo(registration);
                   return (
-                    <tr key={registration._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {team.id}
+                    <tr
+                      key={registration._id}
+                      className={
+                        selected.includes(registration._id)
+                          ? "bg-blue-50"
+                          : "hover:bg-gray-50"
+                      }
+                    >
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(registration._id)}
+                          onChange={() => toggleSelect(registration._id)}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {team.name}
@@ -196,6 +239,16 @@ const TournamentRegistrations: React.FC = () => {
                 })}
               </tbody>
             </table>
+            {selected.length > 0 && (
+              <div className="my-4 flex justify-end">
+                <button
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow"
+                  onClick={handleDeleteSelected}
+                >
+                  Borrar seleccionados ({selected.length})
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { User } from "../models";
+import { API_BASE_URL } from "../config";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = API_BASE_URL;
 
 export const getPlayers = async (): Promise<User[]> => {
   const res = await axios.get(`${API_BASE}/users`);
@@ -91,6 +92,19 @@ export function useDeletePlayerFromTeam() {
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "players"] });
     },
+  });
+}
+
+export const getPlayerByUserId = async (userId: string) => {
+  const res = await axios.get(`${API_BASE}/players/by-user/${userId}`);
+  return res.data;
+};
+
+export function usePlayerByUserId(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["player", "byUser", userId],
+    queryFn: () => (userId ? getPlayerByUserId(userId) : undefined),
+    enabled: !!userId,
   });
 }
 

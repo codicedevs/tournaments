@@ -25,6 +25,9 @@ export class Team extends Document {
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Player' }] })
   players: (Player | Types.ObjectId | string)[];
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
+  captain?: User;
 }
 
 export const TeamSchema = SchemaFactory.createForClass(Team);

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, isValidObjectId, Types } from 'mongoose';
+import mongoose, { Model, isValidObjectId, Types } from 'mongoose';
 import { Match } from './entities/match.entity';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { CreateMatchDto } from './dto/create-match.dto';
@@ -86,11 +86,48 @@ export class MatchesService {
       .exec();
   }
 
+  async getMatchTournamentDetails(id: string): Promise<any> {
+    const match = await this.matchModel.findById(id).lean().exec();
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${id} not found`);
+    }
+    // Obtener los IDs relacionados
+    const matchDayId = match.matchDayId;
+    let phaseId = new Types.ObjectId();
+    let tournamentId = new Types.ObjectId();
+    if (matchDayId) {
+      const matchday = await this.matchdayModel.findById(matchDayId).lean();
+      if (matchday && matchday.phaseId) {
+        phaseId = matchday.phaseId;
+        const phase = await this.phaseModel.findById(phaseId).lean();
+        if (phase && phase.tournamentId) {
+          tournamentId = phase.tournamentId;
+        }
+      }
+    }
+    return {
+      matchId: match._id?.toString?.() ?? match._id,
+      matchDayId: matchDayId?.toString?.() ?? matchDayId,
+      phaseId: phaseId
+        ? typeof phaseId === 'string'
+          ? phaseId
+          : phaseId
+        : undefined,
+      tournamentId: tournamentId
+        ? typeof tournamentId === 'string'
+          ? tournamentId
+          : tournamentId
+        : undefined,
+    };
+  }
+
   async findOne(id: string): Promise<any> {
     const match = await this.matchModel
       .findById(id)
       .populate('teamA')
       .populate('teamB')
+      .populate({ path: 'viewerId', select: 'name' })
+      .populate({ path: 'refereeId', select: 'name' })
       .lean()
       .exec();
 
@@ -219,6 +256,7 @@ export class MatchesService {
     if (!match.events) {
       match.events = [];
     }
+
     match.events.push({
       ...event,
       minute: event.minute ?? 0,
@@ -246,6 +284,8 @@ export class MatchesService {
       match.result = 'Draw';
     }
 
+    // (No actualizar stats.played, wins, draws, losses, points aquí)
+
     // Actualizar estadísticas de los equipos en sus registros
     const matchday = await this.matchdayModel.findById(match.matchDayId);
     if (!matchday) {
@@ -265,7 +305,7 @@ export class MatchesService {
           // Actualizar registro de TeamA
           await this.registrationModel.findOneAndUpdate(
             {
-              teamId: teamAId.toString(),
+              teamId: teamAId._id.toString(),
               tournamentId: tournamentId.toString(),
             },
             {
@@ -283,7 +323,7 @@ export class MatchesService {
           // Actualizar registro de TeamB
           await this.registrationModel.findOneAndUpdate(
             {
-              teamId: match.teamB.toString(),
+              teamId: match.teamB._id.toString(),
               tournamentId: tournamentId.toString(),
             },
             {
@@ -296,7 +336,7 @@ export class MatchesService {
           // Actualizar registro de TeamB
           await this.registrationModel.findOneAndUpdate(
             {
-              teamId: match.teamB.toString(),
+              teamId: match.teamB._id.toString(),
               tournamentId: tournamentId.toString(),
             },
             {
@@ -314,7 +354,7 @@ export class MatchesService {
           // Actualizar registro de TeamA
           await this.registrationModel.findOneAndUpdate(
             {
-              teamId: match.teamA.toString(),
+              teamId: match.teamA._id.toString(),
               tournamentId: tournamentId.toString(),
             },
             {
@@ -336,8 +376,8 @@ export class MatchesService {
             {
               teamId:
                 event.team === 'TeamA'
-                  ? match.teamA.toString()
-                  : match.teamB.toString(),
+                  ? match.teamA._id.toString()
+                  : match.teamB._id.toString(),
               tournamentId: tournamentId.toString(),
             },
             {
@@ -358,8 +398,8 @@ export class MatchesService {
           {
             teamId:
               event.team === 'TeamA'
-                ? match.teamA.toString()
-                : match.teamB.toString(),
+                ? match.teamA._id.toString()
+                : match.teamB._id.toString(),
             tournamentId: tournamentId.toString(),
           },
           {
@@ -379,8 +419,8 @@ export class MatchesService {
           {
             teamId:
               event.team === 'TeamA'
-                ? match.teamA.toString()
-                : match.teamB.toString(),
+                ? match.teamA._id.toString()
+                : match.teamB._id.toString(),
             tournamentId: tournamentId.toString(),
           },
           {
@@ -422,7 +462,7 @@ export class MatchesService {
     // Actualizar los campos en el registro
     await this.registrationModel.findOneAndUpdate(
       {
-        teamId: teamId.toString(),
+        teamId: teamId._id.toString(),
         tournamentId: tournamentId.toString(),
       },
       {
@@ -438,7 +478,7 @@ export class MatchesService {
   }
 
   async completeMatch(id: string): Promise<Match> {
-    const match = await this.findOne(id);
+    const match = await this.matchModel.findById(id);
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
@@ -459,7 +499,7 @@ export class MatchesService {
 
     const tournamentId = phase.tournamentId;
 
-    // Actualizar estadísticas de los equipos
+    // Actualizar estadísticas de los equipos SOLO AQUÍ
     const teamAGoals = match.events.filter(
       (e) => e.team === 'TeamA' && e.type === MatchEventType.GOAL,
     ).length;
@@ -469,7 +509,7 @@ export class MatchesService {
 
     // Actualizar registro de TeamA
     await this.registrationModel.findOneAndUpdate(
-      { teamId: match.teamA.toString(), tournamentId: tournamentId.toString() },
+      { teamId: match.teamA._id, tournamentId: tournamentId.toString() },
       {
         $inc: {
           'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
@@ -484,7 +524,10 @@ export class MatchesService {
 
     // Actualizar registro de TeamB
     await this.registrationModel.findOneAndUpdate(
-      { teamId: match.teamB.toString(), tournamentId: tournamentId.toString() },
+      {
+        teamId: match.teamB._id.toString(),
+        tournamentId: tournamentId.toString(),
+      },
       {
         $inc: {
           'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
@@ -551,7 +594,7 @@ export class MatchesService {
 
     // Actualizar registro de TeamA
     await this.registrationModel.findOneAndUpdate(
-      { teamId: match.teamA.toString(), tournamentId: tournamentId.toString() },
+      { teamId: match.teamA._id, tournamentId: tournamentId.toString() },
       {
         $inc: {
           'stats.goalsFor': -teamAGoals,
@@ -571,7 +614,7 @@ export class MatchesService {
 
     // Actualizar registro de TeamB
     await this.registrationModel.findOneAndUpdate(
-      { teamId: match.teamB.toString(), tournamentId: tournamentId.toString() },
+      { teamId: match.teamB._id, tournamentId: tournamentId.toString() },
       {
         $inc: {
           'stats.goalsFor': -teamBGoals,

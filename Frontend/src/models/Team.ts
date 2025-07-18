@@ -8,4 +8,5 @@ export interface Team {
   createdAt?: Date;
   createdById: string | User;
   players?: string[] | User[];
+  captain?: string | User;
 }

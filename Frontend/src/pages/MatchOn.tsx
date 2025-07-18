@@ -8,6 +8,8 @@ import {
 import { formatTime } from "../utils/functions";
 import { useMatchById, useUpdateMatch } from "../api/matchHooks";
 import type { Team } from "../models/Match";
+import { useNavigate } from "react-router-dom";
+import { translateEventType } from "../utils/functions";
 
 const MatchOn: React.FC<MatchOnProps> = ({
   matchId,
@@ -41,9 +43,10 @@ const MatchOn: React.FC<MatchOnProps> = ({
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { mutate: sendEvent } = useUpdateMatch();
+  const navigate = useNavigate();
 
   // Obtener datos del partido
-  const { data: match, isLoading } = useMatchById(matchId);
+  const { data: match, isPending } = useMatchById(matchId);
 
   // Separar jugadores por equipo
   const playersA = confirmedPlayers.filter(
@@ -56,6 +59,14 @@ const MatchOn: React.FC<MatchOnProps> = ({
   // Nombres de equipos
   const teamA: Team = match?.teamA || { _id: "", name: "Equipo A" };
   const teamB: Team = match?.teamB || { _id: "", name: "Equipo B" };
+  const refereeName =
+    typeof match?.refereeId === "object" && match.refereeId?.name
+      ? match.refereeId.name
+      : null;
+  const viewerName =
+    typeof match?.viewerId === "object" && match.viewerId?.name
+      ? match.viewerId.name
+      : null;
 
   // Cronómetro: iniciar, pausar, resetear
   useEffect(() => {
@@ -84,6 +95,19 @@ const MatchOn: React.FC<MatchOnProps> = ({
     }
   }, [eventModalOpen]);
 
+  // Actualizar marcador en tiempo real según los eventos
+  useEffect(() => {
+    if (!match?.events) return;
+    const home = match.events.filter(
+      (e: any) => e.type === "goal" && e.team === "TeamA"
+    ).length;
+    const away = match.events.filter(
+      (e: any) => e.type === "goal" && e.team === "TeamB"
+    ).length;
+    setHomeScore(home);
+    setAwayScore(away);
+  }, [match?.events]);
+
   // Jugadores según equipo seleccionado
   const playersForSelectedTeam =
     selectedTeam === "home"
@@ -97,13 +121,14 @@ const MatchOn: React.FC<MatchOnProps> = ({
       | "start_first_half"
       | "end_first_half"
       | "start_second_half"
-      | "end_second_half"
+      | "end_second_half",
+    minute: number = 0
   ) => {
     sendEvent({
       matchId,
       event: {
         type,
-        minute: 0,
+        minute,
       },
     });
   };
@@ -123,14 +148,17 @@ const MatchOn: React.FC<MatchOnProps> = ({
         },
       });
     } else if (eventType === "card" && selectedCardType) {
+      let cardEventType: "yellowCard" | "redCard" | "blueCard" = "yellowCard";
+      if (selectedCardType === "yellow") cardEventType = "yellowCard";
+      if (selectedCardType === "red") cardEventType = "redCard";
+      if (selectedCardType === "blue") cardEventType = "blueCard";
       sendEvent({
         matchId,
         event: {
-          type: "card",
+          type: cardEventType,
           team: backendTeam,
           playerId: selectedPlayer.playerId,
           minute,
-          ...(selectedCardType ? { cardType: selectedCardType } : {}),
         },
       });
     }
@@ -147,10 +175,17 @@ const MatchOn: React.FC<MatchOnProps> = ({
         <div className="text-lg opacity-90">
           {teamA.name} vs {teamB.name}
         </div>
+        {(refereeName || viewerName) && (
+          <div className="text-sm text-gray-300 mt-1">
+            {refereeName && <span>Árbitro: {refereeName}</span>}
+            {refereeName && viewerName && <span className="mx-2">|</span>}
+            {viewerName && <span>Veedor: {viewerName}</span>}
+          </div>
+        )}
       </div>
       <button
         className="bg-white/20 text-white px-6 py-3 rounded-xl text-lg hover:bg-white/30 transition"
-        onClick={onBack}
+        onClick={() => onBack(secondHalfStarted)}
       >
         ← Gestión Jugadores
       </button>
@@ -275,7 +310,10 @@ const MatchOn: React.FC<MatchOnProps> = ({
           <button
             className="bg-red-500 text-white py-3 rounded-xl font-bold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
             onClick={() => {
-              handleRegisterSystemEvent("end_first_half");
+              handleRegisterSystemEvent(
+                "end_first_half",
+                Math.floor(timer / 60)
+              );
               setTimer(0);
               setTimerRunning(false);
               setFirstHalfEnded(true);
@@ -303,7 +341,10 @@ const MatchOn: React.FC<MatchOnProps> = ({
           <button
             className="bg-red-700 text-white py-3 rounded-xl font-bold text-lg"
             onClick={() => {
-              handleRegisterSystemEvent("end_second_half");
+              handleRegisterSystemEvent(
+                "end_second_half",
+                Math.floor(timer / 60)
+              );
               setTimerRunning(false);
               setMatchEnded(true);
             }}
@@ -314,31 +355,6 @@ const MatchOn: React.FC<MatchOnProps> = ({
       </div>
     </div>
   );
-
-  const translateEventType = (type: string) => {
-    switch (type) {
-      case "goal":
-        return "Gol";
-      case "card":
-        return "Tarjeta";
-      case "yellowCard":
-        return "Tarjeta Amarilla";
-      case "redCard":
-        return "Tarjeta Roja";
-      case "blueCard":
-        return "Tarjeta Azul";
-      case "start_first_half":
-        return "Inicio Primer Tiempo";
-      case "end_first_half":
-        return "Fin Primer Tiempo";
-      case "start_second_half":
-        return "Inicio Segundo Tiempo";
-      case "end_second_half":
-        return "Fin Segundo Tiempo";
-      default:
-        return type;
-    }
-  };
 
   // EventList
   const EventList = () => (
@@ -379,27 +395,30 @@ const MatchOn: React.FC<MatchOnProps> = ({
                     )}
                   </span>
                 )}
-                {event.type === "card" && event.player && (
-                  <span>
-                    {event.cardType === "yellow" && "🟨"}
-                    {event.cardType === "blue" && "🟦"}
-                    {event.cardType === "red" && "🟥"}
-                    Tarjeta para{" "}
-                    <b>{event.player.name || event.player.user?.name}</b>
-                    {event.player.jerseyNumber && (
-                      <> (#{event.player.jerseyNumber})</>
-                    )}
-                    {event.team && (
-                      <>
-                        {" "}
-                        de{" "}
-                        <b>
-                          {event.team === "TeamA" ? teamA.name : teamB.name}
-                        </b>
-                      </>
-                    )}
-                  </span>
-                )}
+                {(event.type === "yellowCard" ||
+                  event.type === "blueCard" ||
+                  event.type === "redCard") &&
+                  event.player && (
+                    <span>
+                      {event.type === "yellowCard" && "🟨"}
+                      {event.type === "blueCard" && "🟦"}
+                      {event.type === "redCard" && "🟥"}
+                      Tarjeta para{" "}
+                      <b>{event.player.name || event.player.user?.name}</b>
+                      {event.player.jerseyNumber && (
+                        <> (#{event.player.jerseyNumber})</>
+                      )}
+                      {event.team && (
+                        <>
+                          {" "}
+                          de{" "}
+                          <b>
+                            {event.team === "TeamA" ? teamA.name : teamB.name}
+                          </b>
+                        </>
+                      )}
+                    </span>
+                  )}
                 {[
                   "start_first_half",
                   "end_first_half",
@@ -556,7 +575,9 @@ const MatchOn: React.FC<MatchOnProps> = ({
             <button
               className="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-bold shadow hover:bg-blue-700 transition"
               onClick={() => {
-                window.location.href = `/match/${matchId}/detail`;
+                navigate(`/match/${matchId}/report`, {
+                  state: { confirmedPlayers },
+                });
               }}
             >
               Ver ficha del partido

@@ -27,11 +27,7 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl my-10 overflow-hidden">
-      <div className="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-8 py-8">
-        <h1 className="text-3xl font-light mb-2">Mis Partidos Asignados</h1>
-        <div className="text-base opacity-80">Panel de Control - Veedor</div>
-      </div>
+    <div className="max-w-5xl mx-auto bg-white rounded-2xl  my-10 overflow-hidden">
       <div className="px-8 py-10">
         {matchesByViewer?.length === 0 && (
           <div className="text-center text-gray-500 py-12">
@@ -120,13 +116,17 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                 <div className="partido-actions flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200">
                   <button
                     className="btn btn-primary py-3 px-7 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-base shadow hover:from-indigo-600 hover:to-purple-600 transition"
-                    onClick={() =>
-                      onSelectMatch
-                        ? onSelectMatch(match._id)
-                        : navigate(`/match/${match._id}/confirm-teams`)
-                    }
+                    onClick={() => {
+                      if (match.completed) {
+                        navigate(`/match/${match._id}/report`);
+                      } else if (onSelectMatch) {
+                        onSelectMatch(match._id);
+                      } else {
+                        navigate(`/match/${match._id}/confirm-teams`);
+                      }
+                    }}
                   >
-                    Ver Detalles
+                    {match.completed ? "Ver Ficha" : "Ver Detalles"}
                   </button>
                 </div>
               </div>

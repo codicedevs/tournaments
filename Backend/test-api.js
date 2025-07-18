@@ -1,6 +1,9 @@
 const axios = require('axios');
 
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.API_BASE_URL;
+if (!API_URL) {
+  throw new Error('API_BASE_URL no está definida en las variables de entorno');
+}
 
 // Phase types enum - matching what we defined in the backend
 const PhaseType = {

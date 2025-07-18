@@ -23,24 +23,6 @@ import { extname } from 'path';
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log('entro?', file);
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
-    }
-
-    // Generate the file URL based on your server configuration
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
-    const url = `${baseUrl}/uploads/${file.filename}`;
-
-    return {
-      originalName: file.originalname,
-      filename: file.filename,
-      url,
-    };
-  }
   @Get('check-name')
   async checkNameExists(@Query('name') name: string) {
     console.log('Checking team name:', name);
@@ -82,7 +64,7 @@ export class TeamsController {
       }),
     }),
   )
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateTeamDto: UpdateTeamDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -120,5 +102,32 @@ export class TeamsController {
   @Get(':id/players')
   async getPlayersByTeam(@Param('id') teamId: string) {
     return this.teamsService.getPlayersByTeam(teamId);
+  }
+
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `profileImage-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  async uploadProfileImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+    const url = `${baseUrl}/uploads/${file.filename}`;
+    return {
+      originalName: file.originalname,
+      filename: file.filename,
+      url,
+    };
   }
 }

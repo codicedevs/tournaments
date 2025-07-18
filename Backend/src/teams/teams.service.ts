@@ -27,6 +27,7 @@ export class TeamsService {
 
   async create(createTeamDto: CreateTeamDto): Promise<Team> {
     const newTeam = new this.teamModel(createTeamDto);
+    console.log(createTeamDto);
     return newTeam.save();
   }
 
