@@ -11,6 +11,8 @@ import PhaseDetails from "../components/tournaments/PhaseDetails";
 import CalendarSection from "../components/tournaments/CalendarSection";
 import { useResetTeamStats } from "../api/teamHooks";
 import PlayersTable from "../components/tournaments/PlayersTable";
+import BestDefenseTable from "../components/tournaments/BestDefenseTable";
+import FairPlayTable from "../components/tournaments/FairPlayTable";
 
 const PhaseDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -121,18 +123,80 @@ const PhaseDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección superior: PhaseDetails centrado */}
-        <div className="mb-8">
-          <PhaseDetails
-            phase={phase}
-            registrationsCount={registrations.length}
-          />
+        {/* Sección superior: PhaseDetails centrado y con tarjeta destacada */}
+        <div className="mb-8 flex justify-center">
+          <div className="rounded-2xl shadow-2xl border-4 border-violet-800 bg-gradient-to-br from-violet-700 to-fuchsia-600 w-full max-w-2xl">
+            <div className="px-6 py-4 flex items-center gap-3 justify-center">
+              <span className="text-3xl">🏟️</span>
+              <span className="text-white font-extrabold text-2xl tracking-wide drop-shadow">
+                Detalles de la Fase
+              </span>
+            </div>
+            <div className="bg-white rounded-b-2xl p-6 flex justify-center">
+              <PhaseDetails
+                phase={phase}
+                registrationsCount={registrations.length}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Nueva fila: StandingsTable y PlayersTable a la par */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <StandingsTable registrations={registrations} />
-          <PlayersTable tournamentId={tournamentId!} />
+        {/* StandingsTable ajustada y banner a la derecha en md+ */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="flex justify-center">
+            <div>
+              <h2 className="text-2xl font-extrabold text-green-700 flex items-center gap-2 mb-4">
+                <span className="text-3xl">🏆</span>
+                Tabla de Posiciones
+              </h2>
+              <div className="max-w-fit">
+                <StandingsTable registrations={registrations} />
+              </div>
+            </div>
+          </div>
+          <div className="hidden md:flex flex-col items-center justify-center h-full w-full">
+            <div className="rounded-2xl shadow-xl bg-gradient-to-br from-green-400 via-yellow-200 to-white border-2 border-green-600 px-8 py-10 flex flex-col items-center">
+              <span className="text-5xl mb-4">⚽</span>
+              <span className="text-2xl font-bold text-green-900 mb-2 text-center">
+                ¡Vive la pasión del fútbol!
+              </span>
+              <span className="text-lg text-green-800 text-center">
+                Sigue las posiciones, estadísticas y el fair play de tu torneo
+                en tiempo real.
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="rounded-xl shadow border border-indigo-400 bg-white">
+            <div className="bg-indigo-600 rounded-t-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-xl">👥</span>
+              <span className="text-white font-bold text-base">Jugadores</span>
+            </div>
+            <div className="p-2">
+              <PlayersTable tournamentId={tournamentId!} />
+            </div>
+          </div>
+          <div className="rounded-xl shadow border border-emerald-400 bg-white">
+            <div className="bg-emerald-500 rounded-t-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-xl">🛡️</span>
+              <span className="text-white font-bold text-base">
+                Valla Menos Vencida
+              </span>
+            </div>
+            <div className="p-2">
+              <BestDefenseTable registrations={registrations} />
+            </div>
+          </div>
+          <div className="rounded-xl shadow border border-amber-400 bg-white">
+            <div className="bg-amber-500 rounded-t-xl px-4 py-2 flex items-center gap-2">
+              <span className="text-xl">🤝</span>
+              <span className="text-white font-bold text-base">Fair Play</span>
+            </div>
+            <div className="p-2">
+              <FairPlayTable registrations={registrations} />
+            </div>
+          </div>
         </div>
 
         {/* Sección inferior: Lista de jornadas y partidos */}

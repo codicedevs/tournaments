@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateUser } from "../api/userHooks";
+import { useCreatePlayerByUser } from "../api/playerHooks";
 import { UserRole } from "../models/User";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -34,6 +35,7 @@ const UserCreate: React.FC = () => {
     error,
     data,
   } = useCreateUser();
+  const { mutate: createPlayerByUser } = useCreatePlayerByUser();
 
   const {
     register,
@@ -50,7 +52,20 @@ const UserCreate: React.FC = () => {
       profilePicture: profilePictureUrl || undefined,
     };
     createUser(userData, {
-      onSuccess: () => navigate("/users"),
+      onSuccess: (newUser) => {
+        if (data.role === "Player" && newUser && newUser._id) {
+          createPlayerByUser(
+            { userId: newUser._id },
+            {
+              onSettled: () => navigate("/users"),
+              onError: () =>
+                alert("Error al crear el Player para este usuario"),
+            }
+          );
+        } else {
+          navigate("/users");
+        }
+      },
     });
   };
 

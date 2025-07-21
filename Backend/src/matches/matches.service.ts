@@ -248,6 +248,9 @@ export class MatchesService {
       throw new NotFoundException(`Player with ID ${event.playerId} not found`);
     }
     const teamId = event.team === 'TeamA' ? match.teamA._id : match.teamB._id;
+    if (!player.teamId) {
+      throw new BadRequestException('El jugador no pertenece a ningún equipo');
+    }
     if (player.teamId.toString() !== teamId.toString()) {
       throw new BadRequestException(
         'Player does not belong to the specified team',

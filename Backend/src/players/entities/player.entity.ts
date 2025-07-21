@@ -8,8 +8,8 @@ export class Player extends Document {
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   userId: User;
 
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Team', required: true })
-  teamId: Team;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Team', required: false })
+  teamId?: Team | null;
 
   @Prop({
     type: {

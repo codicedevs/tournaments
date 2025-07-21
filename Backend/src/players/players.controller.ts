@@ -21,6 +21,11 @@ export class PlayersController {
     return this.playersService.register(registerPlayerDto);
   }
 
+  @Post('by-user')
+  async createPlayerByUser(@Body() body: { userId: string; teamId?: string }) {
+    return this.playersService.createPlayerByUser(body.userId, body.teamId);
+  }
+
   @Get()
   findAll() {
     return this.playersService.findAll();

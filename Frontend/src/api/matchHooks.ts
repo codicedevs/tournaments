@@ -69,6 +69,7 @@ export interface MatchUpdateData {
   viewerId?: string;
   refereeId?: string;
   fieldNumber?: string;
+  date?: string;
 }
 
 export function useUpdateMatch() {

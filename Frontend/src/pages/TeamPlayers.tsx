@@ -3,16 +3,24 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 import { useDeletePlayerFromTeam } from "../api/playerHooks";
-import { useTeam, useTeamPlayers } from "../api/teamHooks";
+import { useTeam } from "../api/teamHooks";
+import { useAllPlayers } from "../api/playerHooks";
 import { User } from "../models/User";
 
 const TeamPlayers: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
   const { data: team } = useTeam(teamId || "");
-  const { data: players = [], isLoading, isError } = useTeamPlayers(teamId);
-
-  const playersList = players.map((player: any) => player.user);
+  const { data: allPlayers = [], isLoading, isError } = useAllPlayers();
+  // Filtrar los players que pertenecen a este equipo
+  const playersList = allPlayers.filter((player: any) => {
+    if (!teamId) return false;
+    if (!player.teamId) return false;
+    if (typeof player.teamId === "object") {
+      return player.teamId._id === teamId;
+    }
+    return player.teamId === teamId;
+  });
 
   const { mutate: deletePlayer, isPending: isDeleting } =
     useDeletePlayerFromTeam();
@@ -73,7 +81,7 @@ const TeamPlayers: React.FC = () => {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-red-600 mb-4">Error al cargar jugadores.</p>
           </div>
-        ) : players.length === 0 ? (
+        ) : playersList.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">
               No hay jugadores en este equipo.
@@ -106,33 +114,33 @@ const TeamPlayers: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {playersList.map((player: User) => (
+                {playersList.map((player: any) => (
                   <tr key={player._id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        {player.profilePicture ? (
+                        {player.userId?.profilePicture ? (
                           <img
-                            src={player.profilePicture}
-                            alt={player.name}
+                            src={player.userId.profilePicture}
+                            alt={player.userId.name}
                             className="h-10 w-10 rounded-full mr-3"
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
                             <span className="text-gray-500 text-sm">
-                              {player.name?.charAt(0)?.toUpperCase()}
+                              {player.userId?.name?.charAt(0)?.toUpperCase()}
                             </span>
                           </div>
                         )}
                         <div className="text-sm font-medium text-gray-900">
-                          {player.name}
+                          {player.userId?.name}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {player.email}
+                      {player.userId?.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {player.phone}
+                      {player.userId?.phone}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button

@@ -151,4 +151,34 @@ export class PlayersService {
       .sort({ 'stats.goals': -1 })
       .exec();
   }
+
+  async createPlayerByUser(userId: string, teamId?: string): Promise<Player> {
+    // Validar que el usuario existe y es rol Player
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    if (user.role !== Role.Player) {
+      throw new BadRequestException('El usuario no tiene rol Player');
+    }
+    // Validar que no exista ya un Player para ese userId
+    const existingPlayer = await this.playerModel.findOne({ userId }).exec();
+    if (existingPlayer) {
+      throw new BadRequestException('Ya existe un Player para este usuario');
+    }
+    // Crear Player
+    const createdPlayer = new this.playerModel({
+      userId: user._id,
+      teamId: teamId || null,
+      stats: {
+        goals: 0,
+        yellowCards: 0,
+        blueCards: 0,
+        redCards: 0,
+        assists: 0,
+        matchesPlayed: 0,
+      },
+    });
+    return createdPlayer.save();
+  }
 }

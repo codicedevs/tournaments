@@ -95,6 +95,29 @@ export function useDeletePlayerFromTeam() {
   });
 }
 
+export function useTransferPlayer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      playerId,
+      teamId,
+    }: {
+      playerId: string;
+      teamId: string;
+    }) => {
+      // PATCH al endpoint de jugadores para cambiar el teamId
+      const res = await axios.patch(`${API_BASE}/players/${playerId}`, {
+        teamId,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
 export const getPlayerByUserId = async (userId: string) => {
   const res = await axios.get(`${API_BASE}/players/by-user/${userId}`);
   return res.data;
@@ -105,6 +128,33 @@ export function usePlayerByUserId(userId: string | undefined) {
     queryKey: ["player", "byUser", userId],
     queryFn: () => (userId ? getPlayerByUserId(userId) : undefined),
     enabled: !!userId,
+  });
+}
+
+// Traer todos los Player (con _id y userId populado)
+export const getAllPlayers = async () => {
+  const res = await axios.get(`${API_BASE}/players`);
+  return res.data;
+};
+
+export function useAllPlayers() {
+  return useQuery({
+    queryKey: ["allPlayers"],
+    queryFn: getAllPlayers,
+  });
+}
+
+// Traer un Player por su _id
+export const getPlayerById = async (playerId: string) => {
+  const res = await axios.get(`${API_BASE}/players/${playerId}`);
+  return res.data;
+};
+
+export function usePlayerById(playerId: string | undefined) {
+  return useQuery({
+    queryKey: ["player", playerId],
+    queryFn: () => (playerId ? getPlayerById(playerId) : undefined),
+    enabled: !!playerId,
   });
 }
 
@@ -131,3 +181,28 @@ export const useRegisterPlayer = () => {
     },
   });
 };
+
+export const createPlayerByUser = async ({
+  userId,
+  teamId,
+}: {
+  userId: string;
+  teamId?: string;
+}) => {
+  const res = await axios.post(`${API_BASE}/players/by-user`, {
+    userId,
+    teamId,
+  });
+  return res.data;
+};
+
+export function useCreatePlayerByUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createPlayerByUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}

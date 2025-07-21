@@ -39,24 +39,6 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
                 DG
               </th>
               <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <span className="flex items-center justify-center gap-1">
-                  <span className="text-yellow-500">🟨</span>
-                  <span>TA</span>
-                </span>
-              </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <span className="flex items-center justify-center gap-1">
-                  <span className="text-blue-500">🟦</span>
-                  <span>TAz</span>
-                </span>
-              </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <span className="flex items-center justify-center gap-1">
-                  <span className="text-red-500">🟥</span>
-                  <span>TR</span>
-                </span>
-              </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Pts
               </th>
             </tr>
@@ -70,9 +52,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
                 losses: teamStats.losses || 0,
                 goalsFor: teamStats.goalsFor || 0,
                 goalsAgainst: teamStats.goalsAgainst || 0,
-                yellowCards: teamStats.yellowCards || 0,
-                blueCards: teamStats.blueCards || 0,
-                redCards: teamStats.redCards || 0,
+                // tarjetas eliminadas
               };
               const played = stats.wins + stats.draws + stats.losses;
               const points = stats.wins * 3 + stats.draws;
@@ -108,15 +88,6 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
                     {goalDiff}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
-                    {stats.yellowCards}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
-                    {stats.blueCards}
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
-                    {stats.redCards}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-medium text-gray-900">
                     {points}

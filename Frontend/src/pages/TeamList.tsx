@@ -10,12 +10,22 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { useTeams, useDeleteTeam, useDeleteTeams } from "../api/teamHooks";
+import { useAllPlayers } from "../api/playerHooks";
+import { useTransferPlayer } from "../api/playerHooks";
 import { Team } from "../models";
+import { Modal } from "antd";
 
 const TeamList: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [transferSourceTeam, setTransferSourceTeam] = useState<Team | null>(
+    null
+  );
+  const [transferPlayerId, setTransferPlayerId] = useState<string>("");
+  const [transferTargetTeamId, setTransferTargetTeamId] = useState<string>("");
+  const { data: allPlayers = [] } = useAllPlayers();
 
   // Get teams data
   const { data: teams = [], isLoading, isError } = useTeams();
@@ -24,6 +34,9 @@ const TeamList: React.FC = () => {
   const { mutate: deleteTeam, isPending: isDeleteLoading } = useDeleteTeam();
   const { mutate: deleteTeams, isPending: isBatchDeleteLoading } =
     useDeleteTeams();
+
+  const { mutate: transferPlayer, isPending: isTransfering } =
+    useTransferPlayer();
 
   // Handle checkbox change
   const handleSelectTeam = (teamId: string) => {
@@ -82,6 +95,30 @@ const TeamList: React.FC = () => {
     }
   };
 
+  // Abrir modal y cargar jugadores del equipo origen
+  const handleOpenTransfer = () => {
+    setTransferSourceTeam(null);
+    setTransferPlayerId("");
+    setTransferTargetTeamId("");
+    setIsTransferOpen(true);
+  };
+
+  // Transferir jugador
+  const handleTransfer = () => {
+    if (!transferPlayerId || !transferTargetTeamId) return;
+    transferPlayer(
+      { playerId: transferPlayerId, teamId: transferTargetTeamId },
+      {
+        onSuccess: () => {
+          setIsTransferOpen(false);
+        },
+        onError: () => {
+          alert("Error al transferir jugador");
+        },
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -114,14 +151,22 @@ const TeamList: React.FC = () => {
               </button>
             )}
           </div>
-
-          <button
-            onClick={() => navigate("/teams/new")}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
-          >
-            <PlusIcon size={18} />
-            <span>Crear Equipo</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleOpenTransfer}
+              className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md transition"
+            >
+              <UserPlusIcon size={18} />
+              <span>Transferir Jugador</span>
+            </button>
+            <button
+              onClick={() => navigate("/teams/new")}
+              className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+            >
+              <PlusIcon size={18} />
+              <span>Crear Equipo</span>
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -213,7 +258,6 @@ const TeamList: React.FC = () => {
                         title="Eliminar equipo"
                       >
                         <Trash2Icon size={16} />
-                        <span>Eliminar</span>
                       </button>
                     </td>
                   </tr>
@@ -223,6 +267,57 @@ const TeamList: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Modal de transferencia con antd */}
+      <Modal
+        open={isTransferOpen}
+        onCancel={() => setIsTransferOpen(false)}
+        onOk={handleTransfer}
+        okText="Transferir"
+        cancelText="Cancelar"
+        okButtonProps={{
+          disabled: !transferPlayerId || !transferTargetTeamId || isTransfering,
+        }}
+        title="Transferir Jugador"
+      >
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Jugador</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={transferPlayerId}
+            onChange={(e) => setTransferPlayerId(e.target.value)}
+          >
+            <option value="">Selecciona un jugador</option>
+            {allPlayers.map((p: any) => (
+              <option key={p._id} value={p._id}>
+                {p.userId?.name || p.userId?.email || p._id}{" "}
+                {p.teamId
+                  ? `(${
+                      typeof p.teamId === "object" ? p.teamId.name : p.teamId
+                    })`
+                  : "(Sin equipo)"}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Equipo destino
+          </label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={transferTargetTeamId}
+            onChange={(e) => setTransferTargetTeamId(e.target.value)}
+          >
+            <option value="">Selecciona un equipo</option>
+            {teams.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </Modal>
     </div>
   );
 };
