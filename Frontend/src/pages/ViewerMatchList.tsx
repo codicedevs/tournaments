@@ -1,5 +1,6 @@
 import { useMatches } from "../api/matchHooks";
 import { useNavigate } from "react-router-dom";
+import { MatchStatus } from "../models/Match";
 
 interface ViewerMatchListProps {
   viewerId: string;
@@ -17,10 +18,43 @@ function formatTime(dateStr?: string) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-const estadoClass = (completed: boolean) =>
-  completed
-    ? "bg-green-100 text-green-700 border border-green-300"
-    : "bg-blue-100 text-blue-700 border border-blue-300";
+const estadoClass = (status: MatchStatus, match: any) => {
+  // Si el status es UNASSIGNED pero tiene fecha y hora, mostrar como Programado
+  if (status === MatchStatus.UNASSIGNED && match.date) {
+    return "bg-blue-100 text-blue-700 border border-blue-300";
+  }
+  switch (status) {
+    case MatchStatus.IN_PROGRESS:
+      return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+    case MatchStatus.FINISHED:
+      return "bg-green-100 text-green-700 border border-green-300";
+    case MatchStatus.COMPLETED:
+      return "bg-green-400 text-green-900 border border-gray-400";
+    case MatchStatus.SCHEDULED:
+      return "bg-blue-100 text-blue-700 border border-blue-300";
+    default:
+      return "bg-gray-100 text-gray-500 border border-gray-200";
+  }
+};
+const estadoTexto = (status: MatchStatus, match: any) => {
+  if (status === MatchStatus.UNASSIGNED && match.date) {
+    return "Programado";
+  }
+  switch (status) {
+    case MatchStatus.UNASSIGNED:
+      return "Sin programar";
+    case MatchStatus.SCHEDULED:
+      return "Programado";
+    case MatchStatus.IN_PROGRESS:
+      return "En juego";
+    case MatchStatus.FINISHED:
+      return "Finalizado";
+    case MatchStatus.COMPLETED:
+      return "Completado";
+    default:
+      return "-";
+  }
+};
 
 const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
   const { data: matchesByViewer } = useMatches({ viewerId });
@@ -64,10 +98,11 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                   </div>
                   <div
                     className={`estado px-5 py-2 rounded-full text-sm font-bold capitalize border ${estadoClass(
-                      match.completed
+                      match.status,
+                      match
                     )}`}
                   >
-                    {match.completed ? "Finalizado" : "Programado"}
+                    {estadoTexto(match.status, match)}
                   </div>
                 </div>
                 <div className="partido-info grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
@@ -108,7 +143,8 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                     </div>
                   </div>
                 </div>
-                {match.completed && (
+                {(match.status === MatchStatus.FINISHED ||
+                  match.status === MatchStatus.COMPLETED) && (
                   <div className="text-center text-lg font-bold text-gray-700 mb-2">
                     Resultado: {match.homeScore} - {match.awayScore}
                   </div>
@@ -117,7 +153,10 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                   <button
                     className="btn btn-primary py-3 px-7 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-base shadow hover:from-indigo-600 hover:to-purple-600 transition"
                     onClick={() => {
-                      if (match.completed) {
+                      if (
+                        match.status === MatchStatus.FINISHED ||
+                        match.status === MatchStatus.COMPLETED
+                      ) {
                         navigate(`/match/${match._id}/report`);
                       } else if (onSelectMatch) {
                         onSelectMatch(match._id);
@@ -126,7 +165,10 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                       }
                     }}
                   >
-                    {match.completed ? "Ver Ficha" : "Ver Detalles"}
+                    {match.status === MatchStatus.COMPLETED ||
+                    match.status === MatchStatus.FINISHED
+                      ? "Ver Ficha"
+                      : "Ver Detalles"}
                   </button>
                 </div>
               </div>

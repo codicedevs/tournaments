@@ -61,8 +61,6 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
           jerseysBInit[pm.playerId] = pm.jerseyNumber;
         }
       });
-      console.log("A", selectedAInit);
-      console.log("B", selectedBInit);
 
       setSelectedA(selectedAInit);
       setSelectedB(selectedBInit);
@@ -212,7 +210,7 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
             <button
               className="bg-gray-600 text-white px-3 py-1 rounded-md text-xs hover:bg-gray-700 transition"
               onClick={() => {
-                setSelectedUserId(player.user?._id);
+                setSelectedUserId(player.playerId);
                 setShowUserModal(true);
               }}
               type="button"

@@ -31,7 +31,6 @@ const PhaseDetail: React.FC = () => {
     usePhaseMatchdays(phaseId);
   const { data: registrations = [] } =
     useRegistrationsByTournament(tournamentId);
-  console.log("regis", registrations);
   const { mutate: resetStats } = useResetTeamStats();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;
@@ -125,14 +124,8 @@ const PhaseDetail: React.FC = () => {
 
         {/* Sección superior: PhaseDetails centrado y con tarjeta destacada */}
         <div className="mb-8 flex justify-center">
-          <div className="rounded-2xl shadow-2xl border-4 border-violet-800 bg-gradient-to-br from-violet-700 to-fuchsia-600 w-full max-w-2xl">
-            <div className="px-6 py-4 flex items-center gap-3 justify-center">
-              <span className="text-3xl">🏟️</span>
-              <span className="text-white font-extrabold text-2xl tracking-wide drop-shadow">
-                Detalles de la Fase
-              </span>
-            </div>
-            <div className="bg-white rounded-b-2xl p-6 flex justify-center">
+          <div className="bg-white w-full p-0">
+            <div className="p-0 flex justify-start">
               <PhaseDetails
                 phase={phase}
                 registrationsCount={registrations.length}

@@ -42,7 +42,7 @@ export const deletePlayerFromTeam = async (
   teamId: string,
   playerId: string
 ): Promise<void> => {
-  await axios.delete(`${API_BASE}/teams/${teamId}/players/${playerId}`);
+  await axios.delete(`${API_BASE}/players/${playerId}/removeFromteam`);
 };
 
 export function usePlayers() {
@@ -91,6 +91,7 @@ export function useDeletePlayerFromTeam() {
       deletePlayerFromTeam(teamId, playerId),
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: ["teams", teamId, "players"] });
+      queryClient.invalidateQueries({ queryKey: ["allPlayers"] });
     },
   });
 }

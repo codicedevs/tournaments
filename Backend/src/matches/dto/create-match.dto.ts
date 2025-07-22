@@ -7,6 +7,7 @@ import {
   Min,
 } from 'class-validator';
 import { Types } from 'mongoose';
+import { MatchStatus } from '../enums/match-status.enum';
 
 export class CreateMatchDto {
   @IsMongoId()
@@ -33,9 +34,10 @@ export class CreateMatchDto {
   result?: 'TeamA' | 'TeamB' | 'Draw';
 
   @IsOptional()
-  @IsMongoId()
-  matchDayId?: string;
+  @IsEnum(MatchStatus)
+  status?: MatchStatus;
 
   @IsOptional()
-  completed?: boolean;
+  @IsMongoId()
+  matchDayId?: string;
 }

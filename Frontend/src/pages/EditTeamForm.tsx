@@ -71,7 +71,6 @@ const EditTeamForm: React.FC = () => {
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log("file", file);
     if (!file) return;
     setValue("profileImage", file);
     const reader = new FileReader();

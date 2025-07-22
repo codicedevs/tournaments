@@ -12,6 +12,7 @@ import { translateEventType, formatDate } from "../utils/functions";
 import type { ConfirmedPlayer } from "../interfaces/interfaces.match";
 import StandingsTable from "../components/tournaments/StandingsTable";
 import { useRegistrationsByTournament } from "../api/registrationHooks";
+import { MatchStatus } from "../models";
 
 interface MatchReportProps {
   confirmedPlayers: ConfirmedPlayer[];
@@ -29,7 +30,6 @@ const MatchReport: React.FC<
   const { data: match, isLoading } = useMatchById(matchId!);
 
   const { data: matchTournamentDetails } = useMatchTournamentDetails(matchId);
-  console.log("el torneo", matchTournamentDetails);
   const {
     data: registrations,
     isLoading: loadingStandings,
@@ -150,7 +150,8 @@ const MatchReport: React.FC<
   const completeMatchMutation = useCompleteMatch();
   const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
-  const soloLectura = props.soloLectura || match?.completed;
+  const soloLectura =
+    props.soloLectura || match?.status === MatchStatus.COMPLETED;
 
   const queryClient = useQueryClient();
 

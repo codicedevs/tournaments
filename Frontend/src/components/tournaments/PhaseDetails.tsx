@@ -19,47 +19,48 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
       : undefined;
   const tournamentName = tournament?.name || "-";
 
-  // Fechas hardcodeadas
-  const startDate = "1/1/2025";
-  const endDate = "31/12/2025";
+  // Fecha de inicio: usar createdAt del documento
+  const startDate = phase.createdAt
+    ? new Date(phase.createdAt).toLocaleDateString()
+    : "-";
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden p-6">
-      <h2 className="text-lg font-medium text-gray-800 mb-4">
+    <div className="bg-white p-8 w-full">
+      <h2 className="text-xl font-semibold text-gray-700 mb-6 border-b border-gray-200 pb-2">
         Detalles de la Fase
       </h2>
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between md:gap-16 gap-4">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between md:gap-16 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-600">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
             Liga
           </label>
-          <p className="mt-1 text-sm text-gray-900">{tournamentName}</p>
+          <p className="mt-1 text-lg text-gray-900 font-semibold">
+            {tournamentName}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
             Tipo
           </label>
-          <p className="mt-1 text-sm text-gray-900">{phase?.type}</p>
+          <p className="mt-1 text-base text-gray-700 font-normal">
+            {phase?.type}
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
             Equipos Registrados
           </label>
-          <p className="mt-1 text-sm text-gray-900">
+          <p className="mt-1 text-base text-gray-700 font-normal">
             {registrationsCount} equipos
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-600">
+          <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
             Fecha de inicio
           </label>
-          <p className="mt-1 text-sm text-gray-900">{startDate}</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600">
-            Fecha de finalización
-          </label>
-          <p className="mt-1 text-sm text-gray-900">{endDate}</p>
+          <p className="mt-1 text-base text-gray-700 font-normal">
+            {startDate}
+          </p>
         </div>
       </div>
     </div>

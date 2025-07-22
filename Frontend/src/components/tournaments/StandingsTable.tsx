@@ -6,7 +6,6 @@ interface StandingsTableProps {
 }
 
 const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
-  console.log("regis", registrations);
   return (
     <div className="bg-white rounded-lg shadow p-4">
       <h2 className="text-lg font-bold mb-4">Tabla de Posiciones</h2>

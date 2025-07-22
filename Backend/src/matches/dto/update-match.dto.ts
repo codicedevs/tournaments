@@ -7,6 +7,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { MatchStatus } from '../enums/match-status.enum';
 
 export class UpdateMatchDto {
   @IsOptional()
@@ -39,11 +40,12 @@ export class UpdateMatchDto {
   result?: 'TeamA' | 'TeamB' | 'Draw';
 
   @IsOptional()
-  @IsMongoId()
-  matchDayId?: string;
+  @IsEnum(MatchStatus)
+  status?: MatchStatus;
 
   @IsOptional()
-  completed?: boolean;
+  @IsMongoId()
+  matchDayId?: string;
 
   @IsOptional()
   @IsMongoId()

@@ -24,7 +24,7 @@ const TournamentForm: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data && data._id) {
-            navigate(`/tournaments/${data._id}`);
+            navigate(`/tournaments/${data._id}/registrations`);
           } else {
             navigate("/tournaments");
           }

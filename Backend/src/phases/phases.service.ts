@@ -12,6 +12,7 @@ import { Matchday } from '../matchdays/entities/matchday.entity';
 import { Match } from '../matches/entities/match.entity';
 import { Registration } from '../registrations/entities/registration.entity';
 import { Team } from 'src/teams/entities/team.entity';
+import { MatchStatus } from '../matches/enums/match-status.enum';
 
 @Injectable()
 export class PhasesService {
@@ -245,6 +246,7 @@ export class PhasesService {
           teamB: awayTeam._id,
           date: new Date(), // Default date, to be updated later
           matchDayId: savedMatchDay._id,
+          status: MatchStatus.UNASSIGNED,
         });
 
         const savedMatch = await match.save();
@@ -274,6 +276,7 @@ export class PhasesService {
             teamB: homeTeam._id, // Now home team is away
             date: new Date(), // Default date, to be updated later
             matchDayId: savedMatchDay._id,
+            status: MatchStatus.UNASSIGNED,
           });
 
           const savedMatch = await match.save();
@@ -356,7 +359,7 @@ export class PhasesService {
         teamB: shuffledTeams[i * 2 + 1]._id,
         date: new Date(), // Default date, can be updated later
         matchDayId: savedMatchday._id,
-        completed: false,
+        status: MatchStatus.UNASSIGNED,
       });
 
       const savedMatch = await match.save();
@@ -372,7 +375,7 @@ export class PhasesService {
         teamB: null, // No opponent (bye)
         date: new Date(),
         matchDayId: savedMatchday._id,
-        completed: true, // Auto-complete this match
+        status: MatchStatus.COMPLETED,
         result: 'TeamA', // Team with bye automatically advances
       });
 
@@ -423,11 +426,11 @@ export class PhasesService {
 
     // Check if all matches have results
     const incompleteMatches = matches.filter(
-      (match) => !match.completed || !match.result,
+      (match) => match.status !== MatchStatus.COMPLETED || !match.result,
     );
     if (incompleteMatches.length > 0) {
       throw new BadRequestException(
-        'All matches must be completed before advancing to the next round',
+        'Todos los partidos deben estar completados antes de avanzar a la siguiente ronda',
       );
     }
 
@@ -446,7 +449,7 @@ export class PhasesService {
     // Check if we have a winner (tournament completed)
     if (winners.length <= 1) {
       throw new BadRequestException(
-        'Tournament is already completed with a winner',
+        'El torneo ya está completado con un ganador',
       );
     }
 
@@ -468,7 +471,7 @@ export class PhasesService {
         teamB: winners[i * 2 + 1],
         date: new Date(), // Default date, can be updated later
         matchDayId: savedMatchday._id,
-        completed: false,
+        status: MatchStatus.UNASSIGNED,
       });
 
       const savedMatch = await match.save();
@@ -484,7 +487,7 @@ export class PhasesService {
         teamB: null, // No opponent (bye)
         date: new Date(),
         matchDayId: savedMatchday._id,
-        completed: true, // Auto-complete this match
+        status: MatchStatus.COMPLETED,
         result: 'TeamA', // Team with bye automatically advances
       });
 

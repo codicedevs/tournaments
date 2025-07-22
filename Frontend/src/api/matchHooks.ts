@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Match, MatchResult } from "../models";
 import type { MatchEvent } from "../models/Match";
+import { MatchStatus } from "../models/Match";
 
 const API_BASE = "http://localhost:3000";
 
@@ -31,7 +32,7 @@ export const updateMatch = async (
     homeScore?: number;
     awayScore?: number;
     result?: MatchResult;
-    completed?: boolean;
+    status?: MatchStatus;
   }
 ): Promise<Match> => {
   const res = await axios.patch(`${API_BASE}/matches/${matchId}`, data);
@@ -76,7 +77,7 @@ export function useUpdateMatch() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: MatchUpdateData) => {
-      const { matchId, event, viewerId, refereeId, fieldNumber } = data;
+      const { matchId, event, viewerId, refereeId, fieldNumber, date } = data;
       if (event) {
         const playerId = event.playerId || "6851bd6c2001ffcdaa4d462e";
         const response = await axios.post(
@@ -93,6 +94,7 @@ export function useUpdateMatch() {
         if (viewerId !== undefined) patchData.viewerId = viewerId;
         if (refereeId !== undefined) patchData.refereeId = refereeId;
         if (fieldNumber !== undefined) patchData.fieldNumber = fieldNumber;
+        if (date !== undefined) patchData.date = date;
         const response = await axios.patch(
           `${API_BASE}/matches/${matchId}`,
           patchData
@@ -145,7 +147,6 @@ export const getMatchTournamentDetails = async (
     `${API_BASE}/matches/${matchId}/tournament-details`
   );
 
-  console.log("use", res);
   return res.data;
 };
 

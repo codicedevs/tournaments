@@ -50,6 +50,14 @@ interface PopulatedMatchday {
   phaseId?: PopulatedPhase | string;
 }
 
+export enum MatchStatus {
+  UNASSIGNED = "Sin programar",
+  SCHEDULED = "Programado",
+  IN_PROGRESS = "En juego",
+  FINISHED = "Finalizado",
+  COMPLETED = "Completado",
+}
+
 export interface Match {
   _id: string;
   teamA: Team;
@@ -58,7 +66,7 @@ export interface Match {
   homeScore: number;
   awayScore: number;
   result: "TeamA" | "TeamB" | "Draw" | null;
-  completed: boolean;
+  status: MatchStatus;
   matchDayId: string | PopulatedMatchday;
   events: MatchEvent[];
   viewerId?: Viewer;

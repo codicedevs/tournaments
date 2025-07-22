@@ -15,6 +15,7 @@ import { Phase } from '../phases/entities/phase.entity';
 import { MatchEventType } from './enums/match-event-type.enum';
 import { MatchEventDto } from './dto/match-event.dto';
 import { Player } from '../players/entities/player.entity';
+import { MatchStatus } from './enums/match-status.enum';
 
 @Injectable()
 export class MatchesService {
@@ -214,7 +215,7 @@ export class MatchesService {
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
-    if (match.completed) {
+    if (match.status === MatchStatus.COMPLETED) {
       throw new BadRequestException('Cannot add events to a completed match');
     }
     if (!match.events) {
@@ -225,6 +226,13 @@ export class MatchesService {
       minute: event.minute ?? 0,
       timestamp: new Date(),
     });
+    // Cambiar status según el tipo de evento
+    if (event.type === MatchEventType.START_FIRST_HALF) {
+      match.status = MatchStatus.IN_PROGRESS;
+    }
+    if (event.type === MatchEventType.END_SECOND_HALF) {
+      match.status = MatchStatus.FINISHED;
+    }
     return match.save();
   }
 
@@ -237,7 +245,7 @@ export class MatchesService {
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
-    if (match.completed) {
+    if (match.status === MatchStatus.COMPLETED) {
       throw new BadRequestException('Cannot add events to a completed match');
     }
     // Validación de jugador y equipo
@@ -481,12 +489,13 @@ export class MatchesService {
   }
 
   async completeMatch(id: string): Promise<Match> {
+    console.log('completando match', id);
     const match = await this.matchModel.findById(id);
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);
     }
 
-    if (match.completed) {
+    if (match.status === MatchStatus.COMPLETED) {
       throw new BadRequestException('Match is already completed');
     }
 
@@ -544,7 +553,7 @@ export class MatchesService {
     );
 
     // Marcar el partido como completado
-    match.completed = true;
+    match.status = MatchStatus.COMPLETED;
     return match.save();
   }
 

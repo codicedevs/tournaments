@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Team, TeamDocument } from '../../teams/entities/team.entity';
 import { MatchEventType } from '../enums/match-event-type.enum';
+import { MatchStatus } from '../enums/match-status.enum';
 
 @Schema()
 export class MatchEvent {
@@ -77,8 +78,8 @@ export class Match extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Matchday' })
   matchDayId: Types.ObjectId;
 
-  @Prop({ type: Boolean, default: false })
-  completed: boolean;
+  @Prop({ type: String, enum: MatchStatus, default: MatchStatus.UNASSIGNED })
+  status: MatchStatus;
 
   @Prop({ type: [MatchEvent], default: [] })
   events: MatchEvent[];

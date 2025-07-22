@@ -64,6 +64,10 @@ export class PlayersController {
     return this.playersService.updateStats(id, stats);
   }
 
+  @Delete(':id/removeFromTeam')
+  removeFromTeam(@Param('id') id: string) {
+    return this.playersService.removeFromTeam(id);
+  }
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.playersService.remove(id);

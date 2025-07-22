@@ -28,7 +28,7 @@ const TeamList: React.FC = () => {
   const { data: allPlayers = [] } = useAllPlayers();
 
   // Get teams data
-  const { data: teams = [], isLoading, isError } = useTeams();
+  const { data: teams = [], isLoading, isError, refetch } = useTeams();
 
   // Delete mutations
   const { mutate: deleteTeam, isPending: isDeleteLoading } = useDeleteTeam();
@@ -61,7 +61,10 @@ const TeamList: React.FC = () => {
     if (confirm("¿Estás seguro de que deseas eliminar este equipo?")) {
       setIsDeleting(true);
       deleteTeam(teamId, {
-        onSuccess: () => setIsDeleting(false),
+        onSuccess: () => {
+          setIsDeleting(false);
+          refetch();
+        },
         onError: (error) => {
           console.error("Error deleting team:", error);
           setIsDeleting(false);

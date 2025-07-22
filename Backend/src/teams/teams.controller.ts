@@ -25,7 +25,6 @@ export class TeamsController {
 
   @Get('check-name')
   async checkNameExists(@Query('name') name: string) {
-    console.log('Checking team name:', name);
     if (!name || name.length < 3) {
       return { exists: false };
     }

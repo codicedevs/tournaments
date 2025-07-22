@@ -110,6 +110,14 @@ export class PlayersService {
     if (!player) {
       throw new NotFoundException(`Player with ID ${id} not found`);
     }
+
+    if (player.teamId !== updatePlayerDto.teamId) {
+      const team = await this.teamModel.findById(updatePlayerDto.teamId).exec();
+      if (team) {
+        team.players.push(player._id as Types.ObjectId);
+        await team.save();
+      }
+    }
     return player;
   }
 
@@ -134,6 +142,26 @@ export class PlayersService {
     if (!result) {
       throw new NotFoundException(`Player with ID ${id} not found`);
     }
+  }
+
+  async removeFromTeam(id: string): Promise<void> {
+    const player = await this.playerModel
+      .findById(id)
+      .populate('teamId')
+      .exec();
+    if (!player) throw new NotFoundException(`Player with ID ${id} not found`);
+
+    const team = player.teamId?._id
+      ? await this.teamModel.findById(player.teamId._id).exec()
+      : null;
+    if (!team)
+      throw new NotFoundException(`Team with ID ${player.teamId} not found`);
+
+    player.teamId = null;
+    team.players = team.players.filter((player) => player.toString() !== id);
+
+    await player.save();
+    await team.save();
   }
 
   async findPlayersByTournament(tournamentId: string): Promise<Player[]> {
@@ -161,6 +189,12 @@ export class PlayersService {
     if (user.role !== Role.Player) {
       throw new BadRequestException('El usuario no tiene rol Player');
     }
+
+    const team = await this.teamModel.findById(teamId).exec();
+    if (!team) {
+      throw new NotFoundException('Equipo no encontrado');
+    }
+
     // Validar que no exista ya un Player para ese userId
     const existingPlayer = await this.playerModel.findOne({ userId }).exec();
     if (existingPlayer) {
@@ -179,6 +213,9 @@ export class PlayersService {
         matchesPlayed: 0,
       },
     });
+    team.players.push(user._id as Types.ObjectId);
+    await team.save();
+
     return createdPlayer.save();
   }
 }

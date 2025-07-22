@@ -27,7 +27,6 @@ export class TeamsService {
 
   async create(createTeamDto: CreateTeamDto): Promise<Team> {
     const newTeam = new this.teamModel(createTeamDto);
-    console.log(createTeamDto);
     return newTeam.save();
   }
 
@@ -47,7 +46,6 @@ export class TeamsService {
   }
 
   async update(id: string, updateTeamDto: UpdateTeamDto): Promise<Team | null> {
-    console.log('Update team with ID:', id, updateTeamDto);
     return this.teamModel
       .findByIdAndUpdate(new Types.ObjectId(id), updateTeamDto, { new: true })
       .populate('createdById players')

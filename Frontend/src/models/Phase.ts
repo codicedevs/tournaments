@@ -15,4 +15,5 @@ export interface Phase {
   type: PhaseType;
   tournamentId: string | Tournament;
   matchdays?: Matchday[];
+  createdAt?: string;
 }

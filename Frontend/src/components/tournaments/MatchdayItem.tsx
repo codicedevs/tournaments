@@ -1,15 +1,19 @@
 import React, { useState } from "react";
 import { Matchday } from "../../models/Matchday";
-import { Match, MatchEvent, MatchEventType } from "../../models/Match";
+import {
+  Match,
+  MatchEvent,
+  MatchEventType,
+  MatchStatus,
+} from "../../models/Match";
 import { useMatchdayMatches } from "../../api/fixtureHooks";
 import {
   useCompleteMatch,
   useUpdateMatch,
   MatchUpdateData,
 } from "../../api/matchHooks";
-import { MatchEventsList } from "../matches/MatchEventEditor";
 import { useUsers } from "../../api/userHooks";
-import { MatchEventEditor } from "../matches/MatchEventEditor";
+
 import { Modal } from "antd";
 
 interface MatchdayItemProps {
@@ -117,6 +121,43 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
     return `${day} ${hour}`;
   };
 
+  const estadoClass = (status: MatchStatus, match: any) => {
+    if (status === MatchStatus.UNASSIGNED && match.date) {
+      return "bg-blue-100 text-blue-700 border border-blue-300";
+    }
+    switch (status) {
+      case MatchStatus.IN_PROGRESS:
+        return "bg-yellow-100 text-yellow-700 border border-yellow-300";
+      case MatchStatus.FINISHED:
+        return "bg-green-100 text-green-700 border border-green-300";
+      case MatchStatus.COMPLETED:
+        return "bg-gray-200 text-gray-700 border border-gray-400";
+      case MatchStatus.SCHEDULED:
+        return "bg-blue-100 text-blue-700 border border-blue-300";
+      default:
+        return "bg-gray-100 text-gray-500 border border-gray-200";
+    }
+  };
+  const estadoTexto = (status: MatchStatus, match: any) => {
+    if (status === MatchStatus.UNASSIGNED && match.date) {
+      return "Programado";
+    }
+    switch (status) {
+      case MatchStatus.UNASSIGNED:
+        return "Sin programar";
+      case MatchStatus.SCHEDULED:
+        return "Programado";
+      case MatchStatus.IN_PROGRESS:
+        return "En juego";
+      case MatchStatus.FINISHED:
+        return "Finalizado";
+      case MatchStatus.COMPLETED:
+        return "Completado";
+      default:
+        return "-";
+    }
+  };
+
   return (
     <div className="rounded-xl shadow-lg p-6 bg-white transition flex flex-col">
       <div className="mb-4">
@@ -157,7 +198,16 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                   <span className="font-bold text-black">
                     {match.teamB.name}
                   </span>
-                  {match.completed && (
+                  <span
+                    className={`ml-2 px-3 py-1 rounded-full text-xs font-bold border ${estadoClass(
+                      match.status,
+                      match
+                    )}`}
+                  >
+                    {estadoTexto(match.status, match)}
+                  </span>
+                  {(match.status === MatchStatus.FINISHED ||
+                    match.status === MatchStatus.COMPLETED) && (
                     <span className="ml-2 bg-green-100 text-green-800 text-lg px-3 py-1 rounded font-bold flex items-center gap-1">
                       <span className="text-2xl">{match.homeScore}</span>
                       <span className="text-xl">-</span>
@@ -187,7 +237,8 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                         <span className="text-gray-400">vs</span>{" "}
                         {match.teamB.name}
                       </span>
-                      {match.completed && (
+                      {(match.status === MatchStatus.FINISHED ||
+                        match.status === MatchStatus.COMPLETED) && (
                         <span className="flex justify-center items-center gap-2 text-2xl font-bold text-green-700 mb-2">
                           {match.homeScore}
                           <span className="text-xl">-</span>
@@ -196,7 +247,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                       )}
                     </div>
                   }
-                  width={520}
+                  width={540}
                   destroyOnClose
                   className="custom-match-modal"
                 >
@@ -204,177 +255,141 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-gray-500">Fecha</span>
-                        <span className="font-semibold text-base">{day}</span>
+                        <input
+                          type="date"
+                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                          value={
+                            fieldValues[match._id]?.date ||
+                            (match.date
+                              ? new Date(match.date).toISOString().slice(0, 10)
+                              : "")
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(match._id, "date", e.target.value)
+                          }
+                        />
                       </div>
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-gray-500">Hora</span>
-                        <span className="font-semibold text-base">{hour}</span>
+                        <input
+                          type="time"
+                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                          value={
+                            fieldValues[match._id]?.time ||
+                            (match.date
+                              ? new Date(match.date).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "")
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(match._id, "time", e.target.value)
+                          }
+                        />
                       </div>
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-gray-500">N° Cancha</span>
-                        <span className="font-semibold text-base">
-                          {match.fieldNumber || "-"}
-                        </span>
+                        <input
+                          type="text"
+                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                          value={
+                            fieldValues[match._id]?.fieldNumber ||
+                            match.fieldNumber ||
+                            ""
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(
+                              match._id,
+                              "fieldNumber",
+                              e.target.value
+                            )
+                          }
+                        />
                       </div>
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-gray-500">Veedor</span>
-                        <span className="font-semibold text-base">
-                          {getUserName(match.viewerId)}
-                        </span>
+                        <select
+                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                          value={
+                            fieldValues[match._id]?.viewerId ||
+                            (typeof match.viewerId === "object"
+                              ? match.viewerId._id
+                              : match.viewerId) ||
+                            ""
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(
+                              match._id,
+                              "viewerId",
+                              e.target.value
+                            )
+                          }
+                        >
+                          <option value="">Seleccionar</option>
+                          {users
+                            .filter((u) => u.role === "Viewer")
+                            .map((u) => (
+                              <option key={u._id} value={u._id}>
+                                {u.name}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                       <div className="flex flex-col gap-2">
                         <span className="text-xs text-gray-500">Referee</span>
-                        <span className="font-semibold text-base">
-                          {getUserName(match.refereeId)}
-                        </span>
+                        <select
+                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                          value={
+                            fieldValues[match._id]?.refereeId ||
+                            (typeof match.refereeId === "object"
+                              ? match.refereeId._id
+                              : match.refereeId) ||
+                            ""
+                          }
+                          onChange={(e) =>
+                            handleFieldChange(
+                              match._id,
+                              "refereeId",
+                              e.target.value
+                            )
+                          }
+                        >
+                          <option value="">Seleccionar</option>
+                          {users
+                            .filter((u) => u.role === "Referee")
+                            .map((u) => (
+                              <option key={u._id} value={u._id}>
+                                {u.name}
+                              </option>
+                            ))}
+                        </select>
                       </div>
                     </div>
-                    {editingMatchId === match._id && !match.completed ? (
-                      <div className="flex flex-col gap-2 border-t pt-4 mt-2">
-                        <div className="flex gap-2 items-center">
-                          <label className="text-xs">Fecha:</label>
-                          <input
-                            type="date"
-                            className="border rounded px-2 py-1 text-xs"
-                            value={fieldValues[match._id]?.date || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                match._id,
-                                "date",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <label className="text-xs">Hora:</label>
-                          <select
-                            className="border rounded px-2 py-1 text-xs"
-                            value={fieldValues[match._id]?.time || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                match._id,
-                                "time",
-                                e.target.value
-                              )
-                            }
-                          >
-                            <option value="">Seleccionar</option>
-                            {Array.from({ length: 16 }, (_, i) => {
-                              const hour = i + 8;
-                              return (
-                                <option
-                                  key={hour}
-                                  value={`${hour
-                                    .toString()
-                                    .padStart(2, "0")}:00`}
-                                >
-                                  {hour.toString().padStart(2, "0")}:00
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <label className="text-xs">N° Cancha:</label>
-                          <input
-                            type="text"
-                            className="border rounded px-2 py-1 text-xs"
-                            value={fieldValues[match._id]?.fieldNumber || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                match._id,
-                                "fieldNumber",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <label className="text-xs">Veedor:</label>
-                          <select
-                            className="border rounded px-2 py-1 text-xs"
-                            value={fieldValues[match._id]?.viewerId || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                match._id,
-                                "viewerId",
-                                e.target.value
-                              )
-                            }
-                          >
-                            <option value="">Seleccionar</option>
-                            {users
-                              .filter((u) => u.role === "Viewer")
-                              .map((u) => (
-                                <option key={u._id} value={u._id}>
-                                  {u.name}
-                                </option>
-                              ))}
-                          </select>
-                        </div>
-                        <div className="flex gap-2 items-center">
-                          <label className="text-xs">Referee:</label>
-                          <select
-                            className="border rounded px-2 py-1 text-xs"
-                            value={fieldValues[match._id]?.refereeId || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                match._id,
-                                "refereeId",
-                                e.target.value
-                              )
-                            }
-                          >
-                            <option value="">Seleccionar</option>
-                            {users
-                              .filter((u) => u.role === "Referee")
-                              .map((u) => (
-                                <option key={u._id} value={u._id}>
-                                  {u.name}
-                                </option>
-                              ))}
-                          </select>
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            className="bg-blue-600 text-white px-3 py-1 rounded text-xs"
-                            onClick={() => handleSave(match)}
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs"
-                            onClick={() => setEditingMatchId(null)}
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-2 mt-4">
-                        {!match.completed && (
-                          <button
-                            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
-                            onClick={() => setEditingMatchId(match._id)}
-                          >
-                            Editar datos
-                          </button>
-                        )}
-                        {match.completed && (
-                          <button
-                            className="text-gray-600 hover:text-gray-900 text-xs px-2 py-1 border border-gray-600 rounded"
-                            onClick={() => {
-                              window.open(
-                                `/match/${match._id}/report`,
-                                "_blank"
-                              );
-                            }}
-                          >
-                            Ver ficha
-                          </button>
-                        )}
-                        {match.result && match.completed && (
+                    <div className="flex flex-row justify-end gap-2 mt-4">
+                      <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-bold shadow"
+                        onClick={() => {
+                          handleSave(match);
+                          setShowDetailModal(null);
+                        }}
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-5 py-2 rounded font-bold shadow"
+                        onClick={() => setShowDetailModal(null)}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                    {(match.status === MatchStatus.FINISHED ||
+                      match.status === MatchStatus.COMPLETED) && (
+                      <div className="flex flex-col items-center mt-4">
+                        <span className="text-lg font-bold text-green-700 mb-2">
+                          Resultado: {match.homeScore} - {match.awayScore}
+                        </span>
+                        {match.result && (
                           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-2">
                             {match.result === "TeamA"
                               ? `Victoria ${match.teamA.name}`
