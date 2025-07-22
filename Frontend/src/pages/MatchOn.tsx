@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import {
   Player,
   Event,
@@ -10,6 +10,103 @@ import { useMatchById, useUpdateMatch } from "../api/matchHooks";
 import type { Team } from "../models/Match";
 import { useNavigate } from "react-router-dom";
 import { translateEventType } from "../utils/functions";
+
+// ---------------------------------------------
+// Componente independiente EventList
+// Se define fuera de MatchOn para que React no lo desmonte
+// en cada re-render del padre (causado por el cronómetro).
+
+interface EventListProps {
+  match: any;
+  teamA: Team;
+  teamB: Team;
+}
+
+const EventList: React.FC<EventListProps> = React.memo(({ match, teamA, teamB }) => {
+  const listRef = useRef<HTMLDivElement>(null);
+  const savedScroll = useRef(0);
+
+  const handleScroll = () => {
+    if (listRef.current) savedScroll.current = listRef.current.scrollTop;
+  };
+
+  useLayoutEffect(() => {
+    if (listRef.current) listRef.current.scrollTop = savedScroll.current;
+  });
+
+  // auto-scroll al fondo (solo si usuario estaba abajo)
+  useEffect(() => {
+    if (!listRef.current) return;
+    const { clientHeight, scrollHeight } = listRef.current;
+    const nearBottom = scrollHeight - (savedScroll.current + clientHeight) < 40;
+    if (nearBottom) {
+      savedScroll.current = scrollHeight;
+      listRef.current.scrollTop = scrollHeight;
+    }
+  }, [match?.events?.length]);
+
+  return (
+    <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow mb-8">
+      <div className="text-xl font-semibold mb-4">Registro de Eventos</div>
+      <div
+        className="max-h-64 overflow-y-auto"
+        ref={listRef}
+        onScroll={handleScroll}
+      >
+        {!match?.events || match.events.length === 0 ? (
+          <div className="text-gray-500 text-center py-8">No hay eventos registrados</div>
+        ) : (
+          <ul className="space-y-2">
+            {match.events.map((event: any) => (
+              <li
+                key={event.id || event._id || event.timestamp}
+                className="border rounded p-3 flex flex-col md:flex-row md:items-center gap-2"
+              >
+                <span className="font-bold">[{translateEventType(event.type)}]</span>
+                {typeof event.minute === "number" && (
+                  <span className="text-gray-500">{event.minute}'</span>
+                )}
+                {event.type === "goal" && event.player && (
+                  <span>
+                    ⚽ Gol de <b>{event.player.name || event.player.name}</b>
+                    {event.player.jerseyNumber && <> (#{event.player.jerseyNumber})</>}
+                    {event.team && (
+                      <>
+                        {' '}para{' '}
+                        <b>{event.team === 'TeamA' ? teamA.name : teamB.name}</b>
+                      </>
+                    )}
+                  </span>
+                )}
+                {(event.type === 'yellowCard' || event.type === 'blueCard' || event.type === 'redCard') && event.player && (
+                  <span>
+                    {event.type === 'yellowCard' && '🟨'}
+                    {event.type === 'blueCard' && '🟦'}
+                    {event.type === 'redCard' && '🟥'} Tarjeta para{' '}
+                    <b>{event.player.name || event.player.user?.name}</b>
+                    {event.player.jerseyNumber && <> (#{event.player.jerseyNumber})</>}
+                    {event.team && (
+                      <>
+                        {' '}de{' '}
+                        <b>{event.team === 'TeamA' ? teamA.name : teamB.name}</b>
+                      </>
+                    )}
+                  </span>
+                )}
+                {['start_first_half', 'end_first_half', 'start_second_half', 'end_second_half'].includes(event.type) && (
+                  <span className="italic text-gray-600">{translateEventType(event.type)}</span>
+                )}
+                {/* Otros eventos */}
+                {!['goal', 'card', 'start_first_half', 'end_first_half', 'start_second_half', 'end_second_half'].includes(event.type) &&
+                  event.description && <span>{event.description}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+});
 
 const MatchOn: React.FC<MatchOnProps> = ({
   matchId,
@@ -356,97 +453,6 @@ const MatchOn: React.FC<MatchOnProps> = ({
     </div>
   );
 
-  // EventList
-  const EventList = () => (
-    <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow mb-8">
-      <div className="text-xl font-semibold mb-4">Registro de Eventos</div>
-      <div className="max-h-64 overflow-y-auto">
-        {!match?.events || match.events.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">
-            No hay eventos registrados
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {match.events.map((event: any) => (
-              <li
-                key={event.id || event._id || event.timestamp}
-                className="border rounded p-3 flex flex-col md:flex-row md:items-center gap-2"
-              >
-                <span className="font-bold">
-                  [{translateEventType(event.type)}]
-                </span>
-                {typeof event.minute === "number" && (
-                  <span className="text-gray-500">{event.minute}'</span>
-                )}
-                {event.type === "goal" && event.player && (
-                  <span>
-                    ⚽ Gol de <b>{event.player.name || event.player.name}</b>
-                    {event.player.jerseyNumber && (
-                      <> (#{event.player.jerseyNumber})</>
-                    )}
-                    {event.team && (
-                      <>
-                        {" "}
-                        para{" "}
-                        <b>
-                          {event.team === "TeamA" ? teamA.name : teamB.name}
-                        </b>
-                      </>
-                    )}
-                  </span>
-                )}
-                {(event.type === "yellowCard" ||
-                  event.type === "blueCard" ||
-                  event.type === "redCard") &&
-                  event.player && (
-                    <span>
-                      {event.type === "yellowCard" && "🟨"}
-                      {event.type === "blueCard" && "🟦"}
-                      {event.type === "redCard" && "🟥"}
-                      Tarjeta para{" "}
-                      <b>{event.player.name || event.player.user?.name}</b>
-                      {event.player.jerseyNumber && (
-                        <> (#{event.player.jerseyNumber})</>
-                      )}
-                      {event.team && (
-                        <>
-                          {" "}
-                          de{" "}
-                          <b>
-                            {event.team === "TeamA" ? teamA.name : teamB.name}
-                          </b>
-                        </>
-                      )}
-                    </span>
-                  )}
-                {[
-                  "start_first_half",
-                  "end_first_half",
-                  "start_second_half",
-                  "end_second_half",
-                ].includes(event.type) && (
-                  <span className="italic text-gray-600">
-                    {translateEventType(event.type)}
-                  </span>
-                )}
-                {/* Otros eventos */}
-                {![
-                  "goal",
-                  "card",
-                  "start_first_half",
-                  "end_first_half",
-                  "start_second_half",
-                  "end_second_half",
-                ].includes(event.type) &&
-                  event.description && <span>{event.description}</span>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-
   // Modal de evento ---
   const EventModal = () => (
     <div
@@ -584,7 +590,8 @@ const MatchOn: React.FC<MatchOnProps> = ({
             </button>
           </div>
         )}
-        <EventList />
+        {/* Se pasa match y nombres para reutilizar en EventList */}
+        <EventList match={match} teamA={teamA} teamB={teamB} />
       </div>
 
       <EventModal />
