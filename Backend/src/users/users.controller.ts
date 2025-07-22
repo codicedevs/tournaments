@@ -26,6 +26,11 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Post('with-player')
+  async createUserWithPlayer(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createUserWithPlayer(createUserDto);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();
