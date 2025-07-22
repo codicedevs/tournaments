@@ -41,4 +41,36 @@ export class UsersService {
     // Elimina el usuario
     return this.userModel.findByIdAndDelete(id).exec();
   }
+
+  async createUserWithPlayer(createUserDto: CreateUserDto) {
+    const session = await this.userModel.db.startSession();
+    session.startTransaction();
+    try {
+      // 1. Crear el usuario
+      const user = await this.userModel.create([createUserDto], { session });
+      const createdUser = user[0];
+
+      // 2. Si el rol es Player, crear el player asociado
+      let player = null;
+      if (createUserDto.role === 'Player') {
+        const playerArr = await this.playerModel.create(
+          [{ userId: createdUser._id }],
+          { session },
+        );
+        player = playerArr[0];
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return {
+        user: createdUser,
+        player: player ? player : null,
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+  }
 }
