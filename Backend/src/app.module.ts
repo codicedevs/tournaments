@@ -16,7 +16,9 @@ import { extname } from 'path';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/tournaments'),
+    MongooseModule.forRoot(
+      'mongodb+srv://matiDb:k1k1r1ki@dbprueba.twy3nho.mongodb.net/tournaments?retryWrites=true&w=majority&appName=DbPrueba',
+    ),
     MulterModule.register({
       storage: diskStorage({
         destination: './uploads',
