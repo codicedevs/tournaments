@@ -51,7 +51,7 @@ export class UsersService {
       const createdUser = user[0];
 
       // 2. Si el rol es Player, crear el player asociado
-      let player = null;
+      let player: Player | null = null;
       if (createUserDto.role === 'Player') {
         const playerArr = await this.playerModel.create(
           [{ userId: createdUser._id }],
