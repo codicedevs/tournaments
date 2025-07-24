@@ -33,12 +33,18 @@ export const getMatchdayMatches = async (
 export const generateFixtures = async ({
   phaseId,
   isLocalAway,
+  startDate,
+  weekDay,
 }: {
   phaseId: string;
   isLocalAway: boolean;
+  startDate: string;
+  weekDay: string;
 }): Promise<{ matchDays: Matchday[]; matches: Match[] }> => {
   const res = await axios.post(
-    `${API_BASE}/phases/${phaseId}/fixture?isLocalAway=${isLocalAway}`
+    `${API_BASE}/phases/${phaseId}/fixture?isLocalAway=${isLocalAway}&startDate=${encodeURIComponent(
+      startDate
+    )}&weekDay=${weekDay}`
   );
   return res.data;
 };
@@ -48,15 +54,28 @@ export const createLeague = async ({
   phaseId,
   matchDaysAmount,
   isLocalAway,
+  startDate,
+  weekDay,
 }: {
   phaseId: string;
   matchDaysAmount: number;
   isLocalAway: boolean;
+  startDate: string;
+  weekDay: string;
 }): Promise<Matchday[]> => {
   const res = await axios.post(
-    `${API_BASE}/phases/${phaseId}/league?matchDaysAmount=${matchDaysAmount}&isLocalAway=${isLocalAway}`
+    `${API_BASE}/phases/${phaseId}/league?matchDaysAmount=${matchDaysAmount}&isLocalAway=${isLocalAway}&startDate=${encodeURIComponent(
+      startDate
+    )}&weekDay=${weekDay}`
   );
   return res.data;
+};
+
+// Eliminar todas las jornadas de una fase
+export const deleteMatchdaysByPhase = async (
+  phaseId: string
+): Promise<void> => {
+  await axios.delete(`${API_BASE}/phases/${phaseId}/matchdays`);
 };
 
 // Custom hooks
@@ -106,6 +125,16 @@ export function useCreateLeague() {
       queryClient.invalidateQueries({
         queryKey: ["matchdays", variables.phaseId],
       });
+    },
+  });
+}
+
+export function useDeleteMatchdaysByPhase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (phaseId: string) => deleteMatchdaysByPhase(phaseId),
+    onSuccess: (_, phaseId) => {
+      queryClient.invalidateQueries({ queryKey: ["matchdays", phaseId] });
     },
   });
 }

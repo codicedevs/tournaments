@@ -79,6 +79,7 @@ export function useUpdateMatch() {
   return useMutation({
     mutationFn: async (data: MatchUpdateData) => {
       const { matchId, event, viewerId, refereeId, fieldNumber, date } = data;
+      console.log("dateee", date);
       if (event) {
         const playerId = event.playerId || "6851bd6c2001ffcdaa4d462e";
         const response = await axios.post(

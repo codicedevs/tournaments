@@ -10,6 +10,9 @@ export class Matchday extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'Phase', required: true })
   phaseId: Types.ObjectId;
+
+  @Prop({ type: Date, required: false })
+  date?: Date;
 }
 
 export const MatchdaySchema = SchemaFactory.createForClass(Matchday);

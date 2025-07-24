@@ -13,6 +13,7 @@ import {
   MatchUpdateData,
 } from "../../api/matchHooks";
 import { useUsers } from "../../api/userHooks";
+import { format, parseISO } from "date-fns";
 
 import { Modal } from "antd";
 
@@ -57,13 +58,22 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
 
   const handleSave = (match: Match) => {
     const values = fieldValues[match._id] || {};
-    // Combinar fecha y hora si ambos están presentes
     let dateTime = match.date;
     if (values.date && values.time) {
-      const [hours, minutes] = values.time.split(":");
-      const date = new Date(values.date);
-      date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      dateTime = date.toISOString();
+      // Combinar fecha y hora local y convertir a UTC ISO
+      const localDateTimeString = `${values.date}T${values.time}:00`;
+      dateTime = new Date(localDateTimeString).toISOString();
+    } else if (values.date) {
+      // Solo fecha, hora 00:00 UTC
+      const localDateTimeString = `${values.date}T00:00:00`;
+      dateTime = new Date(localDateTimeString).toISOString();
+    } else if (values.time && match.date) {
+      // Solo hora, combinar con la fecha original
+      const date = new Date(match.date);
+      const localDateTimeString = `${format(date, "yyyy-MM-dd")}T${
+        values.time
+      }:00`;
+      dateTime = new Date(localDateTimeString).toISOString();
     }
     const data: MatchUpdateData = {
       matchId: match._id,
@@ -162,11 +172,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
     <div className="rounded-xl shadow-lg p-6 bg-white transition flex flex-col">
       <div className="mb-4">
         <h3 className="font-bold text-xl mb-1">Fecha {matchday.order}</h3>
-        {matchday.date && (
-          <p className="text-sm text-gray-500">
-            {new Date(matchday.date).toLocaleDateString()}
-          </p>
-        )}
+        {/* Eliminado: solo mostrar la fecha de los partidos, no la de la jornada */}
       </div>
       <div className="mt-2 space-y-1">
         {isLoading ? (
@@ -177,14 +183,8 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
           </span>
         ) : (
           matches.map((match: Match) => {
-            const dateObj = match.date ? new Date(match.date) : null;
-            const day = dateObj ? dateObj.toLocaleDateString() : "-";
-            const hour = dateObj
-              ? dateObj.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "-";
+            const dateObj = match.date ? parseISO(match.date) : null;
+            const dayHour = dateObj ? dateObj.toLocaleString() : "-";
             return (
               <div
                 key={match._id}
@@ -215,9 +215,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-600 pl-1">
-                  Día: {day} Hora: {hour}
-                </div>
+                <div className="text-xs text-gray-600 pl-1">{dayHour}</div>
                 <div className="flex gap-2 mt-1">
                   <button
                     className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
@@ -286,6 +284,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
                           onChange={(e) =>
                             handleFieldChange(match._id, "time", e.target.value)
                           }
+                          step="3600" // Solo permite seleccionar la hora, no los minutos
                         />
                       </div>
                       <div className="flex flex-col gap-2">

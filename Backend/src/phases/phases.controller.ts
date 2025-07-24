@@ -51,11 +51,15 @@ export class PhasesController {
     @Param('id') id: string,
     @Query('matchDaysAmount') matchDaysAmount: string,
     @Query('isLocalAway') isLocalAway: string,
+    @Query('startDate') startDate: string,
+    @Query('weekDay') weekDay: string,
   ) {
     return this.phasesService.createLeague(
       id,
       Number(matchDaysAmount),
       isLocalAway === 'true',
+      startDate,
+      weekDay,
     );
   }
 
@@ -63,8 +67,15 @@ export class PhasesController {
   generateFixture(
     @Param('id') id: string,
     @Query('isLocalAway') isLocalAway: string,
+    @Query('startDate') startDate: string,
+    @Query('weekDay') weekDay: string,
   ) {
-    return this.phasesService.generateFixture(id, isLocalAway === 'true');
+    return this.phasesService.generateFixture(
+      id,
+      isLocalAway === 'true',
+      startDate,
+      weekDay,
+    );
   }
 
   /**
@@ -83,5 +94,10 @@ export class PhasesController {
   @Post(':id/knockout/advance')
   advanceKnockoutRound(@Param('id') id: string) {
     return this.phasesService.advanceKnockoutRound(id);
+  }
+
+  @Delete(':id/matchdays')
+  async deleteMatchdaysByPhase(@Param('id') id: string) {
+    return this.phasesService.deleteMatchdaysByPhase(id);
   }
 }

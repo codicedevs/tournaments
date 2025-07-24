@@ -63,10 +63,12 @@ export class MatchesService {
     if (!isValidObjectId(matchDayId)) {
       throw new BadRequestException('Invalid matchday ID');
     }
-    return this.matchModel
+    const res = await this.matchModel
       .find({ matchDayId: new Types.ObjectId(matchDayId) })
       .populate('teamA teamB')
       .exec();
+    console.log('res', res);
+    return res;
   }
 
   async findAll(filter: Record<string, string>): Promise<Match[]> {

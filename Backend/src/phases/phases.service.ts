@@ -62,6 +62,8 @@ export class PhasesService {
   async generateFixture(
     phaseId: string,
     isLocalAway: boolean,
+    startDate?: string,
+    weekDay?: string,
   ): Promise<{ matchDays: Matchday[]; matches: Match[] }> {
     // Find the phase
     const phase = await this.phaseModel.findById(phaseId);
@@ -117,6 +119,8 @@ export class PhasesService {
       phaseId,
       schedule,
       isLocalAway,
+      startDate,
+      weekDay,
     );
 
     return result;
@@ -129,6 +133,8 @@ export class PhasesService {
     phaseId: string,
     matchDaysAmount: number,
     isLocalAway: boolean,
+    startDate?: string,
+    weekDay?: string,
   ): Promise<Matchday[]> {
     // Verify phase exists
     const phase = await this.phaseModel.findById(phaseId);
@@ -166,14 +172,26 @@ export class PhasesService {
 
     const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
     const createdMatchDays: Matchday[] = [];
-
+    let currentDate = startDate ? new Date(startDate) : undefined;
+    let targetWeekday = weekDay !== undefined ? parseInt(weekDay) : undefined;
+    if (currentDate && targetWeekday !== undefined) {
+      currentDate = getNextWeekday(currentDate, targetWeekday);
+    }
     for (let i = 1; i <= totalMatchDays; i++) {
+      let dateToSet = new Date();
+      if (currentDate) {
+        dateToSet = new Date(currentDate);
+        // Sumar 7 días para la próxima jornada
+        currentDate.setDate(currentDate.getDate() + 7);
+        if (targetWeekday !== undefined) {
+          currentDate = getNextWeekday(currentDate, targetWeekday);
+        }
+      }
       const matchDay = new this.matchdayModel({
         order: i,
         phaseId: new Types.ObjectId(phaseId),
-        // No date is set, it will be defined later
+        date: dateToSet as Date | undefined,
       });
-
       const savedMatchDay = await matchDay.save();
       createdMatchDays.push(savedMatchDay);
     }
@@ -224,68 +242,96 @@ export class PhasesService {
     phaseId: string,
     schedule: Array<Array<[any, any]>>,
     isLocalAway: boolean,
+    startDate?: string,
+    weekDay?: string,
   ): Promise<{ matchDays: Matchday[]; matches: Match[] }> {
-    const createdMatchDays: Matchday[] = [];
-    const createdMatches: Match[] = [];
+    const matchDays: Matchday[] = [];
+    const matches: Match[] = [];
+    let currentDate = startDate ? new Date(startDate) : undefined;
+    let targetWeekday = weekDay !== undefined ? parseInt(weekDay) : undefined;
+    if (currentDate && targetWeekday !== undefined) {
+      currentDate = getNextWeekday(currentDate, targetWeekday);
+    }
 
-    // First round (home matches)
-    for (let round = 0; round < schedule.length; round++) {
+    for (let i = 0; i < schedule.length; i++) {
+      let dateToSet: Date | undefined = undefined;
+      if (currentDate) {
+        dateToSet = new Date(currentDate);
+        currentDate.setDate(currentDate.getDate() + 7);
+        if (targetWeekday !== undefined) {
+          currentDate = getNextWeekday(currentDate, targetWeekday);
+        }
+      }
       const matchDay = new this.matchdayModel({
-        order: round + 1, // Order starts at 1 and increases
+        order: i + 1,
         phaseId: new Types.ObjectId(phaseId),
-        // Date to be set later
+        date: dateToSet,
       });
-
       const savedMatchDay = await matchDay.save();
-      createdMatchDays.push(savedMatchDay);
+      matchDays.push(savedMatchDay);
 
       // Create matches for this round
-      for (const [homeTeam, awayTeam] of schedule[round]) {
+      for (const [homeTeam, awayTeam] of schedule[i]) {
+        let matchDate = dateToSet ? new Date(dateToSet) : undefined;
+        if (matchDate) {
+          matchDate.setHours(0, 0, 0, 0);
+        }
         const match = new this.matchModel({
           teamA: homeTeam._id,
           teamB: awayTeam._id,
-          date: new Date(), // Default date, to be updated later
+          date: matchDate,
           matchDayId: savedMatchDay._id,
           status: MatchStatus.UNASSIGNED,
         });
-
         const savedMatch = await match.save();
-        createdMatches.push(savedMatch);
+        matches.push(savedMatch);
       }
     }
 
-    // If local-away format, create second round (away matches) with continuing order numbers
+    // Segunda vuelta (local-away)
     if (isLocalAway) {
-      // Start order numbering where the first round ended
-      const startOrder = schedule.length + 1;
-
+      // Comenzar una semana después de la última fecha de la primera vuelta
+      let secondRoundDate: Date | undefined = undefined;
+      if (currentDate) {
+        secondRoundDate = new Date(currentDate);
+      }
       for (let round = 0; round < schedule.length; round++) {
+        let dateToSet: Date | undefined = undefined;
+        if (secondRoundDate) {
+          dateToSet = new Date(secondRoundDate);
+          secondRoundDate.setDate(secondRoundDate.getDate() + 7);
+          if (targetWeekday !== undefined) {
+            secondRoundDate = getNextWeekday(secondRoundDate, targetWeekday);
+          }
+        }
         const matchDay = new this.matchdayModel({
-          order: startOrder + round, // Continue numbering from where home matches ended
+          order: schedule.length + 1 + round,
           phaseId: new Types.ObjectId(phaseId),
-          // Date to be set later
+          date: dateToSet,
         });
-
         const savedMatchDay = await matchDay.save();
-        createdMatchDays.push(savedMatchDay);
+        matchDays.push(savedMatchDay);
 
         // Create matches with reversed home/away teams
         for (const [homeTeam, awayTeam] of schedule[round]) {
+          let matchDate = dateToSet ? new Date(dateToSet) : undefined;
+          if (matchDate) {
+            matchDate.setHours(0, 0, 0, 0);
+          }
           const match = new this.matchModel({
             teamA: awayTeam._id, // Now away team is home
             teamB: homeTeam._id, // Now home team is away
-            date: new Date(), // Default date, to be updated later
+            date: matchDate,
             matchDayId: savedMatchDay._id,
             status: MatchStatus.UNASSIGNED,
           });
-
           const savedMatch = await match.save();
-          createdMatches.push(savedMatch);
+          matches.push(savedMatch);
         }
       }
     }
 
-    return { matchDays: createdMatchDays, matches: createdMatches };
+    return { matchDays, matches };
   }
 
   /**
@@ -540,4 +586,22 @@ export class PhasesService {
 
     return this.phaseModel.findByIdAndDelete(id).exec();
   }
+
+  async deleteMatchdaysByPhase(
+    phaseId: string,
+  ): Promise<{ deletedCount: number }> {
+    const result = await this.matchdayModel.deleteMany({
+      phaseId: new Types.ObjectId(phaseId),
+    });
+    return { deletedCount: result.deletedCount };
+  }
+}
+
+// Agregar función auxiliar para ajustar la fecha al próximo día de la semana
+function getNextWeekday(date: Date, targetWeekday: number): Date {
+  const result = new Date(date);
+  const currentDay = result.getDay();
+  const diff = (targetWeekday + 7 - currentDay) % 7;
+  result.setDate(result.getDate() + diff);
+  return result;
 }
