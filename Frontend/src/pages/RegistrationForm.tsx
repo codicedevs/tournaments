@@ -114,7 +114,9 @@ const RegistrationForm: React.FC = () => {
               onSuccess: () => resolve({ team, success: true }),
               onError: (error) => resolve({ team, success: false, error }),
             }
-          );
+          )
+            .then(() => resolve({ team, success: true }))
+            .catch((error) => resolve({ team, success: false, error }));
         })
     );
 
@@ -262,20 +264,39 @@ const RegistrationForm: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Equipos a registrar:
                 </label>
-                <ul className="list-disc pl-5">
-                  {pendingTeams.map((team) => (
-                    <li key={team._id} className="flex items-center gap-2">
-                      <span>{team.name}</span>
-                      <button
-                        type="button"
-                        className="text-red-600 hover:underline text-xs"
-                        onClick={() => handleRemovePending(team._id)}
-                      >
-                        Quitar
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                          Nombre
+                        </th>
+                        <th className="px-4 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingTeams.map((team, idx) => (
+                        <tr
+                          key={team._id}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="px-4 py-2 text-gray-900">
+                            {team.name}
+                          </td>
+                          <td className="px-4 py-2">
+                            <button
+                              type="button"
+                              className="text-red-600 hover:underline text-xs"
+                              onClick={() => handleRemovePending(team._id)}
+                            >
+                              Quitar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
