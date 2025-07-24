@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
 import { User } from "../models/User";
+import { API_BASE_URL } from "../config";
 
 export function useUser(userId: string) {
   return useQuery<User, Error>({
@@ -46,6 +47,20 @@ export function useCreateUser() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+export function useCreateUserWithPlayer() {
+  return useMutation({
+    mutationFn: async (userData: any) => {
+      const res = await fetch(`${API_BASE_URL}/users/with-player`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      if (!res.ok) throw new Error("Error al crear usuario y player");
+      return res.json();
     },
   });
 }

@@ -6,6 +6,14 @@ export enum UserRole {
   REFEREE = "Referee",
 }
 
+export const roleLabels: Record<UserRole, string> = {
+  [UserRole.ADMIN]: "Admin",
+  [UserRole.MODERATOR]: "Coordinador",
+  [UserRole.PLAYER]: "Jugador",
+  [UserRole.VIEWER]: "Veedor",
+  [UserRole.REFEREE]: "Árbitro",
+};
+
 export interface User {
   _id: string;
   email: string;

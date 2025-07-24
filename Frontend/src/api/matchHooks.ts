@@ -3,8 +3,9 @@ import axios from "axios";
 import { Match, MatchResult } from "../models";
 import type { MatchEvent } from "../models/Match";
 import { MatchStatus } from "../models/Match";
+import { API_BASE_URL } from "../config";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = API_BASE_URL;
 
 export const getMatches = async (
   filter: Record<string, string>

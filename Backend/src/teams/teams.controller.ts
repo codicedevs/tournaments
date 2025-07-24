@@ -69,7 +69,7 @@ export class TeamsController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (file) {
-      const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+      const baseUrl = process.env.API_BASE_URL || 'http://localhost:6969';
       updateTeamDto.profileImage = `${baseUrl}/uploads/${file.filename}`;
     }
     return this.teamsService.update(id, updateTeamDto);

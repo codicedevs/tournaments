@@ -55,7 +55,7 @@ const RegistrationForm: React.FC = () => {
     useTournaments();
   const { data: teams = [], isLoading: isLoadingTeams } = useTeams();
   const {
-    mutate: registerTeam,
+    mutateAsync: registerTeam,
     isPending: isRegistering,
     isError: isErrorRegistro,
     error: errorRegistro,
@@ -102,7 +102,7 @@ const RegistrationForm: React.FC = () => {
     e.stopPropagation();
     setError("");
     setRegistroTerminado(false);
-    if (pendingTeams.length === 0) return;
+    // if (pendingTeams.length === 0) return;
 
     type Result = { team: Team; success: boolean; error?: any };
     const promises = pendingTeams.map(
@@ -118,8 +118,11 @@ const RegistrationForm: React.FC = () => {
         })
     );
 
+    console.log("promises", promises);
     await Promise.all(promises);
-    setRegistroTerminado(true);
+
+    console.log("promises2", promises);
+    navigate("/teams");
   };
 
   const handleRemovePending = (id: string) => {

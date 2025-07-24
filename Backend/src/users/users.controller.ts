@@ -69,7 +69,7 @@ export class UsersController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:6969';
     const url = `${baseUrl}/uploads/${file.filename}`;
     return {
       originalName: file.originalname,

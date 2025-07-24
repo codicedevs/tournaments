@@ -182,8 +182,10 @@ export class PlayersService {
 
   async createPlayerByUser(userId: string, teamId?: string): Promise<Player> {
     // Validar que el usuario existe y es rol Player
+
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
+      console.log('Usuario no encontrado', userId);
       throw new NotFoundException('Usuario no encontrado');
     }
     if (user.role !== Role.Player) {
@@ -192,6 +194,7 @@ export class PlayersService {
 
     const team = await this.teamModel.findById(teamId).exec();
     if (!team) {
+      console.log('Equipo no encontrado', teamId);
       throw new NotFoundException('Equipo no encontrado');
     }
 

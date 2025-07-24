@@ -55,9 +55,9 @@ const FairPlayTable: React.FC<FairPlayTableProps> = ({ registrations }) => {
               const total = yellow + blue + red;
               return (
                 <tr key={team._id}>
-                  <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {/* <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                     {team.name}
-                  </td>
+                  </td> */}
                   <td className="px-1 py-2 whitespace-nowrap text-sm text-center text-gray-500">
                     {yellow}
                   </td>

@@ -42,7 +42,9 @@ export class UsersService {
     return this.userModel.findByIdAndDelete(id).exec();
   }
 
-  async createUserWithPlayer(createUserDto: CreateUserDto) {
+  async createUserWithPlayer(
+    createUserDto: CreateUserDto & { teamId?: string },
+  ) {
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {
@@ -53,10 +55,11 @@ export class UsersService {
       // 2. Si el rol es Player, crear el player asociado
       let player: Player | null = null;
       if (createUserDto.role === 'Player') {
-        const playerArr = await this.playerModel.create(
-          [{ userId: createdUser._id }],
-          { session },
-        );
+        const playerData: any = { userId: createdUser._id };
+        if (createUserDto.teamId) playerData.teamId = createUserDto.teamId;
+        const playerArr = await this.playerModel.create([playerData], {
+          session,
+        });
         player = playerArr[0];
       }
 

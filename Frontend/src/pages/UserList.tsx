@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { PlusIcon, ArrowLeftIcon, Trash2Icon } from "lucide-react";
 import { useUsers, useDeleteUser, useDeleteUsers } from "../api/userHooks";
-import { UserRole } from "../models/User";
+import { UserRole, roleLabels } from "../models/User";
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
@@ -112,6 +112,25 @@ const UserList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selected.length === filteredUsers.length &&
+                        filteredUsers.length > 0
+                      }
+                      onChange={() => {
+                        if (selected.length === filteredUsers.length) {
+                          setSelected([]);
+                        } else {
+                          setSelected(
+                            filteredUsers.map((user: any) => user._id)
+                          );
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nombre
                   </th>
@@ -127,7 +146,7 @@ const UserList: React.FC = () => {
                       <option value="">Todos los roles</option>
                       {Object.values(UserRole).map((role) => (
                         <option key={role} value={role}>
-                          {role}
+                          {roleLabels[role]}
                         </option>
                       ))}
                     </select>
@@ -143,6 +162,14 @@ const UserList: React.FC = () => {
                     key={user._id}
                     className={selected.includes(user._id) ? "bg-blue-50" : ""}
                   >
+                    <td className="px-4 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(user._id)}
+                        onChange={() => toggleSelect(user._id)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
                       onClick={() => navigate(`/users/${user._id}/edit`)}
@@ -159,7 +186,7 @@ const UserList: React.FC = () => {
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
                       onClick={() => navigate(`/users/${user._id}/edit`)}
                     >
-                      {user.role}
+                      {roleLabels[user.role as UserRole] || user.role}
                     </td>
                     <td className="px-2 py-4 text-center">
                       <button

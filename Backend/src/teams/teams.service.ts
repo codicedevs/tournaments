@@ -57,7 +57,9 @@ export class TeamsService {
   }
 
   async addPlayer(teamId: string, userDto: any): Promise<Player> {
+    console.log('Agregando jugador al equipo', teamId, userDto);
     if (!isValidObjectId(teamId)) {
+      console.log('Invalid team ID', teamId);
       throw new BadRequestException(`Invalid team ID: ${teamId}`);
     }
 

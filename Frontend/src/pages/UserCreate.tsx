@@ -5,9 +5,9 @@ import { ArrowLeftIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateUser } from "../api/userHooks";
-import { useCreatePlayerByUser } from "../api/playerHooks";
-import { UserRole } from "../models/User";
+import { useCreateUserWithPlayer } from "../api/userHooks";
+import { useTeams } from "../api/teamHooks";
+import { UserRole, roleLabels } from "../models/User";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
@@ -16,6 +16,7 @@ const userSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   role: z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]),
+  teamId: z.string().optional(),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -29,43 +30,35 @@ const UserCreate: React.FC = () => {
     null
   );
   const {
-    mutate: createUser,
+    mutate: createUserWithPlayer,
     isPending,
     isError,
     error,
     data,
-  } = useCreateUser();
-  const { mutate: createPlayerByUser } = useCreatePlayerByUser();
+  } = useCreateUserWithPlayer();
+  const { data: teams = [] } = useTeams();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: { role: UserRole.PLAYER },
   });
 
   const onSubmit = (data: UserFormData) => {
-    const userData = {
+    const userData: any = {
       ...data,
       profilePicture: profilePictureUrl || undefined,
     };
-    createUser(userData, {
-      onSuccess: (newUser) => {
-        if (data.role === "Player" && newUser && newUser._id) {
-          createPlayerByUser(
-            { userId: newUser._id },
-            {
-              onSettled: () => navigate("/users"),
-              onError: () =>
-                alert("Error al crear el Player para este usuario"),
-            }
-          );
-        } else {
-          navigate("/users");
-        }
-      },
+    if (data.role === "Player" && data.teamId) {
+      userData.teamId = data.teamId;
+    }
+    createUserWithPlayer(userData, {
+      onSuccess: () => navigate("/users"),
+      onError: (error: any) => alert(error.message),
     });
   };
 
@@ -210,7 +203,7 @@ const UserCreate: React.FC = () => {
               >
                 {Object.values(UserRole).map((role) => (
                   <option key={role} value={role}>
-                    {role}
+                    {roleLabels[role]}
                   </option>
                 ))}
               </select>
@@ -220,6 +213,28 @@ const UserCreate: React.FC = () => {
                 </div>
               )}
             </div>
+            {watch("role") === "Player" && (
+              <div className="mb-4">
+                <label
+                  htmlFor="teamId"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Equipo (opcional)
+                </label>
+                <select
+                  id="teamId"
+                  {...register("teamId")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                >
+                  <option value="">Sin equipo</option>
+                  {teams.map((team: any) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"

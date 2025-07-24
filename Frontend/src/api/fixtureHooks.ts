@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Phase, Matchday, Match } from "../models";
+import { API_BASE_URL } from "../config";
 
-const API_BASE = "http://localhost:3000";
+const API_BASE = API_BASE_URL;
 
 // Fetch all phases for a tournament
 export const getTournamentPhases = async (
