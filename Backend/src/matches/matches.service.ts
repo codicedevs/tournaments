@@ -521,9 +521,16 @@ export class MatchesService {
       (e) => e.team === 'TeamB' && e.type === MatchEventType.GOAL,
     ).length;
 
+    // Helper para obtener el id de un equipo de forma segura
+    function getTeamId(team: any): string {
+      if (!team) return '';
+      if (typeof team === 'object' && team._id) return String(team._id);
+      return String(team);
+    }
+
     // Actualizar registro de TeamA
     await this.registrationModel.findOneAndUpdate(
-      { teamId: match.teamA._id, tournamentId: tournamentId.toString() },
+      { teamId: getTeamId(match.teamA), tournamentId: tournamentId.toString() },
       {
         $inc: {
           'stats.wins': teamAGoals > teamBGoals ? 1 : 0,
@@ -538,10 +545,7 @@ export class MatchesService {
 
     // Actualizar registro de TeamB
     await this.registrationModel.findOneAndUpdate(
-      {
-        teamId: match.teamB._id.toString(),
-        tournamentId: tournamentId.toString(),
-      },
+      { teamId: getTeamId(match.teamB), tournamentId: tournamentId.toString() },
       {
         $inc: {
           'stats.wins': teamBGoals > teamAGoals ? 1 : 0,
