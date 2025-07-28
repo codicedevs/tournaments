@@ -8,18 +8,23 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateUserWithPlayer } from "../api/userHooks";
 import { useTeams } from "../api/teamHooks";
 import { UserRole, roleLabels } from "../models/User";
+import { ROLE_PASSWORDS } from "../config";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
 const userSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   email: z.string().email("Correo electrónico inválido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   role: z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]),
   teamId: z.string().optional(),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
+
+// Función para obtener la contraseña según el rol desde variables de entorno
+const getPasswordByRole = (role: UserRole): string => {
+  return ROLE_PASSWORDS[role] || "usuario123";
+};
 
 const UserCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -48,16 +53,30 @@ const UserCreate: React.FC = () => {
     defaultValues: { role: UserRole.PLAYER },
   });
 
+  const selectedRole = watch("role");
+
   const onSubmit = (data: UserFormData) => {
+    const password = getPasswordByRole(data.role);
+
     const userData: any = {
       ...data,
+      password,
       profilePicture: profilePictureUrl || undefined,
+      mustChangePassword: true, // Siempre forzar cambio de contraseña
+      isVerified: true, // Usuarios creados por admin están verificados
     };
+
     if (data.role === "Player" && data.teamId) {
       userData.teamId = data.teamId;
     }
+
     createUserWithPlayer(userData, {
-      onSuccess: () => navigate("/users"),
+      onSuccess: () => {
+        alert(
+          `Usuario creado exitosamente!\n\nCredenciales temporales:\nEmail: ${data.email}\nContraseña: ${password}\n\nEl usuario deberá cambiar su contraseña en el primer login.`
+        );
+        navigate("/users");
+      },
       onError: (error: any) => alert(error.message),
     });
   };
@@ -171,26 +190,6 @@ const UserCreate: React.FC = () => {
             </div>
             <div className="mb-4">
               <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                {...register("password")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ingrese la contraseña"
-              />
-              {errors.password && (
-                <div className="text-red-600 text-sm mt-1">
-                  {errors.password.message}
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
-              <label
                 htmlFor="role"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
@@ -213,7 +212,19 @@ const UserCreate: React.FC = () => {
                 </div>
               )}
             </div>
-            {watch("role") === "Player" && (
+
+            {/* Mostrar la contraseña que se asignará */}
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Contraseña temporal:</strong>{" "}
+                {getPasswordByRole(selectedRole)}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                El usuario deberá cambiar esta contraseña en su primer login.
+              </p>
+            </div>
+
+            {selectedRole === "Player" && (
               <div className="mb-4">
                 <label
                   htmlFor="teamId"
@@ -224,7 +235,7 @@ const UserCreate: React.FC = () => {
                 <select
                   id="teamId"
                   {...register("teamId")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Sin equipo</option>
                   {teams.map((team: any) => (

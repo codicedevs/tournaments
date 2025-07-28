@@ -10,6 +10,7 @@ import { PhasesModule } from './phases/phases.module';
 import { MatchdaysModule } from './matchdays/matchdays.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 import { PlayersModule } from './players/players.module';
+import { AuthModule } from './auth/auth.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -42,6 +43,7 @@ import { serverSetting } from './settings';
         fileSize: 2 * 1024 * 1024, // 2MB
       },
     }),
+    AuthModule,
     UsersModule,
     TeamsModule,
     MatchesModule,

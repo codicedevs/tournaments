@@ -120,10 +120,8 @@ const RegistrationForm: React.FC = () => {
         })
     );
 
-    console.log("promises", promises);
     await Promise.all(promises);
 
-    console.log("promises2", promises);
     navigate("/teams");
   };
 

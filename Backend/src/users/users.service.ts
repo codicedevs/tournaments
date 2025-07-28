@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { User, UserDocument } from './entities/user.entity';
 import { Player } from '../players/entities/player.entity';
 
@@ -14,7 +16,12 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
-    const newUser = new this.userModel(createUserDto);
+    // Hashear la contraseña antes de guardar
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const newUser = new this.userModel({
+      ...createUserDto,
+      password: hashedPassword,
+    });
     return newUser.save();
   }
 
@@ -35,6 +42,38 @@ export class UsersService {
       .exec();
   }
 
+  async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Validar contraseña actual
+    const isCurrentPasswordValid = await bcrypt.compare(
+      updatePasswordDto.currentPassword,
+      user.password,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new Error('La contraseña actual es incorrecta');
+    }
+
+    // Validar que las contraseñas coincidan
+    if (updatePasswordDto.newPassword !== updatePasswordDto.confirmPassword) {
+      throw new Error('Las contraseñas no coinciden');
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 10);
+
+    // Actualizar el usuario
+    await this.userModel.findByIdAndUpdate(userId, {
+      password: hashedPassword,
+      lastPasswordChange: new Date(),
+    });
+
+    return { message: 'Contraseña actualizada exitosamente' };
+  }
+
   async remove(id: string): Promise<UserDocument | null> {
     // Elimina el Player asociado si existe
     await this.playerModel.deleteOne({ userId: id }).exec();
@@ -48,8 +87,19 @@ export class UsersService {
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {
+      // Hashear la contraseña antes de crear el usuario
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
       // 1. Crear el usuario
-      const user = await this.userModel.create([createUserDto], { session });
+      const user = await this.userModel.create(
+        [
+          {
+            ...createUserDto,
+            password: hashedPassword,
+          },
+        ],
+        { session },
+      );
       const createdUser = user[0];
 
       // 2. Si el rol es Player, crear el player asociado
