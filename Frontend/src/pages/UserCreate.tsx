@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateUserWithPlayer } from "../api/userHooks";
 import { useTeams } from "../api/teamHooks";
 import { UserRole, roleLabels } from "../models/User";
+import { ROLE_PASSWORDS } from "../config";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
@@ -20,22 +21,9 @@ const userSchema = z.object({
 
 type UserFormData = z.infer<typeof userSchema>;
 
-// Función para obtener la contraseña según el rol
+// Función para obtener la contraseña según el rol desde variables de entorno
 const getPasswordByRole = (role: UserRole): string => {
-  switch (role) {
-    case UserRole.ADMIN:
-      return "admin123";
-    case UserRole.PLAYER:
-      return "jugador123";
-    case UserRole.VIEWER:
-      return "veedor123";
-    case UserRole.MODERATOR:
-      return "coordinador123";
-    case UserRole.REFEREE:
-      return "arbitro123";
-    default:
-      return "usuario123";
-  }
+  return ROLE_PASSWORDS[role] || "usuario123";
 };
 
 const UserCreate: React.FC = () => {
