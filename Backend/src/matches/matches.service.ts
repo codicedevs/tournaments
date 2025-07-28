@@ -67,7 +67,6 @@ export class MatchesService {
       .find({ matchDayId: new Types.ObjectId(matchDayId) })
       .populate('teamA teamB')
       .exec();
-    console.log('res', res);
     return res;
   }
 
@@ -491,7 +490,6 @@ export class MatchesService {
   }
 
   async completeMatch(id: string): Promise<Match> {
-    console.log('completando match', id);
     const match = await this.matchModel.findById(id);
     if (!match) {
       throw new NotFoundException(`Match with ID ${id} not found`);

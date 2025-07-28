@@ -33,6 +33,12 @@ export class User extends Document {
 
   @Prop({ default: false })
   isVerified: boolean;
+
+  @Prop({ default: true })
+  mustChangePassword: boolean;
+
+  @Prop()
+  lastPasswordChange: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

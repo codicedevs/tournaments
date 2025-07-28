@@ -5,6 +5,7 @@ import {
 } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
 import LoginPage from "./pages/LoginPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import Dashboard from "./pages/Dashboard";
 import TournamentList from "./pages/TournamentList";
 import TournamentForm from "./pages/TournamentForm";
@@ -38,6 +39,7 @@ const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/change-password", element: <ChangePasswordPage /> },
   { path: "/dashboard", element: <Dashboard />, loader: authLoader },
   { path: "/tournaments", element: <TournamentList />, loader: authLoader },
   { path: "/tournaments/new", element: <TournamentForm />, loader: authLoader },
