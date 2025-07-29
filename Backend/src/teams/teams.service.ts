@@ -23,6 +23,7 @@ export class TeamsService {
     private readonly playerService: PlayersService,
     @InjectModel(Match.name) private matchModel: Model<Match>,
     @InjectModel(Matchday.name) private matchdayModel: Model<Matchday>,
+    @InjectModel(Player.name) private playerModel: Model<Player>,
   ) {}
 
   async create(createTeamDto: CreateTeamDto): Promise<Team> {
@@ -38,9 +39,16 @@ export class TeamsService {
   }
 
   async findOne(id: string, populate: boolean): Promise<Team | null> {
+    console.log('Buscando equipo', id, populate);
     const query = this.teamModel.findById(id);
     if (populate) {
-      query.populate('players');
+      query.populate({
+        path: 'players',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profilePicture role',
+        },
+      });
     }
     return query.exec();
   }
@@ -48,7 +56,14 @@ export class TeamsService {
   async update(id: string, updateTeamDto: UpdateTeamDto): Promise<Team | null> {
     return this.teamModel
       .findByIdAndUpdate(new Types.ObjectId(id), updateTeamDto, { new: true })
-      .populate('createdById players')
+      .populate('createdById')
+      .populate({
+        path: 'players',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profilePicture role',
+        },
+      })
       .exec();
   }
 
@@ -115,7 +130,13 @@ export class TeamsService {
 
     const team = await this.teamModel
       .findById(teamId)
-      .populate('players')
+      .populate({
+        path: 'players',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profilePicture role',
+        },
+      })
       .exec();
     if (!team) {
       throw new NotFoundException(`Team with ID ${teamId} not found`);

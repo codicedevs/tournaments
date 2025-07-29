@@ -20,6 +20,7 @@ import { PlayersModule } from 'src/players/players.module';
       { name: Team.name, schema: TeamSchema },
       { name: Match.name, schema: MatchSchema },
       { name: Matchday.name, schema: MatchdaySchema },
+      { name: Player.name, schema: PlayerSchema },
     ]),
     UsersModule,
     PlayersModule,

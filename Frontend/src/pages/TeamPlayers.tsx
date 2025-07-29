@@ -4,23 +4,14 @@ import Header from "../components/layout/Header";
 import { ArrowLeftIcon, PlusIcon } from "lucide-react";
 import { useDeletePlayerFromTeam } from "../api/playerHooks";
 import { useTeam } from "../api/teamHooks";
-import { useAllPlayers } from "../api/playerHooks";
-import { User } from "../models/User";
 
 const TeamPlayers: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams<{ teamId: string }>();
-  const { data: team } = useTeam(teamId || "");
-  const { data: allPlayers = [], isLoading, isError } = useAllPlayers();
-  // Filtrar los players que pertenecen a este equipo
-  const playersList = allPlayers.filter((player: any) => {
-    if (!teamId) return false;
-    if (!player.teamId) return false;
-    if (typeof player.teamId === "object") {
-      return player.teamId._id === teamId;
-    }
-    return player.teamId === teamId;
-  });
+  const { data: team, isLoading, isError } = useTeam(teamId || "", true);
+
+  // Usar directamente los jugadores del equipo que vienen con el populate
+  const playersList = team?.players || [];
 
   const { mutate: deletePlayer, isPending: isDeleting } =
     useDeletePlayerFromTeam();
