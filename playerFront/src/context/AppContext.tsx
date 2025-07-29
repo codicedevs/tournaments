@@ -11,6 +11,8 @@ interface User {
   id: string;
   email: string;
   name: string;
+  role: string;
+  profilePicture?: string; // optional URL of profile image
 }
 
 interface AppContextValue {
@@ -36,10 +38,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       const res = await api.login(email, password);
-      // Example: backend returns token and user info
-      const decodedUser: User = { id: "1", email, name: email.split("@")[0] };
-      setUser(decodedUser);
-      localStorage.setItem("user", JSON.stringify(decodedUser));
+
+      // Verificamos que el backend nos devuelva un usuario con rol "player"
+      if (res.user.role !== "Player") {
+        return false;
+      }
+
+      const loggedUser: User = {
+        id: res.user.id,
+        email: res.user.email,
+        name: res.user.name,
+        role: res.user.role,
+        profilePicture: res.user.profilePicture, // may be undefined
+      };
+
+      setUser(loggedUser);
+      localStorage.setItem("user", JSON.stringify(loggedUser));
       localStorage.setItem("token", res.token);
       return true;
     } catch (e) {
@@ -54,7 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
   };
-
+  
   return (
     <AppContext.Provider value={{ user, loading, login, logout }}>
       {children}

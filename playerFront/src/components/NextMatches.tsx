@@ -1,41 +1,62 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   CalendarIcon,
   ClockIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
+import { useApp } from "../context/AppContext";
+import { api, Player, Match } from "../api/http";
+
 export function NextMatches() {
+  const { user } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const matches = [
-    {
-      id: 1,
-      date: "Oct 15, 2023",
-      time: "14:30",
-      homeTeam: "Thunder FC",
-      awayTeam: "Lightning United",
-      location: "East Field Stadium",
-    },
-    {
-      id: 2,
-      date: "Oct 22, 2023",
-      time: "16:00",
-      homeTeam: "River Plate",
-      awayTeam: "Thunder FC",
-      location: "River Stadium",
-    },
-    {
-      id: 3,
-      date: "Oct 29, 2023",
-      time: "15:00",
-      homeTeam: "Thunder FC",
-      awayTeam: "Mountain Lions",
-      location: "East Field Stadium",
-    },
-  ];
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch player's team & upcoming matches
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return;
+      try {
+        const players = await api.players.getByUserId(user.id);
+        const player: Player | undefined = players[0];
+        if (!player?.teamId?.id) return;
+
+        const all = await api.matches.findByTeam(player.teamId.id);
+        const upcoming = all
+          .filter((m) => new Date(m.date) > new Date())
+          .sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+          .slice(0, 3);
+        setMatches(upcoming);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 text-center">
+        Cargando próximos partidos...
+      </section>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 text-center">
+        No hay partidos programados
+      </section>
+    );
+  }
+
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev === matches.length - 1 ? 0 : prev + 1));
   };
@@ -45,6 +66,7 @@ export function NextMatches() {
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
   };
+
   // Handle touch events for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -66,6 +88,7 @@ export function NextMatches() {
     setTouchStart(null);
     setTouchEnd(null);
   };
+
   return (
     <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -95,17 +118,22 @@ export function NextMatches() {
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2 text-gray-500">
                       <CalendarIcon size={16} />
-                      <span>{match.date}</span>
+                      <span>{new Date(match.date).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-500">
                       <ClockIcon size={16} />
-                      <span>{match.time}</span>
+                      <span>
+                        {new Date(match.date).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <div className="text-center flex-1">
                       <span className="font-bold text-lg">
-                        {match.homeTeam}
+                        {(match as any).teamA?.name ?? "Equipo A"}
                       </span>
                     </div>
                     <div className="px-4 py-2 mx-4 bg-gray-100 rounded-lg font-bold">
@@ -113,12 +141,12 @@ export function NextMatches() {
                     </div>
                     <div className="text-center flex-1">
                       <span className="font-bold text-lg">
-                        {match.awayTeam}
+                        {(match as any).teamB?.name ?? "Equipo B"}
                       </span>
                     </div>
                   </div>
                   <div className="mt-4 text-center text-gray-500">
-                    <span>{match.location}</span>
+                    <span>Loyal</span>
                   </div>
                 </div>
               ))}

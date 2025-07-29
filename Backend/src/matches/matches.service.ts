@@ -678,6 +678,34 @@ export class MatchesService {
       .exec();
   }
 
+  async findByTeam(
+    teamId: string,
+    extraFilter: Record<string, string> = {},
+  ): Promise<Match[]> {
+    if (!isValidObjectId(teamId)) {
+      throw new BadRequestException('Invalid team ID');
+    }
+
+    // Build filter so that the team can appear in either side of the match
+    const baseFilter = {
+      $or: [{ teamA: teamId }, { teamB: teamId }],
+    };
+
+    const mongoFilter = { ...baseFilter, ...extraFilter };
+
+    return this.matchModel
+      .find(mongoFilter)
+      .populate({ path: 'teamA teamB' })
+      .populate({
+        path: 'matchDayId',
+        populate: {
+          path: 'phaseId',
+          populate: { path: 'tournamentId' },
+        },
+      })
+      .exec();
+  }
+
   async updatePlayerMatches(
     matchId: string,
     playerMatches: any[],

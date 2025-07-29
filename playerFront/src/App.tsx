@@ -6,7 +6,6 @@ import { DivisionsPage } from "./pages/DivisionsPage";
 import { MatchesPage } from "./pages/MatchesPage";
 import { AccountPage } from "./pages/AccountPage";
 import LoginPage from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
 
 export function App() {
   return (
@@ -19,7 +18,6 @@ export function App() {
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </main>
       <MobileNavigation />

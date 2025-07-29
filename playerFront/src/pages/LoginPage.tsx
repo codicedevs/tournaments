@@ -8,6 +8,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState("");
   const { login } = useApp();
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -22,7 +23,7 @@ const LoginPage: React.FC = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        navigate("/dashboard");
+        navigate("/");
       } else {
         setError("Credenciales inválidas");
       }
