@@ -74,8 +74,15 @@ export const deleteTeams = async (ids: string[]): Promise<void> => {
 };
 
 // Get a specific team
-export const getTeam = async (id: string): Promise<Team> => {
-  const res = await axios.get(`${API_BASE}/teams/${id}`);
+export const getTeam = async (
+  id: string,
+  populate?: boolean
+): Promise<Team> => {
+  const url = populate
+    ? `${API_BASE}/teams/${id}?populate=true`
+    : `${API_BASE}/teams/${id}`;
+  console.log("url", url);
+  const res = await axios.get(url);
   return res.data;
 };
 export const getTeams = async (): Promise<Team[]> => {
@@ -87,10 +94,10 @@ export function useTeams() {
   return useQuery<Team[]>({ queryKey: ["teams"], queryFn: () => getTeams() });
 }
 
-export function useTeam(id: string) {
+export function useTeam(id: string, populate?: boolean) {
   return useQuery<Team>({
-    queryKey: ["teams", id],
-    queryFn: () => getTeam(id),
+    queryKey: ["teams", id, populate],
+    queryFn: () => getTeam(id, populate),
     enabled: !!id,
   });
 }
