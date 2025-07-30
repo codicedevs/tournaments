@@ -41,6 +41,7 @@ export class MatchdaysService {
   async findByPhase(phaseId: string): Promise<Matchday[]> {
     return this.matchdayModel
       .find({ phaseId: new Types.ObjectId(phaseId) })
+      .populate('matches')
       .sort({ order: 1 })
       .exec();
   }
