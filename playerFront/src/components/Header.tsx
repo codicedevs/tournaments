@@ -42,6 +42,16 @@ export function Header() {
             Partidos
           </NavLink>
           <NavLink
+            to="/teams"
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-white"
+                : "text-white/80 hover:text-white"
+            }
+          >
+            Equipos
+          </NavLink>
+          <NavLink
             to="/account"
             className={({ isActive }) =>
               isActive
@@ -53,7 +63,7 @@ export function Header() {
           </NavLink>
         </nav>
 
-        {user && (
+        {/* {user && (
           <div className="flex items-center gap-2">
             <span>Bienvenido, {user.name}</span>
             {user.profilePicture ? (
@@ -68,7 +78,7 @@ export function Header() {
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
     </header>
   );

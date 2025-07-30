@@ -37,7 +37,9 @@ export interface Player {
 export interface Team {
   _id: string;
   name: string;
-  division: string;
+  division?: string;
+  profileImage?: string;
+  players?: Player[];
 }
 
 // ----------  Matches  ----------
@@ -56,6 +58,14 @@ export interface Tournament {
   id: string;
   name: string;
   season: string;
+}
+
+// ----------  Phases  ----------
+export interface Phase {
+  id: string;
+  name: string;
+  type: string; // GROUP | KNOCKOUT | LEAGUE | FINAL | QUALIFYING
+  tournamentId: string;
 }
 
 export const playersApi = {
@@ -182,6 +192,37 @@ export const tournamentsApi = {
   },
 };
 
+export const phasesApi = {
+  getAll: async () => {
+    const { data } = await http.get<Phase[]>("/phases");
+    return data;
+  },
+
+  getById: async (id: string) => {
+    const { data } = await http.get<Phase>(`/phases/${id}`);
+    return data;
+  },
+
+  findByTournament: async (tournamentId: string) => {
+    const { data } = await http.get<Phase[]>(`/phases/tournament/${tournamentId}`);
+    return data;
+  },
+
+  create: async (payload: Partial<Phase>) => {
+    const { data } = await http.post<Phase>("/phases", payload);
+    return data;
+  },
+
+  update: async (id: string, payload: Partial<Phase>) => {
+    const { data } = await http.patch<Phase>(`/phases/${id}`, payload);
+    return data;
+  },
+
+  remove: async (id: string) => {
+    await http.delete<void>(`/phases/${id}`);
+  },
+};
+
 // Export aggregated api object for convenience
 export const api = {
   login: async (email: string, password: string) => {
@@ -195,4 +236,5 @@ export const api = {
   teams: teamsApi,
   matches: matchesApi,
   tournaments: tournamentsApi,
+  phases: phasesApi,
 };
