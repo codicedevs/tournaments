@@ -3,7 +3,7 @@ import { MobileNavigation } from "./components/MobileNavigation";
 import { Routes, Route } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { DivisionsPage } from "./pages/DivisionsPage";
-import { MatchesPage } from "./pages/MatchesPage";
+import { FixturesPage } from "./pages/FixturesPage";
 import { TeamsPage } from "./pages/TeamsPage";
 
 export function App() {
@@ -14,7 +14,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/divisions" element={<DivisionsPage />} />
-          <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/fixture" element={<FixturesPage />} />
           <Route path="/teams" element={<TeamsPage />} />
 
           {/* <Route path="/account" element={<AccountPage />} /> */}

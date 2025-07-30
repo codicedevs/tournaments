@@ -9,7 +9,7 @@ export const http = axios.create({
 export interface LoginResponse {
   token: string;
   user: {
-    id: string;
+    _id: string;
     email: string;
     name: string;
     role: string;
@@ -19,7 +19,7 @@ export interface LoginResponse {
 
 // ----------  Players  ----------
 export interface Player {
-  id: string;
+  _id: string;
   name: string;
   position: string;
   teamId: Team | null;
@@ -44,7 +44,7 @@ export interface Team {
 
 // ----------  Matches  ----------
 export interface Match {
-  id: string;
+  _id: string;
   homeTeamId: string;
   awayTeamId: string;
   date: string;
@@ -55,18 +55,91 @@ export interface Match {
 
 // ----------  Tournaments  ----------
 export interface Tournament {
-  id: string;
+  _id: string;
   name: string;
   season: string;
+  phases?: Phase[];
 }
 
 // ----------  Phases  ----------
 export interface Phase {
-  id: string;
+  _id: string;
   name: string;
-  type: string; // GROUP | KNOCKOUT | LEAGUE | FINAL | QUALIFYING
+  type: string;
   tournamentId: string;
 }
+
+// ----------  Matchdays  ----------
+export interface Matchday {
+  _id: string;
+  order: number;
+  date?: string;
+  phaseId: string | Phase;
+  matches?: Match[];
+}
+
+// ----------  Registrations  ----------
+export interface Registration {
+  _id: string;
+  teamId: string;
+  tournamentId: string;
+  phaseId?: string;
+  stats: TeamStats;
+}
+
+// ----------  TeamStats  ----------
+export interface TeamStats {
+  wins: number;
+  draws: number;
+  losses: number;
+  points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  yellowCards: number;
+  redCards: number;
+  blueCards: number;
+  fairPlayScore: number;
+  goalDifference: number;
+  scoreWeight: number;
+}
+
+export const registrationApi = {
+  getAll: async () => {
+    const { data } = await http.get<Registration[]>("/registrations");
+    return data;
+  },
+
+  getByTournament: async (tournamentId: string) => {
+    const { data } = await http.get<Registration[]>(
+      `/registrations/tournament/${tournamentId}`
+    );
+    return data;
+  },
+
+  getByTeam: async (teamId: string) => {
+    const { data } = await http.get<Registration[]>(
+      `/registrations/team/${teamId}`
+    );
+    return data;
+  },
+
+  create: async (payload: Partial<Registration>) => {
+    const { data } = await http.post<Registration>("/registrations", payload);
+    return data;
+  },
+
+  update: async (id: string, payload: Partial<Registration>) => {
+    const { data } = await http.patch<Registration>(
+      `/registrations/${id}`,
+      payload
+    );
+    return data;
+  },
+
+  remove: async (id: string) => {
+    await http.delete<void>(`/registrations/${id}`);
+  },
+};
 
 export const playersApi = {
   getAll: async () => {
@@ -204,7 +277,9 @@ export const phasesApi = {
   },
 
   findByTournament: async (tournamentId: string) => {
-    const { data } = await http.get<Phase[]>(`/phases/tournament/${tournamentId}`);
+    const { data } = await http.get<Phase[]>(
+      `/phases/tournament/${tournamentId}`
+    );
     return data;
   },
 
@@ -223,6 +298,13 @@ export const phasesApi = {
   },
 };
 
+export const matchdaysApi = {
+  findByPhase: async (phaseId: string) => {
+    const { data } = await http.get<Matchday[]>(`/matchdays/phase/${phaseId}`);
+    return data;
+  },
+};
+
 // Export aggregated api object for convenience
 export const api = {
   login: async (email: string, password: string) => {
@@ -237,4 +319,5 @@ export const api = {
   matches: matchesApi,
   tournaments: tournamentsApi,
   phases: phasesApi,
+  matchdays: matchdaysApi,
 };
