@@ -4,8 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
 import { DivisionsPage } from "./pages/DivisionsPage";
 import { MatchesPage } from "./pages/MatchesPage";
-import { AccountPage } from "./pages/AccountPage";
-import LoginPage from "./pages/LoginPage";
+import { TeamsPage } from "./pages/TeamsPage";
 
 export function App() {
   return (
@@ -16,6 +15,8 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/divisions" element={<DivisionsPage />} />
           <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
+
           {/* <Route path="/account" element={<AccountPage />} /> */}
           {/* <Route path="/login" element={<LoginPage />} /> */}
         </Routes>

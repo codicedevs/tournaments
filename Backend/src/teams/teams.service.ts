@@ -33,9 +33,28 @@ export class TeamsService {
 
   async findAll(shouldPopulate = false): Promise<Team[]> {
     if (shouldPopulate) {
-      return this.teamModel.find().populate('tournaments').exec();
+      return this.teamModel
+        .find()
+        .populate('tournaments')
+        .populate({
+          path: 'players',
+          populate: {
+            path: 'userId',
+            select: 'name email phone profilePicture role',
+          },
+        })
+        .exec();
     }
-    return this.teamModel.find().exec();
+    return this.teamModel
+      .find()
+      .populate({
+        path: 'players',
+        populate: {
+          path: 'userId',
+          select: 'name email phone profilePicture role',
+        },
+      })
+      .exec();
   }
 
   async findOne(id: string, populate: boolean): Promise<Team | null> {
