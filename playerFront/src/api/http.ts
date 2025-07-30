@@ -35,7 +35,7 @@ export interface Player {
 
 // ----------  Teams  ----------
 export interface Team {
-  id: string;
+  _id: string;
   name: string;
   division: string;
 }
@@ -47,6 +47,8 @@ export interface Match {
   awayTeamId: string;
   date: string;
   phaseId: string;
+  teamA: Team;
+  teamB: Team;
 }
 
 // ----------  Tournaments  ----------

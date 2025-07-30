@@ -86,7 +86,7 @@ export function PositionTable() {
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-xl font-bold text-indigo-700 flex items-center">
           <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
-          Position Table
+          Tabla de posiciones
         </h2>
       </div>
       <div className="overflow-x-auto">

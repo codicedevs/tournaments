@@ -24,15 +24,16 @@ export function NextMatches() {
       try {
         const players = await api.players.getByUserId(user.id);
         const player: Player | undefined = players[0];
-        if (!player?.teamId?.id) return;
-
-        const all = await api.matches.findByTeam(player.teamId.id);
+        if (!player?.teamId?._id) return;
+        const all = await api.matches.findByTeam(player.teamId._id);
+        console.log(all);
         const upcoming = all
           .filter((m) => new Date(m.date) > new Date())
           .sort(
             (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
           )
           .slice(0, 3);
+
         setMatches(upcoming);
       } finally {
         setLoading(false);
@@ -94,7 +95,7 @@ export function NextMatches() {
       <div className="px-6 py-4 border-b border-gray-200">
         <h2 className="text-xl font-bold text-indigo-700 flex items-center">
           <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
-          Next Matches
+          Próximos partidos
         </h2>
       </div>
       <div className="relative">
@@ -118,7 +119,11 @@ export function NextMatches() {
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2 text-gray-500">
                       <CalendarIcon size={16} />
-                      <span>{new Date(match.date).toLocaleDateString()}</span>
+                      <span>{new Date(match.date).toLocaleDateString("es-ES", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-500">
                       <ClockIcon size={16} />

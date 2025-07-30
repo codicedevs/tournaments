@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Team, TeamDocument } from '../../teams/entities/team.entity';
 import { MatchEventType } from '../enums/match-event-type.enum';
 import { MatchStatus } from '../enums/match-status.enum';
 

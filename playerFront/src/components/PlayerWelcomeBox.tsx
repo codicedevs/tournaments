@@ -34,9 +34,9 @@ export function PlayerWelcomeBox() {
   // Fetch next match once we have the player (and therefore teamId)
   useEffect(() => {
     const fetchNext = async () => {
-      if (!player?.teamId?.id) return;
+      if (!player?.teamId?._id) return;
       try {
-        const matches = await api.matches.findByTeam(player.teamId.id);
+        const matches = await api.matches.findByTeam(player.teamId._id);
         const upcoming = matches
           .filter((m) => new Date(m.date) > new Date())
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -46,7 +46,7 @@ export function PlayerWelcomeBox() {
       }
     };
     fetchNext();
-  }, [player?.teamId?.id]);
+  }, [player?.teamId?._id]);
 
   if (loading) return <p className="p-4 text-center">Loading player...</p>;
   if (error) return <p className="p-4 text-center text-red-600">{error}</p>;
@@ -105,11 +105,15 @@ export function PlayerWelcomeBox() {
             <div className="mt-6 flex items-center gap-2 text-sm text-gray-600">
               <CalendarIcon size={16} />
               <span>
-                Próximo partido: {new Date(nextMatch.date).toLocaleDateString()} – {
+                Próximo partido: {new Date(nextMatch.date).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })} vs {
                   // Mostrar rival
-                  nextMatch.teamA === player!.teamId!.id
-                    ? (nextMatch as any).teamB?.name ?? "Rival"
-                    : (nextMatch as any).teamA?.name ?? "Rival"
+                  nextMatch.teamA._id === player!.teamId!._id
+                  ? (nextMatch as any).teamB?.name ?? "Rival"
+                  : (nextMatch as any).teamA?.name ?? "Rival"
                 }
               </span>
             </div>

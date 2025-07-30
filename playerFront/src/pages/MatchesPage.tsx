@@ -57,11 +57,11 @@ export function MatchesPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="font-semibold flex-1 text-center truncate">
-                {match.homeTeamId}
+                {match.teamA.name}
               </span>
               <span className="mx-3 font-bold text-gray-600">VS</span>
               <span className="font-semibold flex-1 text-center truncate">
-                {match.awayTeamId}
+                {match.teamB.name}
               </span>
             </div>
           </article>

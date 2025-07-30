@@ -19,7 +19,7 @@ export function Header() {
                 : "text-white/80 hover:text-white"
             }
           >
-            Home
+            Inicio
           </NavLink>
           <NavLink
             to="/divisions"
@@ -29,7 +29,7 @@ export function Header() {
                 : "text-white/80 hover:text-white"
             }
           >
-            Divisions
+            Divisiones
           </NavLink>
           <NavLink
             to="/matches"
@@ -39,7 +39,7 @@ export function Header() {
                 : "text-white/80 hover:text-white"
             }
           >
-            Matches
+            Partidos
           </NavLink>
           <NavLink
             to="/account"
@@ -49,7 +49,7 @@ export function Header() {
                 : "text-white/80 hover:text-white"
             }
           >
-            Account
+            Mi cuenta
           </NavLink>
         </nav>
 

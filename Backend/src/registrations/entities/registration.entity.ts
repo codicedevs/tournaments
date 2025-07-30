@@ -50,6 +50,9 @@ export class Registration extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Tournament', required: true })
   tournamentId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'Phase', required: false })
+  phaseId?: Types.ObjectId;
+
   @Prop({ default: Date.now })
   registrationDate: Date;
 
