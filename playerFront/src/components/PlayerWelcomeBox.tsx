@@ -4,7 +4,53 @@ import {
   AlertTriangleIcon,
   CalendarIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useApp } from "../context/AppContext";
+import { api, Player, Match } from "../api/http";
+
 export function PlayerWelcomeBox() {
+  const { user } = useApp();
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [nextMatch, setNextMatch] = useState<Match | null>(null);
+
+  useEffect(() => {
+    const fetchPlayer = async () => {
+      if (!user?.id) return;
+      try {
+        const data = await api.players.getByUserId(user.id);
+        setPlayer(data[0] ?? null);
+      } catch (_err) {
+        setError("Error fetching player data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlayer();
+  }, [user?.id]);
+
+  // Fetch next match once we have the player (and therefore teamId)
+  useEffect(() => {
+    const fetchNext = async () => {
+      if (!player?.teamId?._id) return;
+      try {
+        const matches = await api.matches.findByTeam(player.teamId._id);
+        const upcoming = matches
+          .filter((m) => new Date(m.date) > new Date())
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setNextMatch(upcoming[0] ?? null);
+      } catch (e) {
+        // ignore silently
+      }
+    };
+    fetchNext();
+  }, [player?.teamId?._id]);
+
+  if (loading) return <p className="p-4 text-center">Loading player...</p>;
+  if (error) return <p className="p-4 text-center text-red-600">{error}</p>;
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="bg-indigo-600 px-6 py-3">
@@ -20,8 +66,8 @@ export function PlayerWelcomeBox() {
               CR
             </div>
             <div>
-              <h3 className="text-xl font-bold">Carlos Rodriguez</h3>
-              <p className="text-gray-600">Thunder FC</p>
+              <h3 className="text-xl font-bold">{user?.name}</h3>
+              <p className="text-gray-600">{player?.teamId?.name ?? "N/A"}</p>
             </div>
           </div>
           {/* Stats */}
@@ -32,7 +78,7 @@ export function PlayerWelcomeBox() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Goals</p>
-                <p className="font-bold">10</p>
+                <p className="font-bold">{player?.stats?.goals ?? 0}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -41,7 +87,7 @@ export function PlayerWelcomeBox() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Red Cards</p>
-                <p className="font-bold">1</p>
+                <p className="font-bold">{player?.stats?.redCards ?? 0}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -49,35 +95,29 @@ export function PlayerWelcomeBox() {
                 <TrophyIcon size={16} className="text-indigo-600" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Position</p>
-                <p className="font-bold">2nd</p>
+                <p className="text-xs text-gray-500">Jugados</p>
+                <p className="font-bold">{player?.stats?.matchesPlayed}</p>
               </div>
             </div>
           </div>
-        </div>
-        {/* Next match info */}
-        <div className="mt-6 pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2 text-gray-500 mb-2">
-            <CalendarIcon size={16} />
-            <span className="text-sm">Next match:</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="text-center flex-1 md:flex-none">
-              <span className="font-bold text-lg">Thunder FC</span>
+          {/* Next match section */}
+          {nextMatch && (
+            <div className="mt-6 flex items-center gap-2 text-sm text-gray-600">
+              <CalendarIcon size={16} />
+              <span>
+                Próximo partido: {new Date(nextMatch.date).toLocaleDateString("es-ES", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })} vs {
+                  // Mostrar rival
+                  nextMatch.teamA._id === player!.teamId!._id
+                  ? (nextMatch as any).teamB?.name ?? "Rival"
+                  : (nextMatch as any).teamA?.name ?? "Rival"
+                }
+              </span>
             </div>
-            <div className="px-4 py-2 mx-4 bg-gray-100 rounded-lg font-bold">
-              VS
-            </div>
-            <div className="text-center flex-1 md:flex-none">
-              <span className="font-bold text-lg">Mountain Lions</span>
-            </div>
-            <div className="hidden md:block flex-1 text-right text-gray-500">
-              <span>Oct 29, 15:00 • East Field Stadium</span>
-            </div>
-          </div>
-          <div className="md:hidden mt-2 text-center text-gray-500">
-            <span>Oct 29, 15:00 • East Field Stadium</span>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -47,6 +47,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        profilePicture: user.profilePicture,
         mustChangePassword: user.mustChangePassword,
         isVerified: user.isVerified,
       },

@@ -116,6 +116,14 @@ export class MatchesController {
     return this.matchesService.updatePlayerMatches(id, playerMatches);
   }
 
+  @Get('by-team/:teamId')
+  async findByTeam(
+    @Param('teamId') teamId: string,
+    @Query() filter: Record<string, string>,
+  ): Promise<Match[]> {
+    return this.matchesService.findByTeam(teamId, filter);
+  }
+
   // Observaciones del partido
   @Get(':matchId/observations')
   async getObservations(@Param('matchId') matchId: string) {

@@ -678,6 +678,40 @@ export class MatchesService {
       .exec();
   }
 
+  async findByTeam(
+    teamId: string,
+    extraFilter: Record<string, any> = {},
+  ): Promise<Match[]> {
+    if (!isValidObjectId(teamId)) {
+      throw new BadRequestException('Invalid team ID');
+    }
+
+    // Cast the provided ID to ObjectId to guarantee an exact match
+    const objectId = new Types.ObjectId(teamId);
+
+    // Build the filter so that the given team can appear on either side
+    const mongoFilter = {
+      $or: [{ teamA: objectId }, { teamB: objectId }],
+      ...extraFilter,
+    };
+
+    return (
+      this.matchModel
+        .find(mongoFilter)
+        // populate each side explicitly; using a spaced string can silently fail
+        .populate({ path: 'teamA' })
+        .populate({ path: 'teamB' })
+        .populate({
+          path: 'matchDayId',
+          populate: {
+            path: 'phaseId',
+            populate: { path: 'tournamentId' },
+          },
+        })
+        .exec()
+    );
+  }
+
   async updatePlayerMatches(
     matchId: string,
     playerMatches: any[],
