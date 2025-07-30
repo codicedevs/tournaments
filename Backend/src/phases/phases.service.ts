@@ -71,13 +71,17 @@ export class PhasesService {
       throw new NotFoundException(`Phase with ID ${phaseId} not found`);
     }
 
+    console.log(phase, 'phase');
+
     // Get all teams registered for the tournament
     const registrations = await this.registrationModel
       .find({
-        tournamentId: phase.tournamentId,
+        tournamentId: phase.tournamentId.toString(),
       })
       .populate('teamId')
       .exec();
+
+    console.log(registrations, 'registrations');
 
     if (registrations.length < 2) {
       throw new BadRequestException(

@@ -14,13 +14,17 @@ import {
 } from "../../api/matchHooks";
 import { useUsers } from "../../api/userHooks";
 import { format, parseISO } from "date-fns";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  EditIcon,
+} from "lucide-react";
 
 import { Modal } from "antd";
 
 interface MatchdayItemProps {
   matchday: Matchday;
-  // isExpanded: boolean; // Eliminado
-  // onToggle: () => void; // Eliminado
 }
 
 const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
@@ -45,6 +49,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
     null
   );
   const [showDetailModal, setShowDetailModal] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleFieldChange = (matchId: string, field: string, value: string) => {
     setFieldValues((prev) => ({
@@ -148,6 +153,7 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
         return "bg-gray-100 text-gray-500 border border-gray-200";
     }
   };
+
   const estadoTexto = (status: MatchStatus, match: any) => {
     if (status === MatchStatus.UNASSIGNED && match.date) {
       return "Programado";
@@ -169,243 +175,337 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
   };
 
   return (
-    <div className="rounded-xl shadow-lg p-6 bg-white transition flex flex-col">
-      <div className="mb-4">
-        <h3 className="font-bold text-xl mb-1">Fecha {matchday.order}</h3>
-        {/* Eliminado: solo mostrar la fecha de los partidos, no la de la jornada */}
+    <div className="rounded-xl shadow-lg bg-white overflow-hidden">
+      {/* Header colapsable */}
+      <div
+        className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-all"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isExpanded ? (
+              <ChevronDownIcon className="h-5 w-5 text-white" />
+            ) : (
+              <ChevronRightIcon className="h-5 w-5 text-white" />
+            )}
+            <h3 className="font-bold text-xl text-white">
+              Fecha {matchday.order}
+            </h3>
+            <span className="text-blue-100 text-sm">
+              {matches.length} partido{matches.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="text-white text-sm">
+            {isExpanded ? "Ocultar partidos" : "Mostrar partidos"}
+          </div>
+        </div>
       </div>
-      <div className="mt-2 space-y-1">
-        {isLoading ? (
-          <span className="text-gray-400 text-xs">Cargando partidos...</span>
-        ) : matches.length === 0 ? (
-          <span className="text-gray-400 text-xs">
-            No hay partidos definidos
-          </span>
-        ) : (
-          matches.map((match: Match) => {
-            const dateObj = match.date ? parseISO(match.date) : null;
-            const dayHour = dateObj ? dateObj.toLocaleString() : "-";
-            return (
-              <div
-                key={match._id}
-                className="flex flex-col gap-1 text-sm border-b last:border-b-0 pb-2 mb-2"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-black">
-                    {match.teamA.name}
-                  </span>
-                  <span className="text-gray-500 font-semibold">vs</span>
-                  <span className="font-bold text-black">
-                    {match.teamB.name}
-                  </span>
-                  <span
-                    className={`ml-2 px-3 py-1 rounded-full text-xs font-bold border ${estadoClass(
-                      match.status,
-                      match
-                    )}`}
+
+      {/* Contenido colapsable */}
+      {isExpanded && (
+        <div className="p-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Cargando partidos...</span>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <span>No hay partidos definidos para esta fecha</span>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {matches.map((match: Match) => {
+                const dateObj = match.date ? parseISO(match.date) : null;
+                const dayHour = dateObj ? dateObj.toLocaleString() : "-";
+
+                return (
+                  <div
+                    key={match._id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
-                    {estadoTexto(match.status, match)}
-                  </span>
-                  {(match.status === MatchStatus.FINISHED ||
-                    match.status === MatchStatus.COMPLETED) && (
-                    <span className="ml-2 bg-green-100 text-green-800 text-lg px-3 py-1 rounded font-bold flex items-center gap-1">
-                      <span className="text-2xl">{match.homeScore}</span>
+                    {/* Línea principal del partido */}
+                    <div className="flex items-center justify-between mb-3">
+                      {/* Equipos y resultado */}
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="font-bold text-lg text-gray-800 min-w-[120px] text-right">
+                          {match.teamA.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 font-semibold">
+                            vs
+                          </span>
+                          {(match.status === MatchStatus.FINISHED ||
+                            match.status === MatchStatus.COMPLETED) && (
+                            <span className="bg-green-100 text-green-800 text-lg px-3 py-1 rounded font-bold flex items-center gap-1">
+                              <span>{match.homeScore}</span>
+                              <span>-</span>
+                              <span>{match.awayScore}</span>
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold text-lg text-gray-800 min-w-[120px] text-left">
+                          {match.teamB.name}
+                        </span>
+                      </div>
+
+                      {/* Estado */}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${estadoClass(
+                          match.status,
+                          match
+                        )}`}
+                      >
+                        {estadoTexto(match.status, match)}
+                      </span>
+
+                      {/* Botones de acción */}
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm px-3 py-1 border border-blue-600 rounded hover:bg-blue-50 transition"
+                          onClick={() => setShowDetailModal(match._id)}
+                        >
+                          <EditIcon size={14} />
+                          <span>Editar</span>
+                        </button>
+                        <button
+                          className="flex items-center gap-1 text-green-600 hover:text-green-800 text-sm px-3 py-1 border border-green-600 rounded hover:bg-green-50 transition"
+                          onClick={() => {
+                            // Aquí puedes navegar a la ficha del partido
+                            console.log("Ver ficha del partido:", match._id);
+                          }}
+                        >
+                          <EyeIcon size={14} />
+                          <span>Ficha</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Detalles del partido */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 border-t pt-3">
+                      <div>
+                        <span className="font-semibold text-gray-700">
+                          Fecha:
+                        </span>
+                        <div>{dayHour}</div>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">
+                          Cancha:
+                        </span>
+                        <div>{match.fieldNumber || "Sin asignar"}</div>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">
+                          Veedor:
+                        </span>
+                        <div>{getUserName(match.viewerId)}</div>
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-700">
+                          Árbitro:
+                        </span>
+                        <div>{getUserName(match.refereeId)}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal de edición */}
+      <Modal
+        open={showDetailModal !== null}
+        onCancel={() => setShowDetailModal(null)}
+        footer={null}
+        title={
+          <div className="flex flex-col gap-1">
+            <span className="text-lg font-bold text-center mb-2">
+              {showDetailModal &&
+                matches.find((m) => m._id === showDetailModal)?.teamA.name}{" "}
+              <span className="text-gray-400">vs</span>{" "}
+              {showDetailModal &&
+                matches.find((m) => m._id === showDetailModal)?.teamB.name}
+            </span>
+            {showDetailModal &&
+              (() => {
+                const match = matches.find((m) => m._id === showDetailModal);
+                return (
+                  (match?.status === MatchStatus.FINISHED ||
+                    match?.status === MatchStatus.COMPLETED) && (
+                    <span className="flex justify-center items-center gap-2 text-2xl font-bold text-green-700 mb-2">
+                      {match?.homeScore}
                       <span className="text-xl">-</span>
-                      <span className="text-2xl">{match.awayScore}</span>
+                      {match?.awayScore}
                     </span>
-                  )}
+                  )
+                );
+              })()}
+          </div>
+        }
+        width={540}
+        destroyOnClose
+        className="custom-match-modal"
+      >
+        {showDetailModal &&
+          (() => {
+            const match = matches.find((m) => m._id === showDetailModal);
+            if (!match) return null;
+
+            return (
+              <div className="flex flex-col gap-6 p-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500">Fecha</span>
+                    <input
+                      type="date"
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                      value={
+                        fieldValues[match._id]?.date ||
+                        (match.date
+                          ? new Date(match.date).toISOString().slice(0, 10)
+                          : "")
+                      }
+                      onChange={(e) =>
+                        handleFieldChange(match._id, "date", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500">Hora</span>
+                    <input
+                      type="time"
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                      value={
+                        fieldValues[match._id]?.time ||
+                        (match.date
+                          ? new Date(match.date).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "")
+                      }
+                      onChange={(e) =>
+                        handleFieldChange(match._id, "time", e.target.value)
+                      }
+                      step="3600"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500">N° Cancha</span>
+                    <input
+                      type="text"
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                      value={
+                        fieldValues[match._id]?.fieldNumber ||
+                        match.fieldNumber ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        handleFieldChange(
+                          match._id,
+                          "fieldNumber",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500">Veedor</span>
+                    <select
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                      value={
+                        fieldValues[match._id]?.viewerId ||
+                        (typeof match.viewerId === "object"
+                          ? match.viewerId._id
+                          : match.viewerId) ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        handleFieldChange(match._id, "viewerId", e.target.value)
+                      }
+                    >
+                      <option value="">Seleccionar</option>
+                      {users
+                        .filter((u) => u.role === "Viewer")
+                        .map((u) => (
+                          <option key={u._id} value={u._id}>
+                            {u.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs text-gray-500">Referee</span>
+                    <select
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
+                      value={
+                        fieldValues[match._id]?.refereeId ||
+                        (typeof match.refereeId === "object"
+                          ? match.refereeId._id
+                          : match.refereeId) ||
+                        ""
+                      }
+                      onChange={(e) =>
+                        handleFieldChange(
+                          match._id,
+                          "refereeId",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <option value="">Seleccionar</option>
+                      {users
+                        .filter((u) => u.role === "Referee")
+                        .map((u) => (
+                          <option key={u._id} value={u._id}>
+                            {u.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-600 pl-1">{dayHour}</div>
-                <div className="flex gap-2 mt-1">
+                <div className="flex flex-row justify-end gap-2 mt-4">
                   <button
-                    className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-600 rounded"
-                    onClick={() => setShowDetailModal(match._id)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-bold shadow"
+                    onClick={() => {
+                      handleSave(match);
+                      setShowDetailModal(null);
+                    }}
                   >
-                    Ver detalles
+                    Guardar
+                  </button>
+                  <button
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-5 py-2 rounded font-bold shadow"
+                    onClick={() => setShowDetailModal(null)}
+                  >
+                    Cancelar
                   </button>
                 </div>
-                <Modal
-                  open={showDetailModal === match._id}
-                  onCancel={() => setShowDetailModal(null)}
-                  footer={null}
-                  title={
-                    <div className="flex flex-col gap-1">
-                      <span className="text-lg font-bold text-center mb-2">
-                        {match.teamA.name}{" "}
-                        <span className="text-gray-400">vs</span>{" "}
-                        {match.teamB.name}
+                {(match.status === MatchStatus.FINISHED ||
+                  match.status === MatchStatus.COMPLETED) && (
+                  <div className="flex flex-col items-center mt-4">
+                    <span className="text-lg font-bold text-green-700 mb-2">
+                      Resultado: {match.homeScore} - {match.awayScore}
+                    </span>
+                    {match.result && (
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-2">
+                        {match.result === "TeamA"
+                          ? `Victoria ${match.teamA.name}`
+                          : match.result === "TeamB"
+                          ? `Victoria ${match.teamB.name}`
+                          : "Empate"}
                       </span>
-                      {(match.status === MatchStatus.FINISHED ||
-                        match.status === MatchStatus.COMPLETED) && (
-                        <span className="flex justify-center items-center gap-2 text-2xl font-bold text-green-700 mb-2">
-                          {match.homeScore}
-                          <span className="text-xl">-</span>
-                          {match.awayScore}
-                        </span>
-                      )}
-                    </div>
-                  }
-                  width={540}
-                  destroyOnClose
-                  className="custom-match-modal"
-                >
-                  <div className="flex flex-col gap-6 p-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs text-gray-500">Fecha</span>
-                        <input
-                          type="date"
-                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                          value={
-                            fieldValues[match._id]?.date ||
-                            (match.date
-                              ? new Date(match.date).toISOString().slice(0, 10)
-                              : "")
-                          }
-                          onChange={(e) =>
-                            handleFieldChange(match._id, "date", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs text-gray-500">Hora</span>
-                        <input
-                          type="time"
-                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                          value={
-                            fieldValues[match._id]?.time ||
-                            (match.date
-                              ? new Date(match.date).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "")
-                          }
-                          onChange={(e) =>
-                            handleFieldChange(match._id, "time", e.target.value)
-                          }
-                          step="3600" // Solo permite seleccionar la hora, no los minutos
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs text-gray-500">N° Cancha</span>
-                        <input
-                          type="text"
-                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                          value={
-                            fieldValues[match._id]?.fieldNumber ||
-                            match.fieldNumber ||
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleFieldChange(
-                              match._id,
-                              "fieldNumber",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs text-gray-500">Veedor</span>
-                        <select
-                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                          value={
-                            fieldValues[match._id]?.viewerId ||
-                            (typeof match.viewerId === "object"
-                              ? match.viewerId._id
-                              : match.viewerId) ||
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleFieldChange(
-                              match._id,
-                              "viewerId",
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">Seleccionar</option>
-                          {users
-                            .filter((u) => u.role === "Viewer")
-                            .map((u) => (
-                              <option key={u._id} value={u._id}>
-                                {u.name}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <span className="text-xs text-gray-500">Referee</span>
-                        <select
-                          className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                          value={
-                            fieldValues[match._id]?.refereeId ||
-                            (typeof match.refereeId === "object"
-                              ? match.refereeId._id
-                              : match.refereeId) ||
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleFieldChange(
-                              match._id,
-                              "refereeId",
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">Seleccionar</option>
-                          {users
-                            .filter((u) => u.role === "Referee")
-                            .map((u) => (
-                              <option key={u._id} value={u._id}>
-                                {u.name}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex flex-row justify-end gap-2 mt-4">
-                      <button
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-bold shadow"
-                        onClick={() => {
-                          handleSave(match);
-                          setShowDetailModal(null);
-                        }}
-                      >
-                        Guardar
-                      </button>
-                      <button
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-5 py-2 rounded font-bold shadow"
-                        onClick={() => setShowDetailModal(null)}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                    {(match.status === MatchStatus.FINISHED ||
-                      match.status === MatchStatus.COMPLETED) && (
-                      <div className="flex flex-col items-center mt-4">
-                        <span className="text-lg font-bold text-green-700 mb-2">
-                          Resultado: {match.homeScore} - {match.awayScore}
-                        </span>
-                        {match.result && (
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-2">
-                            {match.result === "TeamA"
-                              ? `Victoria ${match.teamA.name}`
-                              : match.result === "TeamB"
-                              ? `Victoria ${match.teamB.name}`
-                              : "Empate"}
-                          </span>
-                        )}
-                      </div>
                     )}
                   </div>
-                </Modal>
+                )}
               </div>
             );
-          })
-        )}
-      </div>
+          })()}
+      </Modal>
     </div>
   );
 };

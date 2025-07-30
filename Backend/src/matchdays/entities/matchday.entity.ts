@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Match } from 'src/matches/entities/match.entity';
+import { Schema as MongooseSchema } from 'mongoose';
 
 export type MatchdayDocument = Matchday & Document;
 
@@ -13,6 +15,9 @@ export class Matchday extends Document {
 
   @Prop({ type: Date, required: false })
   date?: Date;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Match' }] })
+  matches: (Match | Types.ObjectId | string)[];
 }
 
 export const MatchdaySchema = SchemaFactory.createForClass(Matchday);

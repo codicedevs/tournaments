@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { Schema as MongooseSchema } from 'mongoose';
+import { Matchday } from 'src/matchdays/entities/matchday.entity';
 
 export enum PhaseType {
   GROUP = 'GROUP',
@@ -23,6 +25,9 @@ export class Phase extends Document {
     required: true,
   })
   type: PhaseType;
+
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Matchday' }] })
+  matchdays: (Matchday | Types.ObjectId | string)[];
 
   @Prop({ type: Types.ObjectId, ref: 'Tournament', required: true })
   tournamentId: Types.ObjectId;

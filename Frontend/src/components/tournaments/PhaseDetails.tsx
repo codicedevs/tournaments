@@ -6,11 +6,13 @@ import { Matchday } from "../../models/Matchday";
 interface PhaseDetailsProps {
   phase: Phase;
   registrationsCount: number;
+  matchdays?: Matchday[];
 }
 
 const PhaseDetails: React.FC<PhaseDetailsProps> = ({
   phase,
   registrationsCount,
+  matchdays = [],
 }) => {
   // Obtener nombre de la liga
   const tournament =
@@ -19,10 +21,53 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
       : undefined;
   const tournamentName = tournament?.name || "-";
 
-  // Fecha de inicio: usar createdAt del documento
-  const startDate = phase.createdAt
-    ? new Date(phase.createdAt).toLocaleDateString()
-    : "-";
+  // Calcular fecha de inicio basada en el primer matchday o match
+  const calculateStartDate = () => {
+    if (matchdays.length === 0) {
+      return {
+        date: phase.createdAt
+          ? new Date(phase.createdAt).toLocaleDateString()
+          : "-",
+        type: "Fase creada",
+        description: "Fecha de creación de la fase",
+      };
+    }
+
+    // Ordenar matchdays por orden
+    const sortedMatchdays = [...matchdays].sort((a, b) => a.order - b.order);
+    const firstMatchday = sortedMatchdays[0];
+
+    if (firstMatchday.matches && firstMatchday.matches.length > 0) {
+      // Si hay matches, usar la fecha del primer match
+      const sortedMatches = firstMatchday.matches.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+      const firstMatch = sortedMatches[0];
+      return {
+        date: new Date(firstMatch.date).toLocaleDateString(),
+        type: "Primer partido",
+        description: `fecha ${firstMatchday.order}`,
+      };
+    } else if (firstMatchday.date) {
+      // Si no hay matches pero hay fecha del matchday
+      return {
+        date: new Date(firstMatchday.date).toLocaleDateString(),
+        type: "Jornada programada",
+        description: `Fecha ${firstMatchday.order}`,
+      };
+    } else {
+      // Fallback a la fecha de creación de la fase
+      return {
+        date: phase.createdAt
+          ? new Date(phase.createdAt).toLocaleDateString()
+          : "-",
+        type: "Fase creada",
+        description: "Fecha de creación de la fase",
+      };
+    }
+  };
+
+  const startDateInfo = calculateStartDate();
 
   return (
     <div className="bg-white p-8 w-full">
@@ -45,13 +90,25 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
           <p className="mt-1 text-base text-gray-700 font-normal">
             {phase?.type}
           </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {matchdays.length > 0
+              ? `${matchdays.length} fecha${
+                  matchdays.length !== 1 ? "s" : ""
+                } configurada${matchdays.length !== 1 ? "s" : ""}`
+              : "Sin fechas configuradas"}
+          </p>
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
             Equipos Registrados
           </label>
           <p className="mt-1 text-base text-gray-700 font-normal">
-            {registrationsCount} equipos
+            {registrationsCount} equipo{registrationsCount !== 1 ? "s" : ""}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {registrationsCount > 0
+              ? 'Haz clic en "Administrar Equipos" para gestionar'
+              : "No hay equipos registrados aún"}
           </p>
         </div>
         <div>
@@ -59,7 +116,10 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
             Fecha de inicio
           </label>
           <p className="mt-1 text-base text-gray-700 font-normal">
-            {startDate}
+            {startDateInfo.date}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {startDateInfo.description}
           </p>
         </div>
       </div>

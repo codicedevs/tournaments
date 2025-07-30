@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeftIcon, TrashIcon } from "lucide-react";
+import { ArrowLeftIcon, TrashIcon, UsersIcon, PlusIcon } from "lucide-react";
 import Header from "../components/layout/Header";
 import { usePhase } from "../api/phaseHooks";
 import { useTournament } from "../api/tournamentHooks";
@@ -111,7 +111,19 @@ const PhaseDetail: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">{phase?.name}</h1>
             <p className="text-gray-600">{tournament?.name}</p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-3">
+            <button
+              onClick={() =>
+                navigate(`/tournaments/${tournamentId}/registrations`)
+              }
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
+            >
+              <UsersIcon size={16} />
+              <span>Administrar Equipos</span>
+              <span className="ml-1 px-2 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                {registrations.length}
+              </span>
+            </button>
             <button
               onClick={handleResetStats}
               className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 border border-red-600 rounded-md hover:bg-red-50"
@@ -129,6 +141,7 @@ const PhaseDetail: React.FC = () => {
               <PhaseDetails
                 phase={phase}
                 registrationsCount={registrations.length}
+                matchdays={matchdays}
               />
             </div>
           </div>
@@ -138,10 +151,21 @@ const PhaseDetail: React.FC = () => {
         <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <div className="flex justify-center">
             <div>
-              <h2 className="text-2xl font-extrabold text-green-700 flex items-center gap-2 mb-4">
-                <span className="text-3xl">🏆</span>
-                Tabla de Posiciones
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-extrabold text-green-700 flex items-center gap-2">
+                  <span className="text-3xl">🏆</span>
+                  Tabla de Posiciones
+                </h2>
+                <button
+                  onClick={() =>
+                    navigate(`/tournaments/${tournamentId}/registrations`)
+                  }
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
+                >
+                  <UsersIcon size={14} />
+                  <span>Gestionar</span>
+                </button>
+              </div>
               <div className="max-w-fit">
                 <StandingsTable registrations={registrations} />
               </div>
