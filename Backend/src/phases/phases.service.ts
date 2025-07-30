@@ -89,6 +89,9 @@ export class PhasesService {
       );
     }
 
+    // Clean up existing data: Delete all matches and matchdays for this phase
+    console.log('🧹 Limpiando datos existentes...');
+
     // Find all existing matchdays for this phase
     const existingMatchdays = await this.matchdayModel
       .find({
@@ -96,21 +99,32 @@ export class PhasesService {
       })
       .exec();
 
+    console.log(
+      `📋 Encontrados ${existingMatchdays.length} matchdays existentes`,
+    );
+
     // Delete all matches associated with these matchdays
     for (const matchday of existingMatchdays) {
-      await this.matchModel
+      const deletedMatches = await this.matchModel
         .deleteMany({
           matchDayId: matchday._id,
         })
         .exec();
+      console.log(
+        `🗑️ Borrados ${deletedMatches.deletedCount} matches del matchday ${matchday.order}`,
+      );
     }
 
     // Delete all matchdays for this phase
-    await this.matchdayModel
+    const deletedMatchdays = await this.matchdayModel
       .deleteMany({
         phaseId: new Types.ObjectId(phaseId),
       })
       .exec();
+
+    console.log(
+      `🗑️ Borrados ${deletedMatchdays.deletedCount} matchdays de la fase`,
+    );
 
     // Extract teams from registrations
     const teams = registrations.map((reg) => reg.teamId);
@@ -125,6 +139,10 @@ export class PhasesService {
       isLocalAway,
       startDate,
       weekDay,
+    );
+
+    console.log(
+      `✅ Fixture generado: ${result.matchDays.length} matchdays, ${result.matches.length} matches`,
     );
 
     return result;
@@ -151,6 +169,9 @@ export class PhasesService {
       throw new BadRequestException('Match days amount must be at least 1');
     }
 
+    // Clean up existing data: Delete all matches and matchdays for this phase
+    console.log('🧹 Limpiando datos existentes...');
+
     // Find all existing matchdays for this phase
     const existingMatchdays = await this.matchdayModel
       .find({
@@ -158,21 +179,32 @@ export class PhasesService {
       })
       .exec();
 
+    console.log(
+      `📋 Encontrados ${existingMatchdays.length} matchdays existentes`,
+    );
+
     // Delete all matches associated with these matchdays
     for (const matchday of existingMatchdays) {
-      await this.matchModel
+      const deletedMatches = await this.matchModel
         .deleteMany({
           matchDayId: matchday._id,
         })
         .exec();
+      console.log(
+        `🗑️ Borrados ${deletedMatches.deletedCount} matches del matchday ${matchday.order}`,
+      );
     }
 
     // Delete all matchdays for this phase
-    await this.matchdayModel
+    const deletedMatchdays = await this.matchdayModel
       .deleteMany({
         phaseId: new Types.ObjectId(phaseId),
       })
       .exec();
+
+    console.log(
+      `🗑️ Borrados ${deletedMatchdays.deletedCount} matchdays de la fase`,
+    );
 
     const totalMatchDays = isLocalAway ? matchDaysAmount * 2 : matchDaysAmount;
     const createdMatchDays: Matchday[] = [];
@@ -195,10 +227,13 @@ export class PhasesService {
         order: i,
         phaseId: new Types.ObjectId(phaseId),
         date: dateToSet as Date | undefined,
+        matches: [], // Inicializar array vacío
       });
       const savedMatchDay = await matchDay.save();
       createdMatchDays.push(savedMatchDay);
     }
+
+    console.log(`✅ Liga creada: ${createdMatchDays.length} matchdays`);
 
     return createdMatchDays;
   }
@@ -270,11 +305,14 @@ export class PhasesService {
         order: i + 1,
         phaseId: new Types.ObjectId(phaseId),
         date: dateToSet,
+        matches: [], // Inicializar array vacío
       });
       const savedMatchDay = await matchDay.save();
       matchDays.push(savedMatchDay);
+      console.log(matchDays, 'matchDays');
 
       // Create matches for this round
+      const matchIds: Types.ObjectId[] = [];
       for (const [homeTeam, awayTeam] of schedule[i]) {
         let matchDate = dateToSet ? new Date(dateToSet) : undefined;
         if (matchDate) {
@@ -289,7 +327,13 @@ export class PhasesService {
         });
         const savedMatch = await match.save();
         matches.push(savedMatch);
+        matchIds.push(savedMatch._id as Types.ObjectId);
       }
+
+      // Actualizar el matchday con los IDs de los matches
+      await this.matchdayModel.findByIdAndUpdate(savedMatchDay._id, {
+        $push: { matches: { $each: matchIds } },
+      });
     }
 
     // Segunda vuelta (local-away)
@@ -312,11 +356,13 @@ export class PhasesService {
           order: schedule.length + 1 + round,
           phaseId: new Types.ObjectId(phaseId),
           date: dateToSet,
+          matches: [], // Inicializar array vacío
         });
         const savedMatchDay = await matchDay.save();
         matchDays.push(savedMatchDay);
 
         // Create matches with reversed home/away teams
+        const matchIds: Types.ObjectId[] = [];
         for (const [homeTeam, awayTeam] of schedule[round]) {
           let matchDate = dateToSet ? new Date(dateToSet) : undefined;
           if (matchDate) {
@@ -331,7 +377,13 @@ export class PhasesService {
           });
           const savedMatch = await match.save();
           matches.push(savedMatch);
+          matchIds.push(savedMatch._id as Types.ObjectId);
         }
+
+        // Actualizar el matchday con los IDs de los matches
+        await this.matchdayModel.findByIdAndUpdate(savedMatchDay._id, {
+          $push: { matches: { $each: matchIds } },
+        });
       }
     }
 
@@ -370,6 +422,9 @@ export class PhasesService {
     // Shuffle teams randomly
     const shuffledTeams = this.shuffleArray([...teams]);
 
+    // Clean up existing data: Delete all matches and matchdays for this phase
+    console.log('🧹 Limpiando datos existentes...');
+
     // Delete existing matchdays and matches for this phase (if any)
     const existingMatchdays = await this.matchdayModel
       .find({
@@ -377,31 +432,44 @@ export class PhasesService {
       })
       .exec();
 
+    console.log(
+      `📋 Encontrados ${existingMatchdays.length} matchdays existentes`,
+    );
+
     for (const matchday of existingMatchdays) {
-      await this.matchModel
+      const deletedMatches = await this.matchModel
         .deleteMany({
           matchDayId: matchday._id,
         })
         .exec();
+      console.log(
+        `🗑️ Borrados ${deletedMatches.deletedCount} matches del matchday ${matchday.order}`,
+      );
     }
 
-    await this.matchdayModel
+    const deletedMatchdays = await this.matchdayModel
       .deleteMany({
         phaseId: new Types.ObjectId(phaseId),
       })
       .exec();
+
+    console.log(
+      `🗑️ Borrados ${deletedMatchdays.deletedCount} matchdays de la fase`,
+    );
 
     // Create a new matchday with order=1
     const matchday = new this.matchdayModel({
       order: 1,
       phaseId: new Types.ObjectId(phaseId),
       name: `Round of ${shuffledTeams.length}`,
+      matches: [], // Inicializar array vacío
     });
     const savedMatchday = await matchday.save();
 
     // Create matches for the first round
     const matches: Match[] = [];
     const pairCount = Math.floor(shuffledTeams.length / 2);
+    const matchIds: Types.ObjectId[] = [];
 
     for (let i = 0; i < pairCount; i++) {
       const match = new this.matchModel({
@@ -414,6 +482,7 @@ export class PhasesService {
 
       const savedMatch = await match.save();
       matches.push(savedMatch);
+      matchIds.push(savedMatch._id as Types.ObjectId);
     }
 
     // If odd number of teams, the last team gets a bye
@@ -431,7 +500,15 @@ export class PhasesService {
 
       const savedByeMatch = await byeMatch.save();
       matches.push(savedByeMatch);
+      matchIds.push(savedByeMatch._id as Types.ObjectId);
     }
+
+    // Actualizar el matchday con los IDs de los matches
+    await this.matchdayModel.findByIdAndUpdate(savedMatchday._id, {
+      $push: { matches: { $each: matchIds } },
+    });
+
+    console.log(`✅ Knockout creado: 1 matchday, ${matches.length} matches`);
 
     return {
       matchday: savedMatchday,
@@ -508,12 +585,14 @@ export class PhasesService {
       order: latestMatchday.order + 1,
       phaseId: new Types.ObjectId(phaseId),
       name: this.getKnockoutRoundName(winners.length),
+      matches: [], // Inicializar array vacío
     });
     const savedMatchday = await newMatchday.save();
 
     // Create new matches by pairing winners
     const newMatches: Match[] = [];
     const pairCount = Math.floor(winners.length / 2);
+    const matchIds: Types.ObjectId[] = [];
 
     for (let i = 0; i < pairCount; i++) {
       const match = new this.matchModel({
@@ -526,6 +605,7 @@ export class PhasesService {
 
       const savedMatch = await match.save();
       newMatches.push(savedMatch);
+      matchIds.push(savedMatch._id as Types.ObjectId);
     }
 
     // If odd number of winners, one gets a bye
@@ -543,7 +623,13 @@ export class PhasesService {
 
       const savedByeMatch = await byeMatch.save();
       newMatches.push(savedByeMatch);
+      matchIds.push(savedByeMatch._id as Types.ObjectId);
     }
+
+    // Actualizar el matchday con los IDs de los matches
+    await this.matchdayModel.findByIdAndUpdate(savedMatchday._id, {
+      $push: { matches: { $each: matchIds } },
+    });
 
     return {
       matchday: savedMatchday,

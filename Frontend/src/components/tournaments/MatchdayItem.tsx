@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Matchday } from "../../models/Matchday";
 import {
   Match,
@@ -25,9 +26,14 @@ import { Modal } from "antd";
 
 interface MatchdayItemProps {
   matchday: Matchday;
+  tournamentId: string;
 }
 
-const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
+const MatchdayItem: React.FC<MatchdayItemProps> = ({
+  matchday,
+  tournamentId,
+}) => {
+  const navigate = useNavigate();
   const { data: matches = [], isLoading } = useMatchdayMatches(matchday._id);
   const { mutate: updateMatch } = useUpdateMatch();
   const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
@@ -214,99 +220,87 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({ matchday }) => {
               <span>No hay partidos definidos para esta fecha</span>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 overflow-x-auto">
               {matches.map((match: Match) => {
                 const dateObj = match.date ? parseISO(match.date) : null;
                 const dayHour = dateObj ? dateObj.toLocaleString() : "-";
-
                 return (
                   <div
                     key={match._id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="flex items-center gap-3 border-b last:border-b-0 py-2 px-2 min-w-[900px] hover:bg-blue-50 transition"
                   >
-                    {/* Línea principal del partido */}
-                    <div className="flex items-center justify-between mb-3">
-                      {/* Equipos y resultado */}
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="font-bold text-lg text-gray-800 min-w-[120px] text-right">
-                          {match.teamA.name}
+                    {/* Equipo A */}
+                    <span className="font-bold text-gray-800 w-32 truncate text-right">
+                      {match.teamA.name}
+                    </span>
+                    {/* VS */}
+                    <span className="text-gray-500 font-semibold w-6 text-center">
+                      vs
+                    </span>
+                    {/* Equipo B */}
+                    <span className="font-bold text-gray-800 w-32 truncate text-left">
+                      {match.teamB.name}
+                    </span>
+                    {/* Resultado */}
+                    <span className="w-20 text-center">
+                      {match.status === MatchStatus.FINISHED ||
+                      match.status === MatchStatus.COMPLETED ? (
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded font-bold">
+                          {match.homeScore} - {match.awayScore}
                         </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500 font-semibold">
-                            vs
-                          </span>
-                          {(match.status === MatchStatus.FINISHED ||
-                            match.status === MatchStatus.COMPLETED) && (
-                            <span className="bg-green-100 text-green-800 text-lg px-3 py-1 rounded font-bold flex items-center gap-1">
-                              <span>{match.homeScore}</span>
-                              <span>-</span>
-                              <span>{match.awayScore}</span>
-                            </span>
-                          )}
-                        </div>
-                        <span className="font-bold text-lg text-gray-800 min-w-[120px] text-left">
-                          {match.teamB.name}
-                        </span>
-                      </div>
-
-                      {/* Estado */}
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold border ${estadoClass(
-                          match.status,
-                          match
-                        )}`}
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </span>
+                    {/* Estado */}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-bold border w-24 text-center ${estadoClass(
+                        match.status,
+                        match
+                      )}`}
+                    >
+                      {estadoTexto(match.status, match)}
+                    </span>
+                    {/* Fecha/Hora */}
+                    <span className="w-36 text-center text-gray-700">
+                      {dayHour}
+                    </span>
+                    {/* Cancha */}
+                    <span className="w-20 text-center text-gray-700">
+                      {match.fieldNumber || "-"}
+                    </span>
+                    {/* Veedor */}
+                    <span
+                      className="w-32 text-center text-gray-700 truncate"
+                      title={getUserName(match.viewerId)}
+                    >
+                      {getUserName(match.viewerId)}
+                    </span>
+                    {/* Árbitro */}
+                    <span
+                      className="w-32 text-center text-gray-700 truncate"
+                      title={getUserName(match.refereeId)}
+                    >
+                      {getUserName(match.refereeId)}
+                    </span>
+                    {/* Botones */}
+                    <div className="flex gap-2 ml-2">
+                      <button
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs px-3 py-1 border border-blue-600 rounded hover:bg-blue-50 transition"
+                        onClick={() => setShowDetailModal(match._id)}
                       >
-                        {estadoTexto(match.status, match)}
-                      </span>
-
-                      {/* Botones de acción */}
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm px-3 py-1 border border-blue-600 rounded hover:bg-blue-50 transition"
-                          onClick={() => setShowDetailModal(match._id)}
-                        >
-                          <EditIcon size={14} />
-                          <span>Editar</span>
-                        </button>
-                        <button
-                          className="flex items-center gap-1 text-green-600 hover:text-green-800 text-sm px-3 py-1 border border-green-600 rounded hover:bg-green-50 transition"
-                          onClick={() => {
-                            // Aquí puedes navegar a la ficha del partido
-                            console.log("Ver ficha del partido:", match._id);
-                          }}
-                        >
-                          <EyeIcon size={14} />
-                          <span>Ficha</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Detalles del partido */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 border-t pt-3">
-                      <div>
-                        <span className="font-semibold text-gray-700">
-                          Fecha:
-                        </span>
-                        <div>{dayHour}</div>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">
-                          Cancha:
-                        </span>
-                        <div>{match.fieldNumber || "Sin asignar"}</div>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">
-                          Veedor:
-                        </span>
-                        <div>{getUserName(match.viewerId)}</div>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-gray-700">
-                          Árbitro:
-                        </span>
-                        <div>{getUserName(match.refereeId)}</div>
-                      </div>
+                        <EditIcon size={14} />
+                        Editar
+                      </button>
+                      <button
+                        className="flex items-center gap-1 text-green-600 hover:text-green-800 text-xs px-3 py-1 border border-green-600 rounded hover:bg-green-50 transition"
+                        onClick={() => {
+                          navigate(`/match/${match._id}/report`);
+                        }}
+                      >
+                        <EyeIcon size={14} />
+                        Ficha
+                      </button>
                     </div>
                   </div>
                 );

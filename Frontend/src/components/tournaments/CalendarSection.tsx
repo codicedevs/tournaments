@@ -8,6 +8,7 @@ interface CalendarSectionProps {
   expandedMatchdays: Record<string, boolean>;
   onToggleMatchday: (matchdayId: string) => void;
   onGenerateFixture: () => void;
+  tournamentId: string;
 }
 
 const CalendarSection: React.FC<CalendarSectionProps> = ({
@@ -15,6 +16,7 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
   expandedMatchdays,
   onToggleMatchday,
   onGenerateFixture,
+  tournamentId,
 }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -36,13 +38,12 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 p-4">
           {matchdays.map((matchday) => (
             <MatchdayItem
               key={matchday._id}
               matchday={matchday}
-              isExpanded={!!expandedMatchdays[matchday._id]}
-              onToggle={() => onToggleMatchday(matchday._id)}
+              tournamentId={tournamentId}
             />
           ))}
         </div>

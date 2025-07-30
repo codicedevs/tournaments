@@ -260,6 +260,7 @@ export class MatchesService {
     if (!player.teamId) {
       throw new BadRequestException('El jugador no pertenece a ningún equipo');
     }
+    console.log('a ver', player, teamId);
     if (player.teamId.toString() !== teamId.toString()) {
       throw new BadRequestException(
         'Player does not belong to the specified team',

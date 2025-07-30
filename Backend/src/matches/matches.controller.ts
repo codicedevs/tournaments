@@ -130,7 +130,7 @@ export class MatchesController {
     const obs = await this.matchObservationsModel.findOne({
       matchId: new Types.ObjectId(matchId),
     });
-    if (!obs) throw new NotFoundException('Observations not found');
+    if (!obs) return null;
     return obs;
   }
 

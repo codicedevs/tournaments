@@ -222,6 +222,7 @@ const PhaseDetail: React.FC = () => {
           expandedMatchdays={expandedMatchdays}
           onToggleMatchday={toggleMatchday}
           onGenerateFixture={handleGenerateFixture}
+          tournamentId={tournamentId!}
         />
       </main>
     </div>
