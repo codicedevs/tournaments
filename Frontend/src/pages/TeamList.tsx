@@ -8,6 +8,7 @@ import {
   PencilIcon,
   UserPlusIcon,
   UsersIcon,
+  SearchIcon,
 } from "lucide-react";
 import { useTeams, useDeleteTeam, useDeleteTeams } from "../api/teamHooks";
 import { useTeamsWithRegistrations } from "../api/teamHooks";
@@ -26,6 +27,7 @@ const TeamList: React.FC = () => {
   );
   const [transferPlayerId, setTransferPlayerId] = useState<string>("");
   const [transferTargetTeamId, setTransferTargetTeamId] = useState<string>("");
+  const [tournamentFilter, setTournamentFilter] = useState<string>("");
   const { data: allPlayers = [] } = useAllPlayers();
 
   // Get teams data
@@ -35,6 +37,35 @@ const TeamList: React.FC = () => {
     isError,
     refetch,
   } = useTeamsWithRegistrations();
+
+  // Filter teams by division name
+  const filteredTeams = teams.filter((team: Team) => {
+    if (!tournamentFilter) return true;
+
+    return team.registrations?.some((registration: any) => {
+      const tournamentName =
+        typeof registration.tournamentId === "object"
+          ? registration.tournamentId.name
+          : "División";
+      return tournamentName
+        .toLowerCase()
+        .includes(tournamentFilter.toLowerCase());
+    });
+  });
+
+  // Get unique division names for filter dropdown
+  const tournamentNames = Array.from(
+    new Set(
+      teams.flatMap(
+        (team: Team) =>
+          team.registrations?.map((registration: any) =>
+            typeof registration.tournamentId === "object"
+              ? registration.tournamentId.name
+              : "División"
+          ) || []
+      )
+    )
+  ).sort();
 
   // Delete mutations
   const { mutate: deleteTeam, isPending: isDeleteLoading } = useDeleteTeam();
@@ -55,10 +86,10 @@ const TeamList: React.FC = () => {
 
   // Handle select all teams
   const handleSelectAll = () => {
-    if (selectedTeams.length === teams.length) {
+    if (selectedTeams.length === filteredTeams.length) {
       setSelectedTeams([]);
     } else {
-      setSelectedTeams(teams.map((team) => team._id));
+      setSelectedTeams(filteredTeams.map((team) => team._id));
     }
   };
 
@@ -147,6 +178,12 @@ const TeamList: React.FC = () => {
           </div>
         </div>
 
+        {tournamentFilter && (
+          <div className="text-sm text-gray-600 mb-4">
+            Mostrando equipos de la división "{tournamentFilter}"
+          </div>
+        )}
+
         <div className="flex justify-between items-center mb-6">
           <div>
             {selectedTeams.length > 0 && (
@@ -189,16 +226,17 @@ const TeamList: React.FC = () => {
               Error al cargar los equipos. Inténtelo de nuevo más tarde.
             </p>
           </div>
-        ) : teams.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600 mb-4">No hay equipos disponibles.</p>
-            <button
-              onClick={() => navigate("/teams/new")}
-              className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
-            >
-              <PlusIcon size={18} />
-              <span>Crear Primer Equipo</span>
-            </button>
+        ) : filteredTeams.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">🏆</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              No hay equipos disponibles
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {tournamentFilter
+                ? `No hay equipos disponibles para la división "${tournamentFilter}".`
+                : "No hay equipos registrados en el sistema."}
+            </p>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -208,7 +246,10 @@ const TeamList: React.FC = () => {
                   <th className="w-10 px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedTeams.length === teams.length}
+                      checked={
+                        selectedTeams.length === filteredTeams.length &&
+                        filteredTeams.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
@@ -219,8 +260,19 @@ const TeamList: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Entrenador
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Torneos
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                    <select
+                      value={tournamentFilter}
+                      onChange={(e) => setTournamentFilter(e.target.value)}
+                      className="w-40 border border-gray-300 rounded px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-500 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Todas las divisiones</option>
+                      {tournamentNames.map((tournamentName) => (
+                        <option key={tournamentName} value={tournamentName}>
+                          {tournamentName}
+                        </option>
+                      ))}
+                    </select>
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
@@ -228,7 +280,7 @@ const TeamList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {teams.map((team: Team) => (
+                {filteredTeams.map((team: Team) => (
                   <tr key={team._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
@@ -251,12 +303,12 @@ const TeamList: React.FC = () => {
                             <div key={registration._id} className="text-xs">
                               {typeof registration.tournamentId === "object"
                                 ? registration.tournamentId.name
-                                : "Torneo"}
+                                : "División"}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-gray-400">Sin torneos</span>
+                        <span className="text-gray-400">Sin divisiones</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
@@ -266,7 +318,7 @@ const TeamList: React.FC = () => {
                         title="Ver jugadores"
                       >
                         <UsersIcon size={16} />
-                        <span>Ver Jugadores</span>
+                        <span>Ver Jugadores ({team.players?.length || 0})</span>
                       </button>
 
                       <button

@@ -39,7 +39,7 @@ const PhaseForm: React.FC = () => {
   const { data: tournament, isLoading: isTournamentLoading } = useTournament(
     tournamentId || ""
   );
-  const { mutate: createPhase, isLoading: isCreating } = useCreatePhase();
+  const { mutate: createPhase, isPending: isCreating } = useCreatePhase();
 
   const isLoading = isTournamentLoading || isCreating;
 
@@ -47,7 +47,7 @@ const PhaseForm: React.FC = () => {
   const onSubmit = (data: PhaseFormData) => {
     setError("");
     if (!tournamentId) {
-      setError("ID del torneo no encontrado");
+      setError("ID de la división no encontrado");
       return;
     }
 
@@ -59,7 +59,7 @@ const PhaseForm: React.FC = () => {
       },
       {
         onSuccess: (newPhase) => {
-          navigate(`/tournaments/${tournamentId}/phases/${newPhase._id}`);
+          navigate(`/divisions/${tournamentId}/phases/${newPhase._id}`);
         },
         onError: (err) => {
           console.error("Error creating phase:", err);
@@ -74,11 +74,11 @@ const PhaseForm: React.FC = () => {
       <Header />
       <main className="container mx-auto py-8 px-4">
         <button
-          onClick={() => navigate(`/tournaments/${tournamentId}`)}
+          onClick={() => navigate(`/divisions`)}
           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 mb-6"
         >
           <ArrowLeftIcon size={16} />
-          <span>Volver al Torneo</span>
+          <span>Volver a Divisiones</span>
         </button>
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-blue-600 text-white">
@@ -155,7 +155,7 @@ const PhaseForm: React.FC = () => {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
-                onClick={() => navigate(`/tournaments/${tournamentId}`)}
+                onClick={() => navigate(`/divisions`)}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 disabled={isLoading}
               >

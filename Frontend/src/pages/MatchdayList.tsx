@@ -31,6 +31,10 @@ const MatchdayList: React.FC = () => {
     }));
   };
 
+  const handleBack = () => {
+    navigate(`/divisions/${tournamentId}/phases/${phaseId}`);
+  };
+
   // Sort matchdays by order
   const sortedMatchdays = [...matchdays].sort((a, b) => a.order - b.order);
 
@@ -54,9 +58,7 @@ const MatchdayList: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() =>
-              navigate(`/tournaments/${tournamentId}/phases/${phaseId}`)
-            }
+            onClick={handleBack}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
@@ -86,7 +88,7 @@ const MatchdayList: React.FC = () => {
               <button
                 onClick={() =>
                   navigate(
-                    `/tournaments/${tournamentId}/phases/${phaseId}/fixture`
+                    `/divisions/${tournamentId}/phases/${phaseId}/fixture`
                   )
                 }
                 className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -106,6 +108,7 @@ const MatchdayList: React.FC = () => {
                       matchday={matchday}
                       isExpanded={!!expandedMatchdays[matchday._id]}
                       onToggle={() => toggleMatchday(matchday._id)}
+                      isComplete={false}
                     />
                   </div>
                 ))}

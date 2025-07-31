@@ -139,7 +139,6 @@ export class PlayersService {
 
   async remove(id: string): Promise<void> {
     const result = await this.playerModel.findByIdAndDelete(id).exec();
-    console.log('result', result);
     if (!result) {
       throw new NotFoundException(`Player with ID ${id} not found`);
     }

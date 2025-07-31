@@ -77,8 +77,8 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                 ? match.matchDayId.phaseId.tournamentId &&
                   typeof match.matchDayId.phaseId.tournamentId === "object"
                   ? match.matchDayId.phaseId.tournamentId.name
-                  : "-"
-                : "-";
+                  : "División"
+                : "División";
             return (
               <div
                 key={match._id}
@@ -136,7 +136,7 @@ const ViewerMatchList = ({ viewerId, onSelectMatch }: ViewerMatchListProps) => {
                   </div>
                   <div className="info-item text-center">
                     <div className="info-label text-gray-500 text-sm mb-1 font-medium">
-                      Torneo
+                      División
                     </div>
                     <div className="font-semibold text-gray-800 text-lg">
                       {torneo}

@@ -7,11 +7,12 @@ import Header from "../components/layout/Header";
 import { ArrowLeftIcon, Upload, PlusIcon, Star } from "lucide-react";
 import { useTeam, useUpdateTeam, useTeamPlayers } from "../api/teamHooks";
 import { useUser } from "../api/userHooks";
+import { usePlayers } from "../api/playerHooks";
 import RegisterPlayer from "./RegisterPlayer";
 import { Modal } from "antd";
 
 const teamSchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio"),
+  name: z.string().min(1, "El nombre del equipo es requerido"),
   coach: z.string().optional(),
   profileImage: z.instanceof(File).optional().or(z.string().optional()),
 });
@@ -122,7 +123,7 @@ const EditTeamForm: React.FC = () => {
     );
   };
 
-  // PATCH para asignar capitán
+  // PATCH para asignar delegado (capitán)
   const handleSetCaptain = (userId: string) => {
     if (!teamId) return;
     updateTeam(
@@ -136,7 +137,7 @@ const EditTeamForm: React.FC = () => {
           // Refresca la vista automáticamente por react-query
         },
         onError: (error) => {
-          setError("Error al asignar capitán");
+          setError("Error al asignar delegado");
         },
       }
     );
@@ -157,49 +158,43 @@ const EditTeamForm: React.FC = () => {
         </button>
 
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header visual */}
-          <div className="flex items-center gap-6 px-6 py-6 bg-blue-600 text-white">
-            <div className="relative">
+          <div className="px-6 py-4 bg-blue-600 text-white">
+            <h1 className="text-xl font-bold">Editar Equipo</h1>
+          </div>
+
+          <div className="flex justify-end px-6 pt-4">
+            <div
+              className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 border-2 border-blue-400 -mt-10 -mb-5"
+              onClick={() => fileInputRef.current?.click()}
+              title="Seleccionar escudo del equipo"
+            >
               {imagePreview ? (
                 <img
                   src={imagePreview}
-                  alt="Escudo"
-                  className="h-24 w-24 object-cover rounded-full border-4 border-white shadow"
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ cursor: "pointer" }}
+                  alt="Escudo del equipo"
+                  className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <div
-                  className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-10 h-10 text-gray-400" />
-                </div>
+                <span className="text-gray-400">Escudo</span>
               )}
-              <input
-                ref={fileInputRef}
-                id="profileImage"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold mb-1">
-                {team?.name || "Equipo"}
-              </h1>
-            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
                 {error}
               </div>
             )}
-            {/* Nombre */}
-            <div>
+
+            <div className="mb-4">
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
@@ -215,54 +210,50 @@ const EditTeamForm: React.FC = () => {
                 disabled={isLoading}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">
+                <div className="text-red-600 text-sm mt-1">
                   {errors.name.message}
-                </p>
+                </div>
               )}
             </div>
-            {/* Entrenador */}
-            <div>
+
+            <div className="mb-4">
               <label
                 htmlFor="coach"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Entrenador (opcional)
+                Entrenador
               </label>
               <input
                 id="coach"
                 type="text"
                 {...register("coach")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ingrese el nombre del entrenador"
+                placeholder="Nombre del entrenador"
                 disabled={isLoading}
               />
+              {errors.coach && (
+                <div className="text-red-600 text-sm mt-1">
+                  {errors.coach.message}
+                </div>
+              )}
             </div>
-            {/* createdAt y createdById solo visualización */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha de creación
-                </label>
-                <div className="px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
-                  {team?.createdAt
-                    ? new Date(team.createdAt).toLocaleString()
-                    : "-"}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Creador
-                </label>
-                <div className="px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
-                  {creator?.name ||
-                    (typeof team?.createdById === "string"
-                      ? team.createdById
-                      : "-")}
-                </div>
+
+            {/* Información del delegado actual */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Delegado Actual
+              </label>
+              <div className="px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
+                {team?.captain
+                  ? typeof team.captain === "object"
+                    ? team.captain.name
+                    : "Delegado asignado"
+                  : "Sin delegado asignado"}
               </div>
             </div>
-            {/* Lista de jugadores mejorada */}
-            <div>
+
+            {/* Lista de jugadores */}
+            <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-lg font-semibold text-gray-700">
                   Jugadores
@@ -295,7 +286,6 @@ const EditTeamForm: React.FC = () => {
                         }`}
                         onClick={() => setSelectedPlayerId(p.user._id)}
                       >
-                        {/* Imagen: click navega a ficha */}
                         {p.user?.profilePicture ? (
                           <img
                             src={p.user.profilePicture}
@@ -317,7 +307,6 @@ const EditTeamForm: React.FC = () => {
                             {p.user?.name?.charAt(0).toUpperCase() || "?"}
                           </div>
                         )}
-                        {/* Nombre: click navega a ficha */}
                         <span
                           className="font-medium text-gray-800 cursor-pointer"
                           onClick={(e) => {
@@ -327,14 +316,13 @@ const EditTeamForm: React.FC = () => {
                         >
                           {p.user ? p.user.name : p.name}
                         </span>
-                        {/* Icono de capitán alineado a la derecha */}
                         <div className="ml-auto flex items-center">
                           {isCaptain && (
                             <span
-                              title="Capitán"
+                              title="Delegado"
                               className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-400 text-white font-bold text-xs"
                             >
-                              C
+                              D
                             </span>
                           )}
                         </div>
@@ -344,7 +332,8 @@ const EditTeamForm: React.FC = () => {
                 )}
               </div>
             </div>
-            {/* Botón para asignar capitán */}
+
+            {/* Botón para asignar delegado */}
             {selectedPlayerId && (
               <div className="flex justify-end mt-4">
                 <button
@@ -353,11 +342,11 @@ const EditTeamForm: React.FC = () => {
                   onClick={() => handleSetCaptain(selectedPlayerId)}
                   disabled={team?.captain === selectedPlayerId}
                 >
-                  Asignar como Capitán
+                  Asignar como Delegado
                 </button>
               </div>
             )}
-            {/* Botones */}
+
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
@@ -369,8 +358,8 @@ const EditTeamForm: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
                 disabled={isLoading}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 {isUpdating ? "Guardando..." : "Guardar Cambios"}
               </button>
@@ -391,7 +380,6 @@ const EditTeamForm: React.FC = () => {
           teamId={teamId}
           onSuccess={() => {
             setIsModalOpen(false);
-            // Opcional: refrescar la lista de jugadores si tienes un método para ello
           }}
           hideLayout={true}
         />

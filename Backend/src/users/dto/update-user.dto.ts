@@ -46,6 +46,10 @@ export class UpdateUserDto {
   role?: Role;
 
   @IsOptional()
+  @IsString({ message: 'El ID del equipo debe ser una cadena de texto' })
+  teamId?: string;
+
+  @IsOptional()
   @IsBoolean({ message: 'isVerified debe ser un valor booleano' })
   isVerified?: boolean;
 

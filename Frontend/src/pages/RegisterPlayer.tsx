@@ -24,6 +24,20 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
   const { mutate: addPlayerToTeam, isPending } = useAddPlayerToTeam();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Función para determinar la ruta de regreso
+  const getBackRoute = () => {
+    if (propTeamId) {
+      // Si viene de un modal o contexto específico, usar onSuccess si está disponible
+      return `/teams/${propTeamId}/players`;
+    }
+    if (paramTeamId) {
+      // Si viene de una ruta de equipo específico
+      return `/teams/${paramTeamId}/players`;
+    }
+    // Fallback a la lista de equipos
+    return `/teams`;
+  };
+
   const [formData, setFormData] = useState<RegisterPlayerData>({
     name: "",
     email: "",
@@ -101,8 +115,9 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
           ...prev,
           profilePicture: res.data.url,
         }));
-      } catch (err) {
-        alert("Error subiendo la imagen de perfil");
+      } catch (error) {
+        console.error("Error subiendo imagen:", error);
+        alert("Error al subir la imagen");
       }
     }
   };
@@ -113,122 +128,111 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
 
   if (hideLayout) {
     return (
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
-        {/* Datos Personales */}
-        <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Datos Personales
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-6">
-              <div
-                onClick={handleImageClick}
-                className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
-              >
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <UploadIcon className="w-8 h-8 text-gray-400" />
-                )}
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
-              <div className="flex-1">
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Nombre Completo
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Contenido del formulario sin layout */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-6">
+            <div
+              onClick={handleImageClick}
+              className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+            >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-full rounded-full object-cover"
                 />
-              </div>
+              ) : (
+                <UploadIcon className="w-8 h-8 text-gray-400" />
+              )}
             </div>
-
-            <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            <div className="flex-1">
               <label
-                htmlFor="phone"
+                htmlFor="name"
                 className="block text-sm font-medium text-gray-700"
               >
-                Teléfono
+                Nombre Completo
               </label>
               <input
-                type="tel"
-                id="phone"
-                name="phone"
+                type="text"
+                id="name"
+                name="name"
                 required
-                value={formData.phone}
+                value={formData.name}
                 onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
           </div>
-        </div>
 
-        {/* Datos de Inicio de Sesión */}
-        <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Datos de Inicio de Sesión
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Correo Electrónico
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Contraseña
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Selección de Equipo */}
-        <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Equipo</h2>
           <div>
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Teléfono
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              value={formData.phone}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Correo Electrónico
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Contraseña
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="teamId"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Equipo
+            </label>
             <select
               id="teamId"
               name="teamId"
@@ -236,35 +240,22 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
               value={formData.teamId}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              disabled={!!propTeamId}
             >
-              {propTeamId ? (
-                teams
-                  .filter((team) => team._id === propTeamId)
-                  .map((team) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))
-              ) : (
-                <>
-                  <option value="">Selecciona un equipo</option>
-                  {teams.map((team) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </>
-              )}
+              <option value="">Selecciona un equipo</option>
+              {teams.map((team) => (
+                <option key={team._id} value={team._id}>
+                  {team.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="flex justify-end gap-3">
           <button
             type="submit"
             disabled={isPending}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {isPending ? "Registrando..." : "Registrar Jugador"}
           </button>
@@ -279,7 +270,7 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(getBackRoute())}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />

@@ -10,15 +10,14 @@ import { usePlayers } from "../api/playerHooks";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
-  captainFullName: z.string().min(1, "El nombre del capitán es requerido"),
-  captainPhoneNumber: z.string().min(1, "El teléfono del capitán es requerido"),
+  captainFullName: z.string().min(1, "El nombre del delegado es requerido"),
+  captainPhoneNumber: z
+    .string()
+    .min(1, "El teléfono del delegado es requerido"),
   captainEmail: z
     .string()
     .email("Debe ser un correo electrónico válido")
-    .min(1, "El correo del capitán es requerido"),
-  agreement: z.boolean().refine((val) => val === true, {
-    message: "Debes aceptar las reglas y términos del torneo",
-  }),
+    .min(1, "El correo del delegado es requerido"),
   coach: z.string().optional(),
   profileImage: z.instanceof(File).optional().or(z.string().optional()),
   createdById: z.string().min(1, "El ID del creador es requerido"),
@@ -52,7 +51,7 @@ const TeamForm: React.FC = () => {
     watch,
   } = useForm<TeamFormData>({
     resolver: zodResolver(teamSchema),
-    defaultValues: { players: [], agreement: false },
+    defaultValues: { players: [] },
   });
 
   // Watch the team name for validation
@@ -114,6 +113,32 @@ const TeamForm: React.FC = () => {
           <div className="px-6 py-4 bg-blue-600 text-white">
             <h1 className="text-xl font-bold">Crear Nuevo Equipo</h1>
           </div>
+
+          <div className="flex justify-end px-6 pt-4">
+            <div
+              className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 border-2 border-blue-400 -mt-10 -mb-5"
+              onClick={() => fileInputRef.current?.click()}
+              title="Seleccionar escudo del equipo"
+            >
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Escudo del equipo"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <span className="text-gray-400">Escudo</span>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="p-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
@@ -166,14 +191,14 @@ const TeamForm: React.FC = () => {
                 htmlFor="captainFullName"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Nombre Completo del Capitán
+                Nombre Completo del Delegado
               </label>
               <input
                 id="captainFullName"
                 type="text"
                 {...register("captainFullName")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ingrese el nombre completo del capitán"
+                placeholder="Ingrese el nombre completo del delegado"
               />
               {errors.captainFullName && (
                 <div className="text-red-600 text-sm mt-1">
@@ -187,14 +212,14 @@ const TeamForm: React.FC = () => {
                 htmlFor="captainPhoneNumber"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Teléfono del Capitán
+                Teléfono del Delegado
               </label>
               <input
                 id="captainPhoneNumber"
                 type="text"
                 {...register("captainPhoneNumber")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ingrese el teléfono del capitán"
+                placeholder="Ingrese el teléfono del delegado"
               />
               {errors.captainPhoneNumber && (
                 <div className="text-red-600 text-sm mt-1">
@@ -208,14 +233,14 @@ const TeamForm: React.FC = () => {
                 htmlFor="captainEmail"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Correo Electrónico del Capitán
+                Correo Electrónico del Delegado
               </label>
               <input
                 id="captainEmail"
                 type="email"
                 {...register("captainEmail")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ingrese el correo electrónico del capitán"
+                placeholder="Ingrese el correo electrónico del delegado"
               />
               {errors.captainEmail && (
                 <div className="text-red-600 text-sm mt-1">
@@ -244,81 +269,7 @@ const TeamForm: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="mb-4">
-              <label
-                htmlFor="profileImage"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Imagen de Perfil
-              </label>
-              <div className="mt-1 flex items-center">
-                {imagePreview ? (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Vista previa"
-                      className="h-32 w-32 object-cover rounded-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setValue("profileImage", undefined);
-                        if (fileInputRef.current) {
-                          fileInputRef.current.value = "";
-                        }
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex justify-center items-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-gray-500" />
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">
-                            Haga clic para subir
-                          </span>{" "}
-                          o arrastre y suelte
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG o GIF (MAX. 2MB)
-                        </p>
-                      </div>
-                      <input
-                        ref={fileInputRef}
-                        id="profileImage"
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-              {errors.profileImage && (
-                <div className="text-red-600 text-sm mt-1">
-                  {errors.profileImage.message}
-                </div>
-              )}
-            </div>
+
             <div className="mb-4">
               <label
                 htmlFor="createdById"
@@ -349,32 +300,6 @@ const TeamForm: React.FC = () => {
                   {errors.createdById.message}
                 </div>
               )}
-            </div>
-
-            <div className="mb-4">
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="agreement"
-                    type="checkbox"
-                    {...register("agreement")}
-                    className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label
-                    htmlFor="agreement"
-                    className="font-medium text-gray-700"
-                  >
-                    Acepto las reglas y términos del torneo.
-                  </label>
-                  {errors.agreement && (
-                    <div className="text-red-600 text-sm mt-1">
-                      {errors.agreement.message}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">

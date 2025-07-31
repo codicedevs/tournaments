@@ -74,7 +74,7 @@ export class RegistrationsService {
 
   async findByTeam(teamId: string): Promise<Registration[]> {
     return this.registrationModel
-      .find({ teamId: new Types.ObjectId(teamId) })
+      .find({ teamId: teamId })
       .populate('tournamentId')
       .exec();
   }

@@ -8,13 +8,13 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const menuItems = [
     {
-      title: "Torneos",
-      description: "Crear y gestionar torneos",
+      title: "Divisiones",
+      description: "Crear y gestionar divisiones",
       icon: <TrophyIcon size={24} />,
-      primaryAction: () => navigate("/tournaments"),
-      secondaryAction: () => navigate("/tournaments/new"),
-      primaryLabel: "Ver Torneos",
-      secondaryLabel: "Crear Torneo",
+      primaryAction: () => navigate("/divisions"),
+      secondaryAction: () => navigate("/divisions/new"),
+      primaryLabel: "Ver Divisiones",
+      secondaryLabel: "Crear División",
     },
     {
       title: "Equipos",

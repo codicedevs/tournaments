@@ -15,8 +15,23 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
   soloLectura = false,
 }) => {
   const navigate = useNavigate();
-  const params = useParams();
-  const matchId = propMatchId || params.matchId;
+  const { matchId: paramMatchId } = useParams<{ matchId: string }>();
+  const matchId = propMatchId || paramMatchId;
+
+  // Función para determinar la ruta de regreso
+  const getBackRoute = () => {
+    if (onBack) {
+      // Si hay una función onBack específica, usarla
+      return onBack;
+    }
+    if (matchId) {
+      // Si tenemos un matchId, volver al partido
+      return () => navigate(`/match/${matchId}`);
+    }
+    // Fallback a navigate(-1) solo si no hay otra opción
+    return () => navigate(-1);
+  };
+
   const { data: match, isLoading: loadingMatch } = useMatchById(matchId);
   const { mutate: updatePlayerMatches, isPending: updating } =
     useUpdatePlayerMatches();
@@ -386,7 +401,7 @@ const ConfirmTeams: React.FC<ConfirmTeamsProps> = ({
           </div>
           <button
             className="bg-white/20 text-white px-6 py-3 rounded-xl text-lg hover:bg-white/30 transition"
-            onClick={() => (onBack ? onBack() : navigate(-1))}
+            onClick={getBackRoute()}
           >
             ← Volver
           </button>

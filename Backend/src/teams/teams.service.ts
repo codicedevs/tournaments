@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId, Types } from 'mongoose';
@@ -19,6 +21,7 @@ import { Player } from 'src/players/entities/player.entity';
 export class TeamsService {
   constructor(
     @InjectModel(Team.name) private readonly teamModel: Model<TeamDocument>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly playerService: PlayersService,
     @InjectModel(Match.name) private matchModel: Model<Match>,

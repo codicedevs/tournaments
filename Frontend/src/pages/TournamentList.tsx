@@ -26,7 +26,9 @@ const TournamentList: React.FC = () => {
 
   const handleDeleteSelected = () => {
     if (selected.length === 0) return;
-    if (!window.confirm("¿Seguro que deseas borrar los torneos seleccionados?"))
+    if (
+      !window.confirm("¿Seguro que deseas borrar las divisiones seleccionadas?")
+    )
       return;
     selected.forEach((id) => deleteTournament(id));
     setSelected([]);
@@ -81,9 +83,9 @@ const TournamentList: React.FC = () => {
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">🏆 Torneos</h1>
+            <h1 className="text-3xl font-bold text-gray-800">🏆 Divisiones</h1>
             <p className="text-gray-600">
-              Gestiona y visualiza todos los torneos disponibles
+              Gestiona y visualiza todos los divisiones disponibles
             </p>
           </div>
         </div>
@@ -97,7 +99,7 @@ const TournamentList: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">
-                  Total Torneos
+                  Total Divisiones
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {tournaments.length}
@@ -113,7 +115,7 @@ const TournamentList: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">
-                  Torneos Activos
+                  Divisiones Activos
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {
@@ -167,10 +169,10 @@ const TournamentList: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
-              Lista de Torneos
+              Lista de Divisiones
             </h2>
             <p className="text-sm text-gray-500">
-              {tournaments.length} torneo{tournaments.length !== 1 ? "s" : ""}{" "}
+              {tournaments.length} división{tournaments.length !== 1 ? "s" : ""}{" "}
               disponible{tournaments.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -185,11 +187,11 @@ const TournamentList: React.FC = () => {
               </button>
             )}
             <button
-              onClick={() => navigate("/tournaments/new")}
+              onClick={() => navigate("/divisions/new")}
               className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
             >
               <PlusIcon size={18} />
-              <span>Crear Torneo</span>
+              <span>Crear División</span>
             </button>
           </div>
         </div>
@@ -198,7 +200,7 @@ const TournamentList: React.FC = () => {
         {isLoading ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 text-lg">Cargando torneos...</p>
+            <p className="mt-4 text-gray-600 text-lg">Cargando divisiones...</p>
           </div>
         ) : isError ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
@@ -207,7 +209,8 @@ const TournamentList: React.FC = () => {
               Error al cargar
             </h3>
             <p className="text-gray-600 mb-6">
-              No se pudieron cargar los torneos. Inténtelo de nuevo más tarde.
+              No se pudieron cargar las divisiones. Inténtelo de nuevo más
+              tarde.
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -220,17 +223,17 @@ const TournamentList: React.FC = () => {
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <div className="text-gray-400 text-6xl mb-4">🏆</div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              No hay torneos
+              No hay divisiones
             </h3>
             <p className="text-gray-600 mb-6">
-              Comienza creando tu primer torneo para organizar competencias.
+              Comienza creando tu primer división para organizar competencias.
             </p>
             <button
-              onClick={() => navigate("/tournaments/new")}
+              onClick={() => navigate("/divisions/new")}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
             >
               <PlusIcon size={18} />
-              <span>Crear Primer Torneo</span>
+              <span>Crear Primera División</span>
             </button>
           </div>
         ) : (
@@ -249,7 +252,7 @@ const TournamentList: React.FC = () => {
                       </h3>
                       <div className="flex items-center gap-2 text-blue-100">
                         <TrophyIcon size={16} />
-                        <span className="text-sm">Torneo</span>
+                        <span className="text-sm">División</span>
                         {tournament.phases && tournament.phases.length > 0 && (
                           <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
                             Con Fases
@@ -315,7 +318,7 @@ const TournamentList: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() =>
-                        navigate(`/tournaments/${tournament._id}/registrations`)
+                        navigate(`/divisions/${tournament._id}/registrations`)
                       }
                       className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
                     >
@@ -328,11 +331,11 @@ const TournamentList: React.FC = () => {
                         if (tournament.phases && tournament.phases.length > 0) {
                           const firstPhase = tournament.phases[0];
                           navigate(
-                            `/tournaments/${tournament._id}/phases/${firstPhase._id}`
+                            `/divisions/${tournament._id}/phases/${firstPhase._id}`
                           );
                         } else {
-                          // Si no hay fases, navegar al detalle del torneo
-                          navigate(`/tournaments/${tournament._id}`);
+                          // Si no hay fases, navegar a crear la primera fase
+                          navigate(`/divisions/${tournament._id}/phases/new`);
                         }
                       }}
                       className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
@@ -340,8 +343,8 @@ const TournamentList: React.FC = () => {
                       <EyeIcon size={14} />
                       <span>
                         {tournament.phases && tournament.phases.length > 0
-                          ? "Entrar al torneo"
-                          : "Ver Torneo"}
+                          ? "Entrar a la división"
+                          : "Crear Fase"}
                       </span>
                     </button>
                   </div>

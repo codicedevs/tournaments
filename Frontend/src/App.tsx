@@ -22,7 +22,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import RegisterPlayer from "./pages/RegisterPlayer";
 import TeamPlayers from "./pages/TeamPlayers";
 import { authLoader } from "./authLoader";
-import TournamentDetail from "./pages/TournamentDetail";
 import RegistrationForm from "./pages/RegistrationForm";
 import PhaseDetail from "./pages/PhaseDetail";
 import PhaseFixture from "./pages/PhaseFixture";
@@ -30,7 +29,6 @@ import MatchdayList from "./pages/MatchdayList";
 import EditTeamForm from "./pages/EditTeamForm";
 import UserEdit from "./pages/UserEdit";
 import ViewerMatchList from "./pages/ViewerMatchList";
-import MatchOn from "./pages/MatchOn";
 import ConfirmTeams from "./pages/ComfirmTeams";
 import ViewerMatchFlow from "./pages/ViewerMatchFlow";
 import MatchReport from "./pages/MatchReport";
@@ -41,40 +39,40 @@ const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/change-password", element: <ChangePasswordPage /> },
   { path: "/dashboard", element: <Dashboard />, loader: authLoader },
-  { path: "/tournaments", element: <TournamentList />, loader: authLoader },
-  { path: "/tournaments/new", element: <TournamentForm />, loader: authLoader },
+  { path: "/divisions", element: <TournamentList />, loader: authLoader },
+  { path: "/divisions/new", element: <TournamentForm />, loader: authLoader },
+  // {
+  //   path: "/divisions/:tournamentId",
+  //   element: <TournamentDetail />,
+  //   loader: authLoader,
+  // },
   {
-    path: "/tournaments/:tournamentId",
-    element: <TournamentDetail />,
-    loader: authLoader,
-  },
-  {
-    path: "/tournaments/:tournamentId/registrations",
+    path: "/divisions/:tournamentId/registrations",
     element: <TournamentRegistrations />,
     loader: authLoader,
   },
   {
-    path: "/tournaments/:tournamentId/register-team",
+    path: "/divisions/:tournamentId/register-team",
     element: <RegistrationForm />,
     loader: authLoader,
   },
   {
-    path: "/tournaments/:tournamentId/phases/new",
+    path: "/divisions/:tournamentId/phases/new",
     element: <PhaseForm />,
     loader: authLoader,
   },
   {
-    path: "/tournaments/:tournamentId/phases/:phaseId",
+    path: "/divisions/:tournamentId/phases/:phaseId",
     element: <PhaseDetail />,
     loader: authLoader,
   },
   {
-    path: "/tournaments/:tournamentId/phases/:phaseId/fixture",
+    path: "/divisions/:tournamentId/phases/:phaseId/fixture",
     element: <PhaseFixture />,
     loader: authLoader,
   },
   {
-    path: "/tournaments/:tournamentId/phases/:phaseId/matchdays",
+    path: "/divisions/:tournamentId/phases/:phaseId/matchdays",
     element: <MatchdayList />,
     loader: authLoader,
   },
@@ -104,7 +102,6 @@ const router = createBrowserRouter([
   },
   { path: "/", element: <Navigate to="/login" replace /> },
   { path: "/match/:matchId/confirm-teams", element: <ConfirmTeams /> },
-  { path: "/match/:matchId/OnMatch", element: <MatchOn /> },
   {
     path: "/match/viewerFlow",
     element: <ViewerMatchFlow />,

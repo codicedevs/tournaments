@@ -9,7 +9,7 @@ const TournamentDetail: React.FC = () => {
   const navigate = useNavigate();
   const { tournamentId } = useParams<{ tournamentId: string }>();
 
-  // Data fetching - ahora solo necesitamos el torneo con fases populadas
+  // Data fetching - ahora solo necesitamos la división con fases populadas
   const {
     data: tournament,
     isLoading: isTournamentLoading,
@@ -18,7 +18,7 @@ const TournamentDetail: React.FC = () => {
 
   const { mutate: deletePhase, isPending: isDeletingPhase } = useDeletePhase();
 
-  // Obtener las fases del torneo populado
+  // Obtener las fases de la división populada
   const phases = tournament?.phases || [];
 
   // Log para debug
@@ -36,7 +36,7 @@ const TournamentDetail: React.FC = () => {
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <span className="ml-3 text-gray-600">
-              Cargando datos del torneo...
+              Cargando datos de la división...
             </span>
           </div>
         </main>
@@ -50,7 +50,7 @@ const TournamentDetail: React.FC = () => {
         <Header />
         <main className="container mx-auto py-8 px-4">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-            No se pudo cargar la información del torneo.
+            No se pudo cargar la información de la división.
           </div>
         </main>
       </div>
@@ -63,18 +63,18 @@ const TournamentDetail: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/tournaments")}
+            onClick={() => navigate("/divisions")}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
-            <span>Volver a Torneos</span>
+            <span>Volver a Divisiones</span>
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               {tournament.name}
             </h1>
-            <p className="text-gray-600">Detalles del torneo y fases</p>
+            <p className="text-gray-600">Detalles de la división y fases</p>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ const TournamentDetail: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
-              Fases del Torneo
+              Fases de la División
             </h2>
             <p className="text-sm text-gray-500">
               {phases.length} fase{phases.length !== 1 ? "s" : ""} configurada
@@ -97,17 +97,15 @@ const TournamentDetail: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() =>
-                navigate(`/tournaments/${tournamentId}/registrations`)
+                navigate(`/divisions/${tournamentId}/registrations`)
               }
-              className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+              className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
             >
               <EyeIcon size={16} />
               <span>Ver Equipos</span>
             </button>
             <button
-              onClick={() =>
-                navigate(`/tournaments/${tournamentId}/phases/new`)
-              }
+              onClick={() => navigate(`/divisions/${tournamentId}/phases/new`)}
               className="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
             >
               <PlusIcon size={16} />
@@ -120,17 +118,15 @@ const TournamentDetail: React.FC = () => {
         {phases.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">
-              Este torneo no tiene fases configuradas.
+              Esta división no tiene fases configuradas.
               {tournament.phases && tournament.phases.length === 0 && (
                 <span className="block text-sm text-gray-500 mt-2">
-                  (El torneo debería tener una fase automática de tipo LEAGUE)
+                  (La división debería tener una fase automática de tipo LEAGUE)
                 </span>
               )}
             </p>
             <button
-              onClick={() =>
-                navigate(`/tournaments/${tournamentId}/phases/new`)
-              }
+              onClick={() => navigate(`/divisions/${tournamentId}/phases/new`)}
               className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
             >
               <PlusIcon size={18} />
@@ -144,7 +140,7 @@ const TournamentDetail: React.FC = () => {
                 key={phase._id}
                 className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-md transition"
                 onClick={() =>
-                  navigate(`/tournaments/${tournamentId}/phases/${phase._id}`)
+                  navigate(`/divisions/${tournamentId}/phases/${phase._id}`)
                 }
               >
                 <div className="p-5">
@@ -178,7 +174,7 @@ const TournamentDetail: React.FC = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(
-                        `/tournaments/${tournamentId}/phases/${phase._id}/fixture`
+                        `/divisions/${tournamentId}/phases/${phase._id}/fixture`
                       );
                     }}
                   >

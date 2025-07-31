@@ -65,7 +65,7 @@ const PhaseDetail: React.FC = () => {
   const sortedMatchdays = [...matchdays].sort((a, b) => a.order - b.order);
 
   const handleGenerateFixture = () => {
-    navigate(`/tournaments/${tournamentId}/phases/${phaseId}/fixture`);
+    navigate(`/divisions/${tournamentId}/phases/${phaseId}/fixture`);
   };
 
   const handleResetStats = () => {
@@ -135,10 +135,10 @@ const PhaseDetail: React.FC = () => {
               Fase no encontrada
             </h2>
             <button
-              onClick={() => navigate(`/tournaments/${tournamentId}`)}
+              onClick={() => navigate(`/divisions`)}
               className="text-blue-600 hover:text-blue-800"
             >
-              Volver al torneo
+              Volver a Divisiones
             </button>
           </div>
         </main>
@@ -152,11 +152,11 @@ const PhaseDetail: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(`/tournaments`)}
+            onClick={() => navigate(`/divisions`)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
-            <span>Volver al menu anterior</span>
+            <span>Volver a Divisiones</span>
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
@@ -181,7 +181,7 @@ const PhaseDetail: React.FC = () => {
                     placeholder={
                       isUpdatingTournament
                         ? "Guardando..."
-                        : "Nombre del torneo"
+                        : "Nombre de la división"
                     }
                   />
                   <button
@@ -205,7 +205,7 @@ const PhaseDetail: React.FC = () => {
                   <button
                     onClick={handleEditTournamentName}
                     className="text-blue-600 hover:text-blue-800"
-                    title="Editar nombre del torneo"
+                    title="Editar nombre de la división"
                   >
                     <EditIcon size={14} />
                   </button>
@@ -219,7 +219,7 @@ const PhaseDetail: React.FC = () => {
           <div className="ml-auto flex gap-3">
             <button
               onClick={() =>
-                navigate(`/tournaments/${tournamentId}/registrations`)
+                navigate(`/divisions/${tournamentId}/registrations`)
               }
               className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
             >
@@ -274,7 +274,7 @@ const PhaseDetail: React.FC = () => {
                 ¡Vive la pasión del fútbol!
               </span>
               <span className="text-lg text-green-800 text-center">
-                Sigue las posiciones, estadísticas y el fair play de tu torneo
+                Sigue las posiciones, estadísticas y el fair play de tu división
                 en tiempo real.
               </span>
             </div>

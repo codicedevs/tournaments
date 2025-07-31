@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, SearchIcon, ChevronDownIcon } from "lucide-react";
+import { createPortal } from "react-dom";
 import Header from "../components/layout/Header";
 import { useCreateRegistration } from "../api/registrationHooks";
 import { useTournaments, useTournament } from "../api/tournamentHooks";
@@ -24,6 +25,15 @@ const RegistrationForm: React.FC = () => {
     tournamentId?: string;
   }>();
   const [error, setError] = useState("");
+  const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState(false);
+  const [teamSearchTerm, setTeamSearchTerm] = useState("");
+  const [selectedTeamIndex, setSelectedTeamIndex] = useState(-1);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+  const [inputRef, setInputRef] = useState<HTMLInputElement | null>(null);
 
   // Form setup
   const {
@@ -50,6 +60,14 @@ const RegistrationForm: React.FC = () => {
   // Watch for values
   const selectedTournamentId = watch("tournamentId");
 
+  // Limpiar estado del autocompletar cuando cambie el torneo
+  useEffect(() => {
+    setTeamSearchTerm("");
+    setIsTeamDropdownOpen(false);
+    setSelectedTeamIndex(-1);
+    resetField("teamId");
+  }, [selectedTournamentId, resetField]);
+
   // Data fetching
   const { data: tournaments = [], isLoading: isLoadingTournaments } =
     useTournaments();
@@ -70,6 +88,91 @@ const RegistrationForm: React.FC = () => {
 
   // Estado para equipos a registrar
   const [pendingTeams, setPendingTeams] = useState<Team[]>([]);
+
+  // Filtrar equipos basado en el término de búsqueda
+  const filteredTeams = teams.filter((team) =>
+    team.name.toLowerCase().includes(teamSearchTerm.toLowerCase())
+  );
+
+  // Función para manejar la selección de equipo con teclado
+  const handleTeamKeyDown = (e: React.KeyboardEvent) => {
+    if (!isTeamDropdownOpen) {
+      if (e.key === "Enter" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setIsTeamDropdownOpen(true);
+        setSelectedTeamIndex(0);
+      }
+      return;
+    }
+
+    const maxIndex = Math.min(filteredTeams.length - 1, 4); // Máximo 5 equipos (0-4)
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedTeamIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedTeamIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedTeamIndex >= 0 && selectedTeamIndex <= maxIndex) {
+          const selectedTeam = filteredTeams[selectedTeamIndex];
+          setValue("teamId", selectedTeam._id);
+          setTeamSearchTerm(selectedTeam.name);
+          setIsTeamDropdownOpen(false);
+          setSelectedTeamIndex(-1);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setIsTeamDropdownOpen(false);
+        setSelectedTeamIndex(-1);
+        break;
+    }
+  };
+
+  // Función para seleccionar equipo con click
+  const handleTeamSelect = (team: Team) => {
+    setValue("teamId", team._id);
+    setTeamSearchTerm(team.name);
+    setIsTeamDropdownOpen(false);
+    setSelectedTeamIndex(-1);
+  };
+
+  // Función para manejar cambios en el input de búsqueda
+  const handleTeamSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setTeamSearchTerm(value);
+    setIsTeamDropdownOpen(true);
+    setSelectedTeamIndex(-1);
+
+    // Si el valor está vacío, limpiar el campo teamId
+    if (!value) {
+      setValue("teamId", "");
+    }
+  };
+
+  // Función para calcular la posición del dropdown
+  const updateDropdownPosition = () => {
+    if (inputRef) {
+      const rect = inputRef.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  };
+
+  // Actualizar posición cuando se abre el dropdown
+  useEffect(() => {
+    if (isTeamDropdownOpen) {
+      updateDropdownPosition();
+    }
+  }, [isTeamDropdownOpen, teamSearchTerm]);
 
   const handleAddTeam = () => {
     setError("");
@@ -96,6 +199,9 @@ const RegistrationForm: React.FC = () => {
     }
     setPendingTeams((prev) => [...prev, team]);
     resetField("teamId");
+    setTeamSearchTerm("");
+    setIsTeamDropdownOpen(false);
+    setSelectedTeamIndex(-1);
   };
 
   const handleConfirmAll = async (e: any) => {
@@ -122,7 +228,7 @@ const RegistrationForm: React.FC = () => {
 
     await Promise.all(promises);
 
-    navigate("/teams");
+    navigate("/divisions");
   };
 
   const handleRemovePending = (id: string) => {
@@ -137,8 +243,8 @@ const RegistrationForm: React.FC = () => {
           onClick={() =>
             navigate(
               preselectedTournamentId
-                ? `/tournaments/${preselectedTournamentId}/registrations`
-                : "/tournaments"
+                ? `/divisions/${preselectedTournamentId}/registrations`
+                : "/divisions"
             )
           }
           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 mb-6"
@@ -205,19 +311,38 @@ const RegistrationForm: React.FC = () => {
                 Equipo
               </label>
               <div className="flex gap-2">
-                <select
-                  id="teamId"
-                  {...register("teamId")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  disabled={isLoading}
-                >
-                  <option value="">Seleccione un equipo</option>
-                  {teams.map((team: Team) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={teamSearchTerm}
+                      onChange={handleTeamSearchChange}
+                      onKeyDown={handleTeamKeyDown}
+                      onFocus={() => {
+                        setIsTeamDropdownOpen(true);
+                        updateDropdownPosition();
+                      }}
+                      onBlur={() => {
+                        // Delay closing to allow click events
+                        setTimeout(() => setIsTeamDropdownOpen(false), 200);
+                      }}
+                      placeholder="Buscar equipo..."
+                      className="w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoading}
+                      ref={setInputRef}
+                    />
+                    <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <button
+                      type="button"
+                      onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600"
+                    >
+                      <ChevronDownIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Dropdown de equipos - Removido del contenedor relativo */}
+                </div>
                 <button
                   type="button"
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
@@ -248,7 +373,7 @@ const RegistrationForm: React.FC = () => {
                   if (yaRegistrado) {
                     return (
                       <div className="mt-2 text-yellow-700 bg-yellow-100 border border-yellow-300 rounded px-3 py-2 text-sm">
-                        ⚠️ Este equipo ya está registrado en el torneo.
+                        ⚠️ Este equipo ya está registrado en la división.
                       </div>
                     );
                   }
@@ -304,8 +429,8 @@ const RegistrationForm: React.FC = () => {
                 onClick={() =>
                   navigate(
                     preselectedTournamentId
-                      ? `/tournaments/${preselectedTournamentId}/registrations`
-                      : "/tournaments"
+                      ? `/divisions/${preselectedTournamentId}/registrations`
+                      : "/divisions"
                   )
                 }
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -320,8 +445,8 @@ const RegistrationForm: React.FC = () => {
                   onClick={() =>
                     navigate(
                       preselectedTournamentId
-                        ? `/tournaments/${preselectedTournamentId}/registrations`
-                        : "/tournaments"
+                        ? `/divisions/${preselectedTournamentId}/registrations`
+                        : "/divisions"
                     )
                   }
                 >
@@ -341,6 +466,67 @@ const RegistrationForm: React.FC = () => {
           </form>
         </div>
       </main>
+
+      {/* Portal para el dropdown de equipos */}
+      {isTeamDropdownOpen &&
+        createPortal(
+          <div
+            style={{
+              position: "absolute",
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+              zIndex: 9999,
+            }}
+          >
+            {filteredTeams.length > 0 && (
+              <div className="bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                {filteredTeams.slice(0, 5).map((team, index) => (
+                  <div
+                    key={team._id}
+                    className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
+                      index === selectedTeamIndex ? "bg-blue-100" : ""
+                    } ${
+                      pendingTeams.some((t) => t._id === team._id)
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (!pendingTeams.some((t) => t._id === team._id)) {
+                        handleTeamSelect(team);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-900">{team.name}</span>
+                      {pendingTeams.some((t) => t._id === team._id) && (
+                        <span className="text-xs text-gray-500">
+                          Ya agregado
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {filteredTeams.length > 5 && (
+                  <div className="px-3 py-2 text-xs text-gray-500 border-t border-gray-200 bg-gray-50">
+                    Mostrando 5 de {filteredTeams.length} equipos. Usa la
+                    búsqueda para encontrar más equipos.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Mensaje cuando no hay resultados */}
+            {teamSearchTerm && filteredTeams.length === 0 && (
+              <div className="bg-white border border-gray-300 rounded-md shadow-lg">
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  No se encontraron equipos con "{teamSearchTerm}"
+                </div>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

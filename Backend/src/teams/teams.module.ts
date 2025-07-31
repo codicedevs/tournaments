@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { Team, TeamSchema } from './entities/team.entity';
@@ -22,10 +22,11 @@ import { PlayersModule } from 'src/players/players.module';
       { name: Matchday.name, schema: MatchdaySchema },
       { name: Player.name, schema: PlayerSchema },
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     PlayersModule,
   ],
   controllers: [TeamsController],
   providers: [TeamsService],
+  exports: [TeamsService],
 })
 export class TeamsModule {}

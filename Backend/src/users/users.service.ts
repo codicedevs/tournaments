@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -7,14 +7,19 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { User, UserDocument } from './entities/user.entity';
 import { Player } from '../players/entities/player.entity';
+import { Team, TeamDocument } from '../teams/entities/team.entity';
 import { PlayersService } from '../players/players.service';
+import { TeamsService } from '../teams/teams.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Player.name) private readonly playerModel: Model<Player>,
+    @InjectModel(Team.name) private readonly teamModel: Model<TeamDocument>,
     private readonly playersService: PlayersService,
+    @Inject(forwardRef(() => TeamsService))
+    private readonly teamsService: TeamsService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
@@ -46,9 +51,136 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UserDocument | null> {
-    return this.userModel
-      .findByIdAndUpdate(id, updateUserDto, { new: true })
-      .exec();
+    // Obtener el usuario actual para comparar el rol
+    const currentUser = await this.userModel.findById(id).exec();
+    if (!currentUser) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    const session = await this.userModel.db.startSession();
+    session.startTransaction();
+    try {
+      // Verificar si hay cambio de rol
+      const isRoleChanging =
+        updateUserDto.role && updateUserDto.role !== currentUser.role;
+      const isBecomingPlayer =
+        isRoleChanging && updateUserDto.role === 'Player';
+      const isStoppingBeingPlayer =
+        isRoleChanging && currentUser.role === 'Player';
+
+      // Si se está convirtiendo en Player
+      if (isBecomingPlayer) {
+        // Verificar si ya existe un player para este usuario
+        const existingPlayer = await this.playerModel
+          .findOne({ userId: id })
+          .exec();
+        if (!existingPlayer) {
+          // Crear un nuevo player
+          const playerData: any = { userId: id };
+          if (updateUserDto.teamId) {
+            playerData.teamId = updateUserDto.teamId;
+          }
+          const playerArr = await this.playerModel.create([playerData], {
+            session,
+          });
+          const newPlayer = playerArr[0];
+
+          // Si se especificó un teamId, agregar el jugador al array players del equipo
+          if (updateUserDto.teamId && newPlayer) {
+            const team = await this.teamModel
+              .findById(updateUserDto.teamId)
+              .session(session)
+              .exec();
+            if (!team) {
+              throw new Error(
+                `Equipo con ID ${updateUserDto.teamId} no encontrado`,
+              );
+            }
+
+            // Verificar si el jugador ya está en el equipo
+            const playerExists = team.players.some(
+              (p) => p.toString() === (newPlayer as any)._id.toString(),
+            );
+            if (!playerExists) {
+              team.players.push((newPlayer as any)._id);
+              await team.save({ session });
+            }
+          }
+        } else if (updateUserDto.teamId) {
+          // Si el player ya existe pero se está asignando a un equipo
+          const team = await this.teamModel
+            .findById(updateUserDto.teamId)
+            .session(session)
+            .exec();
+          if (!team) {
+            throw new Error(
+              `Equipo con ID ${updateUserDto.teamId} no encontrado`,
+            );
+          }
+
+          // Verificar si el jugador ya está en el equipo
+          const playerExists = team.players.some(
+            (p) => p.toString() === (existingPlayer as any)._id.toString(),
+          );
+          if (!playerExists) {
+            team.players.push((existingPlayer as any)._id);
+            await team.save({ session });
+          }
+
+          // Actualizar el teamId del player
+          await this.playerModel.findByIdAndUpdate(
+            existingPlayer._id,
+            { teamId: updateUserDto.teamId },
+            { session },
+          );
+        }
+      }
+
+      // Si está dejando de ser Player
+      if (isStoppingBeingPlayer) {
+        // Buscar el player asociado
+        const existingPlayer = await this.playerModel
+          .findOne({ userId: id })
+          .exec();
+        if (existingPlayer) {
+          // Remover el player de todos los equipos donde esté
+          const teams = await this.teamModel
+            .find({
+              players: (existingPlayer as any)._id,
+            })
+            .session(session)
+            .exec();
+
+          for (const team of teams) {
+            team.players = team.players.filter(
+              (p) => p.toString() !== (existingPlayer as any)._id.toString(),
+            );
+            await team.save({ session });
+          }
+
+          // Actualizar el player para remover el teamId
+          await this.playerModel.findByIdAndUpdate(
+            existingPlayer._id,
+            { $unset: { teamId: 1 } },
+            { session },
+          );
+        }
+      }
+
+      // Actualizar el usuario
+      const updatedUser = await this.userModel
+        .findByIdAndUpdate(id, updateUserDto, { new: true, session })
+        .exec();
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return updatedUser;
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
   }
 
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto) {
@@ -144,6 +276,29 @@ export class UsersService {
           session,
         });
         player = playerArr[0];
+
+        // 3. Si se especificó un teamId, agregar el jugador al array players del equipo
+        if (createUserDto.teamId && player) {
+          // Obtener el equipo y agregar el jugador al array players
+          const team = await this.teamModel
+            .findById(createUserDto.teamId)
+            .session(session)
+            .exec();
+          if (!team) {
+            throw new Error(
+              `Equipo con ID ${createUserDto.teamId} no encontrado`,
+            );
+          }
+
+          // Verificar si el jugador ya está en el equipo
+          const playerExists = team.players.some(
+            (p) => p.toString() === (player as any)._id.toString(),
+          );
+          if (!playerExists) {
+            team.players.push((player as any)._id);
+            await team.save({ session });
+          }
+        }
       }
 
       await session.commitTransaction();

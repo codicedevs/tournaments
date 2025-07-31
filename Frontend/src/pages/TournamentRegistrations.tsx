@@ -55,7 +55,7 @@ const TournamentRegistrations: React.FC = () => {
   const isError = isRegistrationsError || isTournamentError;
 
   const handleDeleteRegistration = (registrationId: string) => {
-    if (confirm("¿Seguro que desea eliminar este equipo del torneo?")) {
+    if (confirm("¿Seguro que desea eliminar este equipo de la división?")) {
       deleteRegistration(registrationId, {
         onSuccess: () => {
           refetchRegistrations();
@@ -94,11 +94,11 @@ const TournamentRegistrations: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/divisions`)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
-            <span>Volver a Torneos</span>
+            <span>Volver a Divisiones</span>
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
@@ -108,7 +108,7 @@ const TournamentRegistrations: React.FC = () => {
                 : "Equipos Registrados"}
             </h1>
             <p className="text-gray-600">
-              Gestiona los equipos registrados en este torneo
+              Gestiona los equipos registrados en esta división
             </p>
           </div>
         </div>
@@ -118,12 +118,10 @@ const TournamentRegistrations: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">
               Equipos Registrados
             </h1>
-            <p className="text-gray-600">{tournament?.name || "Torneo"}</p>
+            <p className="text-gray-600">{tournament?.name || "División"}</p>
           </div>
           <button
-            onClick={() =>
-              navigate(`/tournaments/${tournamentId}/register-team`)
-            }
+            onClick={() => navigate(`/divisions/${tournamentId}/register-team`)}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
           >
             <PlusIcon size={18} />
@@ -148,11 +146,11 @@ const TournamentRegistrations: React.FC = () => {
         ) : registrations.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-600 mb-4">
-              No hay equipos registrados en este torneo.
+              No hay equipos registrados en esta división.
             </p>
             <button
               onClick={() =>
-                navigate(`/tournaments/${tournamentId}/register-team`)
+                navigate(`/divisions/${tournamentId}/register-team`)
               }
               className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
             >
