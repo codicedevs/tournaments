@@ -7,6 +7,7 @@ import {
   Match,
 } from "../api/http";
 import { CalendarIcon, ClockIcon } from "lucide-react";
+import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
 
 export function FixturesPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -92,60 +93,49 @@ export function FixturesPage() {
   );
 
   return (
-    <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 max-w-4xl mx-auto space-y-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h2 className="text-xl font-bold text-indigo-700 flex items-center">
-          <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
-          Fixture
-        </h2>
-      </div>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <WelcomeDivisionSelector
+        title="Fixture de Partidos"
+        description="Consulta todos los partidos programados y resultados de tu división"
+        tournaments={tournaments}
+        selectedTournamentId={selectedTournamentId}
+        onTournamentChange={setSelectedTournamentId}
+      />
 
-      {/* Tournament Select */}
-      <div>
-        <label htmlFor="tournament" className="block text-sm font-medium mb-1">
-          Seleccionar torneo
-        </label>
-        <select
-          id="tournament"
-          className="border rounded px-3 py-2 w-full max-w-sm"
-          value={selectedTournamentId}
-          onChange={(e) => setSelectedTournamentId(e.target.value)}
-        >
-          <option value="">-- Seleccione --</option>
-          {tournaments.map((t) => (
-            <option key={t._id} value={t._id}>
-              {t.name} - {t.season}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Content Section */}
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 max-w-4xl mx-auto space-y-6">
+        {loading && <p>Cargando jornadas...</p>}
+        {error && <p className="text-red-600">{error}</p>}
 
-      {loading && <p>Cargando jornadas...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      {/* Matchdays List */}
-      {!loading && !error && matchdays.length > 0 && (
-        <div className="space-y-4">
-          {matchdays.map((md) => (
-            <details key={md._id} className="border border-gray-200 rounded-lg">
-              <summary className="font-semibold p-4 cursor-pointer select-none flex items-center justify-between">
-                <span>
-                  Jornada {md.order}
-                  {md.date && ` - ${new Date(md.date).toLocaleDateString("es-AR")}`}
-                </span>
-                <span className="text-sm text-gray-500">Ver partidos</span>
-              </summary>
-              <div className="grid gap-4 p-4 border-t border-gray-100">
-                {md.matches?.length ? (
-                  md.matches.map((m) => renderMatch(m as Match))
-                ) : (
-                  <p>No hay partidos</p>
-                )}
-              </div>
-            </details>
-          ))}
-        </div>
-      )}
-    </section>
+        {/* Matchdays List */}
+        {!loading && !error && matchdays.length > 0 && (
+          <div className="space-y-4">
+            {matchdays.map((md) => (
+              <details
+                key={md._id}
+                className="border border-gray-200 rounded-lg"
+              >
+                <summary className="font-semibold p-4 cursor-pointer select-none flex items-center justify-between">
+                  <span>
+                    Jornada {md.order}
+                    {md.date &&
+                      ` - ${new Date(md.date).toLocaleDateString("es-AR")}`}
+                  </span>
+                  <span className="text-sm text-gray-500">Ver partidos</span>
+                </summary>
+                <div className="grid gap-4 p-4 border-t border-gray-100">
+                  {md.matches?.length ? (
+                    md.matches.map((m) => renderMatch(m as Match))
+                  ) : (
+                    <p>No hay partidos</p>
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

@@ -36,8 +36,8 @@ export function PositionTable({ tournamentId }: PositionTableProps) {
   return (
     <section className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-indigo-700 flex items-center">
-          <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
+        <h2 className="text-xl font-bold text-black flex items-center">
+          <span className="w-1 h-6 bg-black rounded mr-3"></span>
           Tabla de posiciones
         </h2>
       </div>
@@ -81,7 +81,7 @@ export function PositionTable({ tournamentId }: PositionTableProps) {
                 const teamName = (reg as any).teamId?.name || (reg as any).teamId || "--";
                 const played = stats.wins + stats.draws + stats.losses;
                 return (
-                  <tr key={reg.id || idx}>
+                  <tr key={reg._id || idx}>
                     <td className="px-6 py-4">{idx + 1}</td>
                     <td className="px-6 py-4 font-medium">{teamName}</td>
                     <td className="px-6 py-4 text-center">{played}</td>

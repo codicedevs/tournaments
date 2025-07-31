@@ -157,6 +157,13 @@ export const playersApi = {
     return data;
   },
 
+  getByTournament: async (tournamentId: string) => {
+    const { data } = await http.get<Player[]>(
+      `/players/by-tournament/${tournamentId}`
+    );
+    return data;
+  },
+
   create: async (payload: Partial<Player>) => {
     const { data } = await http.post<Player>("/players", payload);
     return data;

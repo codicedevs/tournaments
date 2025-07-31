@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { tournamentsApi, Tournament } from "../api/http";
 import { PositionTable } from "../components/PositionTable";
+import { TopScorers } from "../components/TopScorers";
+import { NextMatches } from "../components/NextMatches";
+import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
 
 export function HomePage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournamentId, setSelectedTournamentId] =
-    useState<string | undefined>();
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    string | undefined
+  >();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,39 +31,25 @@ export function HomePage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Filtra por el torneo que se te cante</h1>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <WelcomeDivisionSelector
+        title="¡Bienvenido a Loyal League!"
+        description="Sigue todos los partidos, resultados y estadísticas de tu división favorita"
+        tournaments={tournaments}
+        selectedTournamentId={selectedTournamentId ?? ""}
+        onTournamentChange={(tournamentId) => 
+          setSelectedTournamentId(tournamentId === "" ? undefined : tournamentId)
+        }
+        loading={loading}
+        error={error}
+      />
 
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="tournament">
-          Seleccionar torneo
-        </label>
-        {loading ? (
-          <p className="text-gray-500">Cargando torneos...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : (
-          <select
-            id="tournament"
-            className="border border-gray-300 rounded px-3 py-2 w-full md:w-64"
-            value={selectedTournamentId ?? ""}
-            onChange={(e) =>
-              setSelectedTournamentId(
-                e.target.value === "" ? undefined : e.target.value
-              )
-            }
-          >
-            <option value="">-- Selecciona un torneo --</option>
-            {tournaments.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.name} - {t.season}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
+      {/* Content Sections */}
+      <NextMatches tournamentId={selectedTournamentId} />
       <PositionTable tournamentId={selectedTournamentId} />
+      {/* Tabla de goleadores */}
+      <TopScorers tournamentId={selectedTournamentId} />
     </div>
   );
 }

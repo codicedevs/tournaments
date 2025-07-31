@@ -8,6 +8,7 @@ import {
   Tournament,
 } from "../api/http";
 import { Modal } from "../components/Modal";
+import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
 
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -85,7 +86,7 @@ export function TeamsPage() {
   };
 
   if (loading) {
-    return <p className="px-4 py-8 text-center">Loading teams...</p>;
+    return <p className="px-4 py-8 text-center">Cargando equipos...</p>;
   }
 
   if (error) {
@@ -93,102 +94,73 @@ export function TeamsPage() {
   }
 
   return (
-    <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 max-w-4xl mx-auto">
-      <div className="mb-6 border-b border-gray-200 pb-4">
-        <h2 className="text-xl font-bold text-indigo-700 flex items-center">
-          <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
-          Equipos del torneo
-        </h2>
-      </div>
-      {/* Tournament Select */}
-      <div className="mb-4">
-        <label htmlFor="tournament" className="block text-sm font-medium mb-1">
-          Seleccionar torneo
-        </label>
-        <select
-          id="tournament"
-          className="border rounded px-3 py-2 w-full max-w-sm"
-          value={selectedTournamentId}
-          onChange={(e) => setSelectedTournamentId(e.target.value)}
-        >
-          <option value="">-- Seleccione --</option>
-          {tournaments.map((t) => (
-            <option key={t._id} value={t._id}>
-              {t.name} - {t.season}
-            </option>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <WelcomeDivisionSelector
+        title="Equipos de la Liga"
+        description="Conoce todos los equipos participantes y sus jugadores"
+        tournaments={tournaments}
+        selectedTournamentId={selectedTournamentId}
+        onTournamentChange={setSelectedTournamentId}
+      />
+
+      {/* Content Section */}
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 max-w-4xl mx-auto">
+        <div className="mb-6 border-b border-gray-200 pb-4">
+          <h2 className="text-xl font-bold text-black flex items-center">
+            <span className="w-1 h-6 bg-black rounded mr-3"></span>
+            Equipos de la division
+          </h2>
+        </div>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {teams.map((team) => (
+            <article
+              key={team._id}
+              className="border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => openTeamModal(team)}
+            >
+              <h3 className="font-semibold text-lg mb-1 truncate">
+                {team.name}
+              </h3>
+              <br />
+              <img
+                src={team.profileImage}
+                alt={team.name}
+                className="w-16 h-16 object-cover rounded-full"
+              />
+            </article>
           ))}
-        </select>
-      </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {teams.map((team) => (
-          <article
-            key={team._id}
-            className="border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => openTeamModal(team)}
-          >
-            <h3 className="font-semibold text-lg mb-1 truncate">{team.name}</h3>
-            <br />
-            <img
-              src={team.profileImage}
-              alt={team.name}
-              className="w-16 h-16 object-cover rounded-full"
-            />
-          </article>
-        ))}
-      </div>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title={`Jugadores de ${selectedTeam?.name}`}
-      >
-        {playersLoading && <p>Cargando jugadores...</p>}
-        {playersError && <p className="text-red-600">{playersError}</p>}
-        {!playersLoading && !playersError && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-left border">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 border">Nombre</th>
-                  <th className="px-4 py-2 border">Goles</th>
-                  <th className="px-4 py-2 border">Asistencias</th>
-                  <th className="px-4 py-2 border">Amarillas</th>
-                  <th className="px-4 py-2 border">Azules</th>
-                  <th className="px-4 py-2 border">Rojas</th>
-                  <th className="px-4 py-2 border">PJ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedTeam?.players?.map((player: any) => {
-                  const stats = player.stats || {};
-                  const playerName = player.name || player.userId?.name || "-";
-                  return (
-                    <tr
-                      key={player._id || player.id}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-4 py-2 border">{playerName}</td>
-                      <td className="px-4 py-2 border">{stats.goals ?? 0}</td>
-                      <td className="px-4 py-2 border">{stats.assists ?? 0}</td>
-                      <td className="px-4 py-2 border">
-                        {stats.yellowCards ?? 0}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {stats.blueCards ?? 0}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {stats.redCards ?? 0}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {stats.matchesPlayed ?? 0}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        </div>
+      </section>
+
+      {/* Modal */}
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        {selectedTeam && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">{selectedTeam.name}</h2>
+            {playersLoading ? (
+              <p>Cargando jugadores...</p>
+            ) : playersError ? (
+              <p className="text-red-600">{playersError}</p>
+            ) : (
+              <div>
+                <h3 className="font-semibold mb-2">Jugadores:</h3>
+                {selectedTeam.players && selectedTeam.players.length > 0 ? (
+                  <ul className="space-y-1">
+                    {selectedTeam.players.map((player: Player) => (
+                      <li key={player._id} className="text-gray-700">
+                        {player.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No hay jugadores registrados</p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </Modal>
-    </section>
+    </div>
   );
 }

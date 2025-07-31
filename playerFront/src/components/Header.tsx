@@ -1,14 +1,14 @@
 import { UserIcon } from "lucide-react";
-import { NavLink } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-// import loyalLogo from "../assets/loyal_logo.jpg";
+import { NavLink } from "react-router-dom";
+import LoyalLogo from "../assets/LoyalLeague2.png?url";
 
 export function Header() {
-  const { user } = useApp();
+  // const { user } = useApp();
   return (
-    <header className="bg-indigo-600 text-white w-full">
+    <header className="bg-black text-white w-full">
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">Torneo Loyal</h1>
+        <img src={LoyalLogo} alt="Torneo Loyal" className="h-10 w-auto" />
         {/* Desktop navigation */}
         <nav className="hidden md:flex items-center gap-6">
           <NavLink
@@ -42,7 +42,7 @@ export function Header() {
           >
             Equipos
           </NavLink>
-          <NavLink
+          {/* <NavLink
             to="/divisions"
             className={({ isActive }) =>
               isActive
@@ -61,7 +61,7 @@ export function Header() {
             }
           >
             Mi cuenta
-          </NavLink>
+          </NavLink> */}
         </nav>
 
         {/* {user && (
