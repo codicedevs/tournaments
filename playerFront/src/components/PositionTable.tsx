@@ -1,86 +1,38 @@
-export function PositionTable() {
-  const teams = [
-    {
-      id: 1,
-      position: 1,
-      name: "Lightning United",
-      played: 10,
-      won: 8,
-      drawn: 1,
-      lost: 1,
-      points: 25,
-    },
-    {
-      id: 2,
-      position: 2,
-      name: "Thunder FC",
-      played: 10,
-      won: 7,
-      drawn: 2,
-      lost: 1,
-      points: 23,
-    },
-    {
-      id: 3,
-      position: 3,
-      name: "River Plate",
-      played: 10,
-      won: 6,
-      drawn: 2,
-      lost: 2,
-      points: 20,
-    },
-    {
-      id: 4,
-      position: 4,
-      name: "Mountain Lions",
-      played: 10,
-      won: 5,
-      drawn: 3,
-      lost: 2,
-      points: 18,
-    },
-    {
-      id: 5,
-      position: 5,
-      name: "Eagles FC",
-      played: 10,
-      won: 5,
-      drawn: 1,
-      lost: 4,
-      points: 16,
-    },
-    {
-      id: 6,
-      position: 6,
-      name: "Royal Knights",
-      played: 10,
-      won: 4,
-      drawn: 2,
-      lost: 4,
-      points: 14,
-    },
-    {
-      id: 7,
-      position: 7,
-      name: "City Warriors",
-      played: 10,
-      won: 3,
-      drawn: 2,
-      lost: 5,
-      points: 11,
-    },
-    {
-      id: 8,
-      position: 8,
-      name: "United Stars",
-      played: 10,
-      won: 2,
-      drawn: 3,
-      lost: 5,
-      points: 9,
-    },
-  ];
+import { useEffect, useState } from "react";
+import { registrationApi, Registration } from "../api/http";
+
+interface PositionTableProps {
+  tournamentId: string | undefined;
+}
+
+export function PositionTable({ tournamentId }: PositionTableProps) {
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!tournamentId) {
+      setRegistrations([]);
+      return;
+    }
+
+    setLoading(true);
+    registrationApi
+      .getByTournament(tournamentId)
+      .then((data) => {
+        const sorted = data.sort(
+          (a, b) =>
+            b.stats.points - a.stats.points ||
+            b.stats.goalDifference - a.stats.goalDifference
+        );
+        setRegistrations(sorted);
+      })
+      .catch(() =>
+        setError("Ocurrió un error al obtener la tabla de posiciones.")
+      )
+      .finally(() => setLoading(false));
+  }, [tournamentId]);
+
   return (
     <section className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -89,39 +41,62 @@ export function PositionTable() {
           Tabla de posiciones
         </h2>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 text-left">
-              <th className="px-6 py-3 text-gray-500">#</th>
-              <th className="px-6 py-3 text-gray-500">Team</th>
-              <th className="px-6 py-3 text-gray-500 text-center">P</th>
-              <th className="px-6 py-3 text-gray-500 text-center">W</th>
-              <th className="px-6 py-3 text-gray-500 text-center">D</th>
-              <th className="px-6 py-3 text-gray-500 text-center">L</th>
-              <th className="px-6 py-3 text-gray-500 text-center">PTS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {teams.map((team) => (
-              <tr
-                key={team.id}
-                className={team.name === "Thunder FC" ? "bg-indigo-50" : ""}
-              >
-                <td className="px-6 py-4">{team.position}</td>
-                <td className="px-6 py-4 font-medium">{team.name}</td>
-                <td className="px-6 py-4 text-center">{team.played}</td>
-                <td className="px-6 py-4 text-center">{team.won}</td>
-                <td className="px-6 py-4 text-center">{team.drawn}</td>
-                <td className="px-6 py-4 text-center">{team.lost}</td>
-                <td className="px-6 py-4 text-center font-bold">
-                  {team.points}
-                </td>
+
+      {!tournamentId && (
+        <p className="p-6 text-center text-gray-500">
+          Selecciona un torneo para ver la tabla de posiciones.
+        </p>
+      )}
+
+      {loading && tournamentId && (
+        <p className="p-6 text-center text-gray-500">Cargando...</p>
+      )}
+
+      {error && <p className="p-6 text-center text-red-600">{error}</p>}
+
+      {!loading && !error && registrations.length === 0 && tournamentId && (
+        <p className="p-6 text-center text-gray-500">
+          Todavía no hay registros para este torneo.
+        </p>
+      )}
+
+      {!loading && registrations.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                <th className="px-6 py-3 text-gray-500">#</th>
+                <th className="px-6 py-3 text-gray-500">Equipo</th>
+                <th className="px-6 py-3 text-gray-500 text-center">PJ</th>
+                <th className="px-6 py-3 text-gray-500 text-center">G</th>
+                <th className="px-6 py-3 text-gray-500 text-center">E</th>
+                <th className="px-6 py-3 text-gray-500 text-center">P</th>
+                <th className="px-6 py-3 text-gray-500 text-center">DG</th>
+                <th className="px-6 py-3 text-gray-500 text-center">PTS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {registrations.map((reg, idx) => {
+                const stats = reg.stats;
+                const teamName = (reg as any).teamId?.name || (reg as any).teamId || "--";
+                const played = stats.wins + stats.draws + stats.losses;
+                return (
+                  <tr key={reg.id || idx}>
+                    <td className="px-6 py-4">{idx + 1}</td>
+                    <td className="px-6 py-4 font-medium">{teamName}</td>
+                    <td className="px-6 py-4 text-center">{played}</td>
+                    <td className="px-6 py-4 text-center">{stats.wins}</td>
+                    <td className="px-6 py-4 text-center">{stats.draws}</td>
+                    <td className="px-6 py-4 text-center">{stats.losses}</td>
+                    <td className="px-6 py-4 text-center">{stats.goalDifference}</td>
+                    <td className="px-6 py-4 text-center font-bold">{stats.points}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

@@ -21,25 +21,16 @@ export function Header() {
           >
             Inicio
           </NavLink>
+
           <NavLink
-            to="/divisions"
+            to="/fixture"
             className={({ isActive }) =>
               isActive
                 ? "font-semibold text-white"
                 : "text-white/80 hover:text-white"
             }
           >
-            Divisiones
-          </NavLink>
-          <NavLink
-            to="/matches"
-            className={({ isActive }) =>
-              isActive
-                ? "font-semibold text-white"
-                : "text-white/80 hover:text-white"
-            }
-          >
-            Partidos
+            Fixture
           </NavLink>
           <NavLink
             to="/teams"
@@ -50,6 +41,16 @@ export function Header() {
             }
           >
             Equipos
+          </NavLink>
+          <NavLink
+            to="/divisions"
+            className={({ isActive }) =>
+              isActive
+                ? "font-semibold text-white"
+                : "text-white/80 hover:text-white"
+            }
+          >
+            Divisiones
           </NavLink>
           <NavLink
             to="/account"
