@@ -94,7 +94,7 @@ export function HomePage() {
             {/* Content Sections */}
             <div className="space-y-8">
               {/* Next Matches Section */}
-              <div className="b rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="bg-white p-4">
                   <h3 className="text-xl font-bold text-black flex items-center gap-2">
                     <CalendarIcon size={24} />
