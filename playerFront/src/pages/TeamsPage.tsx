@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { teamsApi, Team, Player } from "../api/http";
+import {
+  teamsApi,
+  Team,
+  Player,
+  registrationApi,
+  tournamentsApi,
+  Tournament,
+} from "../api/http";
 import { Modal } from "../components/Modal";
 
 export function TeamsPage() {
@@ -10,21 +17,50 @@ export function TeamsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playersLoading, setPlayersLoading] = useState(false);
   const [playersError, setPlayersError] = useState<string | null>(null);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>("");
 
+  // Fetch tournaments on mount and preselect the first one
+  useEffect(() => {
+    (async () => {
+      try {
+        const tData = await tournamentsApi.getAll();
+        setTournaments(tData);
+        if (tData.length > 0) {
+          setSelectedTournamentId(tData[0]._id);
+        }
+      } catch {
+        setError("Error fetching tournaments");
+      }
+    })();
+  }, []);
+
+  // Fetch teams whenever the selected tournament changes
   useEffect(() => {
     const fetchTeams = async () => {
+      if (!selectedTournamentId) {
+        setTeams([]);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const data = await teamsApi.getAll();
-        setTeams(data);
-      } catch (err) {
+        setLoading(true);
+        setError(null);
+        const regs: any[] = await registrationApi.getByTournament(
+          selectedTournamentId
+        );
+        // Cada registro tiene el equipo populado en teamId
+        const tournamentTeams: Team[] = regs.map((r) => r.teamId as Team);
+        setTeams(tournamentTeams);
+      } catch {
         setError("Error fetching teams");
       } finally {
         setLoading(false);
       }
     };
-
     fetchTeams();
-  }, []);
+  }, [selectedTournamentId]);
 
   const openTeamModal = async (team: Team) => {
     setPlayersError(null);
@@ -48,7 +84,6 @@ export function TeamsPage() {
     setSelectedTeam(null);
   };
 
-  console.log(teams);
   if (loading) {
     return <p className="px-4 py-8 text-center">Loading teams...</p>;
   }
@@ -65,6 +100,25 @@ export function TeamsPage() {
           Equipos del torneo
         </h2>
       </div>
+      {/* Tournament Select */}
+      <div className="mb-4">
+        <label htmlFor="tournament" className="block text-sm font-medium mb-1">
+          Seleccionar torneo
+        </label>
+        <select
+          id="tournament"
+          className="border rounded px-3 py-2 w-full max-w-sm"
+          value={selectedTournamentId}
+          onChange={(e) => setSelectedTournamentId(e.target.value)}
+        >
+          <option value="">-- Seleccione --</option>
+          {tournaments.map((t) => (
+            <option key={t._id} value={t._id}>
+              {t.name} - {t.season}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => (
           <article
@@ -73,7 +127,6 @@ export function TeamsPage() {
             onClick={() => openTeamModal(team)}
           >
             <h3 className="font-semibold text-lg mb-1 truncate">{team.name}</h3>
-            <p className="text-sm text-gray-500">Division: {team.division}</p>
             <br />
             <img
               src={team.profileImage}
@@ -109,14 +162,25 @@ export function TeamsPage() {
                   const stats = player.stats || {};
                   const playerName = player.name || player.userId?.name || "-";
                   return (
-                    <tr key={player._id || player.id} className="hover:bg-gray-50">
+                    <tr
+                      key={player._id || player.id}
+                      className="hover:bg-gray-50"
+                    >
                       <td className="px-4 py-2 border">{playerName}</td>
                       <td className="px-4 py-2 border">{stats.goals ?? 0}</td>
                       <td className="px-4 py-2 border">{stats.assists ?? 0}</td>
-                      <td className="px-4 py-2 border">{stats.yellowCards ?? 0}</td>
-                      <td className="px-4 py-2 border">{stats.blueCards ?? 0}</td>
-                      <td className="px-4 py-2 border">{stats.redCards ?? 0}</td>
-                      <td className="px-4 py-2 border">{stats.matchesPlayed ?? 0}</td>
+                      <td className="px-4 py-2 border">
+                        {stats.yellowCards ?? 0}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {stats.blueCards ?? 0}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {stats.redCards ?? 0}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {stats.matchesPlayed ?? 0}
+                      </td>
                     </tr>
                   );
                 })}

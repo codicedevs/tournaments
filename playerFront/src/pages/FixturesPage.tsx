@@ -21,6 +21,10 @@ export function FixturesPage() {
       try {
         const data = await tournamentsApi.getAll();
         setTournaments(data);
+        // Preselect the first tournament so the page shows fixture data by default
+        if (data.length > 0) {
+          setSelectedTournamentId(data[0]._id);
+        }
       } catch {
         setError("Error obteniendo torneos");
       }
@@ -63,7 +67,7 @@ export function FixturesPage() {
       <div className="flex justify-between items-center text-gray-500 text-sm mb-2">
         <div className="flex items-center gap-1">
           <CalendarIcon size={16} />
-          <span>{new Date(match.date).toLocaleDateString()}</span>
+          <span>{new Date(match.date).toLocaleDateString("es-AR")}</span>
         </div>
         <div className="flex items-center gap-1">
           <ClockIcon size={16} />
@@ -121,21 +125,24 @@ export function FixturesPage() {
 
       {/* Matchdays List */}
       {!loading && !error && matchdays.length > 0 && (
-        <div className="space-y-8">
+        <div className="space-y-4">
           {matchdays.map((md) => (
-            <div key={md._id} className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-semibold mb-4">
-                Jornada {md.order}
-                {md.date && ` - ${new Date(md.date).toLocaleDateString()}`}
-              </h3>
-              <div className="grid gap-4">
+            <details key={md._id} className="border border-gray-200 rounded-lg">
+              <summary className="font-semibold p-4 cursor-pointer select-none flex items-center justify-between">
+                <span>
+                  Jornada {md.order}
+                  {md.date && ` - ${new Date(md.date).toLocaleDateString("es-AR")}`}
+                </span>
+                <span className="text-sm text-gray-500">Ver partidos</span>
+              </summary>
+              <div className="grid gap-4 p-4 border-t border-gray-100">
                 {md.matches?.length ? (
                   md.matches.map((m) => renderMatch(m as Match))
                 ) : (
                   <p>No hay partidos</p>
                 )}
               </div>
-            </div>
+            </details>
           ))}
         </div>
       )}

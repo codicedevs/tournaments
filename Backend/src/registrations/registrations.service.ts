@@ -59,7 +59,15 @@ export class RegistrationsService {
     const res = await this.registrationModel
       .find({ tournamentId })
       .sort({ 'stats.scoreWeight': -1 })
-      .populate('teamId')
+      .populate({
+        path: 'teamId',
+        populate: {
+          path: 'players',
+          populate: {
+            path: 'userId',
+          },
+        },
+      })
       .exec();
     return res;
   }
