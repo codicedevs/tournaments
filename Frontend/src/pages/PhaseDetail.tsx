@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeftIcon, TrashIcon, UsersIcon, PlusIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  TrashIcon,
+  UsersIcon,
+  PlusIcon,
+  EditIcon,
+  CheckIcon,
+  XIcon,
+} from "lucide-react";
 import Header from "../components/layout/Header";
 import { usePhase } from "../api/phaseHooks";
-import { useTournament } from "../api/tournamentHooks";
+import { useTournament, useUpdateTournament } from "../api/tournamentHooks";
 import { usePhaseMatchdays } from "../api/fixtureHooks";
 import { useRegistrationsByTournament } from "../api/registrationHooks";
 import StandingsTable from "../components/tournaments/StandingsTable";
@@ -23,6 +31,8 @@ const PhaseDetail: React.FC = () => {
   const [expandedMatchdays, setExpandedMatchdays] = useState<
     Record<string, boolean>
   >({});
+  const [isEditingTournamentName, setIsEditingTournamentName] = useState(false);
+  const [tournamentName, setTournamentName] = useState("");
 
   // Data fetching
   const { data: phase, isLoading: isPhaseLoading } = usePhase(phaseId);
@@ -32,8 +42,17 @@ const PhaseDetail: React.FC = () => {
   const { data: registrations = [] } =
     useRegistrationsByTournament(tournamentId);
   const { mutate: resetStats } = useResetTeamStats();
+  const { mutate: updateTournament, isPending: isUpdatingTournament } =
+    useUpdateTournament();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;
+
+  // Inicializar el nombre del torneo cuando se carga
+  React.useEffect(() => {
+    if (tournament?.name) {
+      setTournamentName(tournament.name);
+    }
+  }, [tournament?.name]);
 
   const toggleMatchday = (matchdayId: string) => {
     setExpandedMatchdays((prev) => ({
@@ -57,6 +76,39 @@ const PhaseDetail: React.FC = () => {
     ) {
       resetStats(tournamentId!);
     }
+  };
+
+  const handleEditTournamentName = () => {
+    setIsEditingTournamentName(true);
+  };
+
+  const handleSaveTournamentName = () => {
+    if (tournamentName.trim() && tournamentName !== tournament?.name) {
+      updateTournament(
+        {
+          id: tournamentId!,
+          data: { name: tournamentName.trim() },
+        },
+        {
+          onSuccess: () => {
+            setIsEditingTournamentName(false);
+          },
+          onError: (error) => {
+            console.error("Error al actualizar el nombre del torneo:", error);
+            // Revertir al nombre original en caso de error
+            setTournamentName(tournament?.name || "");
+            setIsEditingTournamentName(false);
+          },
+        }
+      );
+    } else {
+      setIsEditingTournamentName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setTournamentName(tournament?.name || "");
+    setIsEditingTournamentName(false);
   };
 
   if (isLoading) {
@@ -100,16 +152,69 @@ const PhaseDetail: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(`/tournaments/${tournamentId}`)}
+            onClick={() => navigate(`/tournaments`)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
-            <span>Volver al Torneo</span>
+            <span>Volver al menu anterior</span>
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
             <h1 className="text-2xl font-bold text-gray-800">{phase?.name}</h1>
-            <p className="text-gray-600">{tournament?.name}</p>
+            <div className="flex items-center gap-2">
+              {isEditingTournamentName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={tournamentName}
+                    onChange={(e) => setTournamentName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSaveTournamentName();
+                      } else if (e.key === "Escape") {
+                        handleCancelEdit();
+                      }
+                    }}
+                    className="text-gray-600 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                    autoFocus
+                    disabled={isUpdatingTournament}
+                    placeholder={
+                      isUpdatingTournament
+                        ? "Guardando..."
+                        : "Nombre del torneo"
+                    }
+                  />
+                  <button
+                    onClick={handleSaveTournamentName}
+                    disabled={isUpdatingTournament}
+                    className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                  >
+                    <CheckIcon size={16} />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isUpdatingTournament}
+                    className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                  >
+                    <XIcon size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-gray-600">{tournament?.name}</p>
+                  <button
+                    onClick={handleEditTournamentName}
+                    className="text-blue-600 hover:text-blue-800"
+                    title="Editar nombre del torneo"
+                  >
+                    <EditIcon size={14} />
+                  </button>
+                  {isUpdatingTournament && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="ml-auto flex gap-3">
             <button
@@ -156,15 +261,6 @@ const PhaseDetail: React.FC = () => {
                   <span className="text-3xl">🏆</span>
                   Tabla de Posiciones
                 </h2>
-                <button
-                  onClick={() =>
-                    navigate(`/tournaments/${tournamentId}/registrations`)
-                  }
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
-                >
-                  <UsersIcon size={14} />
-                  <span>Gestionar</span>
-                </button>
               </div>
               <div className="max-w-fit">
                 <StandingsTable registrations={registrations} />

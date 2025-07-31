@@ -94,7 +94,7 @@ const TournamentRegistrations: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/tournaments")}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />

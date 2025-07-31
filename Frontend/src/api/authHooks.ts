@@ -5,7 +5,8 @@ export interface LoginResponse {
   access_token: string;
   user: {
     id: string;
-    email: string;
+    email?: string;
+    username?: string;
     name: string;
     role: string;
     mustChangePassword: boolean;
@@ -24,7 +25,7 @@ export const useLogin = () => {
   const [error, setError] = useState<string | null>(null);
 
   const login = async (
-    email: string,
+    identifier: string,
     password: string
   ): Promise<LoginResponse | null> => {
     setLoading(true);
@@ -32,7 +33,7 @@ export const useLogin = () => {
 
     try {
       const response = await api.post<LoginResponse>("/auth/login", {
-        email,
+        email: identifier, // Mantenemos el nombre del campo por compatibilidad con el backend
         password,
       });
       return response.data;

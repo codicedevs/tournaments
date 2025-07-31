@@ -13,7 +13,7 @@ export enum Role {
 
 @Schema()
 export class User extends Document {
-  @Prop({ required: true })
+  @Prop()
   email: string;
 
   @Prop({ required: true })
@@ -26,6 +26,18 @@ export class User extends Document {
   name: string;
 
   @Prop()
+  username: string;
+
+  @Prop()
+  dni: string;
+
+  @Prop()
+  occupation: string;
+
+  @Prop()
+  healthInsurance: string;
+
+  @Prop()
   profilePicture: string;
 
   @Prop()
@@ -34,11 +46,17 @@ export class User extends Document {
   @Prop({ default: false })
   isVerified: boolean;
 
+  @Prop({ default: false })
+  isBlacklisted: boolean;
+
   @Prop({ default: true })
   mustChangePassword: boolean;
 
   @Prop()
   lastPasswordChange: Date;
+
+  @Prop({ type: [String], default: [] })
+  pdfs: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

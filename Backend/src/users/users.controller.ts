@@ -90,4 +90,38 @@ export class UsersController {
       url,
     };
   }
+
+  @Post('upload-pdf')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/pdfs',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `document-${uniqueSuffix}${ext}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only PDF files are allowed'), false);
+        }
+      },
+    }),
+  )
+  async uploadPdf(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const baseUrl = process.env.API_BASE_URL || 'http://localhost:6969';
+    const url = `${baseUrl}/uploads/pdfs/${file.filename}`;
+    return {
+      originalName: file.originalname,
+      filename: file.filename,
+      url,
+    };
+  }
 }

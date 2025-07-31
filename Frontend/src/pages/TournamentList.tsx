@@ -250,6 +250,11 @@ const TournamentList: React.FC = () => {
                       <div className="flex items-center gap-2 text-blue-100">
                         <TrophyIcon size={16} />
                         <span className="text-sm">Torneo</span>
+                        {tournament.phases && tournament.phases.length > 0 && (
+                          <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                            Con Fases
+                          </span>
+                        )}
                       </div>
                     </div>
                     <input
@@ -318,11 +323,26 @@ const TournamentList: React.FC = () => {
                       <span>Equipos</span>
                     </button>
                     <button
-                      onClick={() => navigate(`/tournaments/${tournament._id}`)}
+                      onClick={() => {
+                        // Navegar directamente a la primera fase del torneo
+                        if (tournament.phases && tournament.phases.length > 0) {
+                          const firstPhase = tournament.phases[0];
+                          navigate(
+                            `/tournaments/${tournament._id}/phases/${firstPhase._id}`
+                          );
+                        } else {
+                          // Si no hay fases, navegar al detalle del torneo
+                          navigate(`/tournaments/${tournament._id}`);
+                        }
+                      }}
                       className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
                     >
                       <EyeIcon size={14} />
-                      <span>Ver</span>
+                      <span>
+                        {tournament.phases && tournament.phases.length > 0
+                          ? "Entrar al torneo"
+                          : "Ver Torneo"}
+                      </span>
                     </button>
                   </div>
                 </div>

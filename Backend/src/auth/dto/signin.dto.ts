@@ -1,9 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class SignInDto {
-  @IsEmail({}, { message: 'El email debe tener un formato válido' })
-  @IsNotEmpty({ message: 'El email es requerido' })
-  email: string;
+  @IsString({
+    message: 'El email o nombre de usuario debe ser una cadena de texto',
+  })
+  @IsNotEmpty({ message: 'El email o nombre de usuario es requerido' })
+  email: string; // Mantenemos el nombre del campo por compatibilidad, pero ahora acepta email o username
 
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @IsNotEmpty({ message: 'La contraseña es requerida' })

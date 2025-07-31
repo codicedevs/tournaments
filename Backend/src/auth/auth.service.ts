@@ -18,8 +18,14 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.userModel.findOne({ email }).exec();
+  async validateUser(identifier: string, password: string): Promise<any> {
+    // Buscar usuario por email o username
+    const user = await this.userModel
+      .findOne({
+        $or: [{ email: identifier }, { username: identifier }],
+      })
+      .exec();
+
     if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user.toObject();
       return result;
@@ -35,6 +41,7 @@ export class AuthService {
 
     const payload = {
       email: user.email,
+      username: user.username,
       sub: user._id,
       role: user.role,
       mustChangePassword: user.mustChangePassword,
@@ -45,6 +52,7 @@ export class AuthService {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
         name: user.name,
         role: user.role,
         profilePicture: user.profilePicture,

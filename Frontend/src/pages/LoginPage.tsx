@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 import { useLogin } from "../api/authHooks";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [validationError, setValidationError] = useState("");
 
@@ -14,28 +14,23 @@ const LoginPage: React.FC = () => {
 
   // Limpiar errores cuando el usuario empiece a escribir
   useEffect(() => {
-    if (email || password) {
+    if (identifier || password) {
       setValidationError("");
     }
-  }, [email, password]);
+  }, [identifier, password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
 
     // Validaciones básicas
-    if (!email || !password) {
+    if (!identifier || !password) {
       setValidationError("Por favor complete todos los campos");
       return;
     }
 
-    if (!email.includes("@")) {
-      setValidationError("Por favor ingrese un email válido");
-      return;
-    }
-
     try {
-      const loginResponse = await apiLogin(email, password);
+      const loginResponse = await apiLogin(identifier, password);
 
       if (loginResponse) {
         // Guardar token y datos del usuario
@@ -82,19 +77,19 @@ const LoginPage: React.FC = () => {
 
           <div>
             <label
-              htmlFor="email"
+              htmlFor="identifier"
               className="block text-sm font-medium text-gray-700"
             >
-              Email
+              Email o Usuario
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="identifier"
+              name="identifier"
+              type="text"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="usuario@ejemplo.com"
+              placeholder="usuario@ejemplo.com o nombre_usuario"
             />
           </div>
 

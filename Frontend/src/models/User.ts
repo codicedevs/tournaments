@@ -16,11 +16,17 @@ export const roleLabels: Record<UserRole, string> = {
 
 export interface User {
   _id: string;
-  email: string;
+  email?: string;
   name: string;
+  username?: string;
+  dni?: string;
+  occupation?: string;
+  healthInsurance?: string;
   role: UserRole;
   profilePicture?: string;
   phone?: string;
   isVerified?: boolean;
+  isBlacklisted?: boolean;
   enabled?: boolean;
+  pdfs?: string[];
 }

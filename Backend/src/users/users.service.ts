@@ -16,6 +16,13 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
+    // Validar que al menos email o username esté presente
+    if (!createUserDto.email && !createUserDto.username) {
+      throw new Error(
+        'Debe proporcionar al menos un email o nombre de usuario',
+      );
+    }
+
     // Hashear la contraseña antes de guardar
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
     const newUser = new this.userModel({
@@ -84,6 +91,13 @@ export class UsersService {
   async createUserWithPlayer(
     createUserDto: CreateUserDto & { teamId?: string },
   ) {
+    // Validar que al menos email o username esté presente
+    if (!createUserDto.email && !createUserDto.username) {
+      throw new Error(
+        'Debe proporcionar al menos un email o nombre de usuario',
+      );
+    }
+
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {

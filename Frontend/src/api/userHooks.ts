@@ -17,12 +17,12 @@ export function useUser(userId: string) {
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (user: Partial<User> & { _id: string }) => {
-      const { data } = await api.patch(`/users/${user._id}`, user);
-      return data;
+    mutationFn: async ({ id, data }: { id: string; data: Partial<User> }) => {
+      const { data: responseData } = await api.patch(`/users/${id}`, data);
+      return responseData;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["user", variables._id] });
+      queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
