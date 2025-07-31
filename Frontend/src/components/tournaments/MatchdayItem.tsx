@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { Modal } from "antd";
+import { es } from "date-fns/locale";
 
 interface MatchdayItemProps {
   matchday: Matchday;
@@ -81,9 +82,9 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
     } else if (values.time && match.date) {
       // Solo hora, combinar con la fecha original
       const date = new Date(match.date);
-      const localDateTimeString = `${format(date, "yyyy-MM-dd")}T${
-        values.time
-      }:00`;
+      const localDateTimeString = `${format(date, "yyyy-MM-dd", {
+        locale: es,
+      })}T${values.time}:00`;
       dateTime = new Date(localDateTimeString).toISOString();
     }
     const data: MatchUpdateData = {
