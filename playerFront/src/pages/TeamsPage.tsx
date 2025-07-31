@@ -10,11 +10,20 @@ import {
 } from "../api/http";
 import { Modal } from "../components/Modal";
 import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
-import { TrophyIcon, UsersIcon, TargetIcon, ShieldIcon, Loader2Icon, AlertCircleIcon } from "lucide-react";
+import {
+  TrophyIcon,
+  UsersIcon,
+  TargetIcon,
+  ShieldIcon,
+  Loader2Icon,
+  AlertCircleIcon,
+} from "lucide-react";
 
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [teamRegistrations, setTeamRegistrations] = useState<Registration[]>([]);
+  const [teamRegistrations, setTeamRegistrations] = useState<Registration[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -122,7 +131,9 @@ export function TeamsPage() {
   const renderErrorState = () => (
     <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
       <AlertCircleIcon size={48} className="text-red-500 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-red-800 mb-2">¡Oops! Algo salió mal</h3>
+      <h3 className="text-lg font-semibold text-red-800 mb-2">
+        ¡Oops! Algo salió mal
+      </h3>
       <p className="text-red-600">{error}</p>
     </div>
   );
@@ -153,7 +164,9 @@ export function TeamsPage() {
             <ShieldIcon size={28} />
             Equipos de la División
           </h2>
-          <p className="text-orange-100 mt-2">Explora todos los equipos y sus estadísticas</p>
+          <p className="text-orange-100 mt-2">
+            Explora todos los equipos y sus estadísticas
+          </p>
         </div>
 
         <div className="p-6">
@@ -196,7 +209,7 @@ export function TeamsPage() {
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="bg-green-50 rounded-lg p-3 text-center border border-green-100">
+                    <div className="rounded-lg p-3 text-center border border-green-100">
                       <div className="text-lg font-bold text-green-700">
                         {stats.wins}
                       </div>
@@ -204,7 +217,7 @@ export function TeamsPage() {
                         Ganados
                       </div>
                     </div>
-                    <div className="bg-yellow-50 rounded-lg p-3 text-center border border-yellow-100">
+                    <div className="rounded-lg p-3 text-center border border-yellow-100">
                       <div className="text-lg font-bold text-yellow-700">
                         {stats.draws}
                       </div>
@@ -212,7 +225,7 @@ export function TeamsPage() {
                         Empates
                       </div>
                     </div>
-                    <div className="bg-red-50 rounded-lg p-3 text-center border border-red-100">
+                    <div className="rounded-lg p-3 text-center border border-red-100">
                       <div className="text-lg font-bold text-red-700">
                         {stats.losses}
                       </div>
@@ -255,13 +268,16 @@ export function TeamsPage() {
                       <div className="flex justify-between text-xs text-gray-500 mb-1">
                         <span>Rendimiento</span>
                         <span>
-                          {Math.round((stats.wins / totalGames) * 100)}% victorias
+                          {Math.round((stats.wins / totalGames) * 100)}%
+                          victorias
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-gradient-to-r from-green-400 to-green-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${(stats.wins / totalGames) * 100}%` }}
+                          style={{
+                            width: `${(stats.wins / totalGames) * 100}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
