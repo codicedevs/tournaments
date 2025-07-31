@@ -1,4 +1,4 @@
-import { HomeIcon, LayersIcon, CalendarIcon, UserIcon } from "lucide-react";
+import { HomeIcon, LayersIcon, CalendarIcon, UserIcon, Shield } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export function MobileNavigation() {
@@ -16,23 +16,11 @@ export function MobileNavigation() {
           }
         >
           <HomeIcon size={20} />
-          <span className="text-xs font-medium">Home</span>
+          <span className="text-xs font-medium">Inicio</span>
         </NavLink>
+
         <NavLink
-          to="/divisions"
-          className={({ isActive }) =>
-            `flex flex-col items-center justify-center space-y-1 ${
-              isActive
-                ? "text-indigo-600"
-                : "text-gray-500 hover:text-indigo-600"
-            }`
-          }
-        >
-          <LayersIcon size={20} />
-          <span className="text-xs font-medium">Divisions</span>
-        </NavLink>
-        <NavLink
-          to="/matches"
+          to="/fixture"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center space-y-1 ${
               isActive
@@ -42,8 +30,23 @@ export function MobileNavigation() {
           }
         >
           <CalendarIcon size={20} />
-          <span className="text-xs font-medium">Matches</span>
+          <span className="text-xs font-medium">Fixture</span>
         </NavLink>
+
+        <NavLink
+          to="/teams"
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center space-y-1 ${
+              isActive
+                ? "text-indigo-600"
+                : "text-gray-500 hover:text-indigo-600"
+            }`
+          }
+        >
+          <Shield size={20} />
+          <span className="text-xs font-medium">Equipos</span>
+        </NavLink>
+
         <NavLink
           to="/account"
           className={({ isActive }) =>

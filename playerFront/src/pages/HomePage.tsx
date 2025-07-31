@@ -15,6 +15,10 @@ export function HomePage() {
       .getAll()
       .then((data) => {
         setTournaments(data);
+        // Preselect the first tournament so the page starts with data
+        if (data.length > 0) {
+          setSelectedTournamentId(data[0]._id);
+        }
       })
       .catch(() =>
         setError("Ocurrió un error al obtener los torneos disponibles.")
