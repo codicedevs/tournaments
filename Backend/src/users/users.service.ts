@@ -7,12 +7,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { User, UserDocument } from './entities/user.entity';
 import { Player } from '../players/entities/player.entity';
+import { PlayersService } from '../players/players.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Player.name) private readonly playerModel: Model<Player>,
+    private readonly playersService: PlayersService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
@@ -82,9 +84,26 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<UserDocument | null> {
-    // Elimina el Player asociado si existe
-    await this.playerModel.deleteOne({ userId: id }).exec();
-    // Elimina el usuario
+    // Buscar el usuario para verificar su rol
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Si es Player, usar el servicio de players para eliminar correctamente
+    if (user.role === 'Player') {
+      const player = await this.playerModel.findOne({ userId: id }).exec();
+      console.log('player', player);
+      if (player) {
+        // Esto elimina el player y lo quita del equipo
+        await this.playersService.remove((player as any)._id.toString());
+      }
+    } else {
+      // Para otros roles, solo eliminar el player asociado si existe
+      await this.playerModel.deleteOne({ userId: id }).exec();
+    }
+
+    // Eliminar el usuario
     return this.userModel.findByIdAndDelete(id).exec();
   }
 

@@ -1,4 +1,5 @@
 import { User } from "./User";
+import { Registration } from "./Registration";
 
 export interface Team {
   _id: string;
@@ -9,4 +10,5 @@ export interface Team {
   createdById: string | User;
   players?: string[] | User[];
   captain?: string | User;
+  registrations?: Registration[];
 }

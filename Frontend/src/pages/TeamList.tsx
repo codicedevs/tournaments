@@ -10,6 +10,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { useTeams, useDeleteTeam, useDeleteTeams } from "../api/teamHooks";
+import { useTeamsWithRegistrations } from "../api/teamHooks";
 import { useAllPlayers } from "../api/playerHooks";
 import { useTransferPlayer } from "../api/playerHooks";
 import { Team } from "../models";
@@ -28,7 +29,12 @@ const TeamList: React.FC = () => {
   const { data: allPlayers = [] } = useAllPlayers();
 
   // Get teams data
-  const { data: teams = [], isLoading, isError, refetch } = useTeams();
+  const {
+    data: teams = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useTeamsWithRegistrations();
 
   // Delete mutations
   const { mutate: deleteTeam, isPending: isDeleteLoading } = useDeleteTeam();
@@ -213,6 +219,9 @@ const TeamList: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Entrenador
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Torneos
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -234,6 +243,21 @@ const TeamList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {team.coach || "Sin entrenador"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {team.registrations && team.registrations.length > 0 ? (
+                        <div className="space-y-1">
+                          {team.registrations.map((registration: any) => (
+                            <div key={registration._id} className="text-xs">
+                              {typeof registration.tournamentId === "object"
+                                ? registration.tournamentId.name
+                                : "Torneo"}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Sin torneos</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <button

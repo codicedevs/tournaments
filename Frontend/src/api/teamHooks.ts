@@ -90,8 +90,47 @@ export const getTeams = async (): Promise<Team[]> => {
   return res.data;
 };
 
+// Get teams with their tournament registrations
+export const getTeamsWithRegistrations = async (): Promise<Team[]> => {
+  const res = await axios.get(`${API_BASE}/teams`);
+  const teams = res.data;
+
+  // Get registrations for each team
+  const teamsWithRegistrations = await Promise.all(
+    teams.map(async (team: Team) => {
+      try {
+        const registrationsRes = await axios.get(
+          `${API_BASE}/registrations/team/${team._id}`
+        );
+        return {
+          ...team,
+          registrations: registrationsRes.data,
+        };
+      } catch (error) {
+        console.error(
+          `Error fetching registrations for team ${team._id}:`,
+          error
+        );
+        return {
+          ...team,
+          registrations: [],
+        };
+      }
+    })
+  );
+
+  return teamsWithRegistrations;
+};
+
 export function useTeams() {
   return useQuery<Team[]>({ queryKey: ["teams"], queryFn: () => getTeams() });
+}
+
+export function useTeamsWithRegistrations() {
+  return useQuery<Team[]>({
+    queryKey: ["teams", "with-registrations"],
+    queryFn: () => getTeamsWithRegistrations(),
+  });
 }
 
 export function useTeam(id: string, populate?: boolean) {

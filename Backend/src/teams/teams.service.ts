@@ -58,7 +58,6 @@ export class TeamsService {
   }
 
   async findOne(id: string, populate: boolean): Promise<Team | null> {
-    console.log('Buscando equipo', id, populate);
     const query = this.teamModel.findById(id);
     if (populate) {
       query.populate({
