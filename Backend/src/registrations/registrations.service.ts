@@ -28,7 +28,7 @@ export class RegistrationsService {
   async create(
     createRegistrationDto: CreateRegistrationDto,
   ): Promise<Registration> {
-    // Check if registration already exists
+    // Check if registration already exists for this tournament
     const existingRegistration = await this.registrationModel.findOne({
       teamId: createRegistrationDto.teamId,
       tournamentId: createRegistrationDto.tournamentId,
@@ -37,6 +37,17 @@ export class RegistrationsService {
     if (existingRegistration) {
       throw new ConflictException(
         'Team is already registered for this tournament',
+      );
+    }
+
+    // Check if team is registered in any other tournament
+    const existingTeamRegistration = await this.registrationModel.findOne({
+      teamId: createRegistrationDto.teamId,
+    });
+
+    if (existingTeamRegistration) {
+      throw new ConflictException(
+        'Team is already registered in another tournament',
       );
     }
 

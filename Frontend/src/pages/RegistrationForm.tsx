@@ -6,7 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeftIcon, SearchIcon, ChevronDownIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import Header from "../components/layout/Header";
-import { useCreateRegistration } from "../api/registrationHooks";
+import {
+  useCreateRegistration,
+  useRegistrations,
+} from "../api/registrationHooks";
 import { useTournaments, useTournament } from "../api/tournamentHooks";
 import { useTeams } from "../api/teamHooks";
 import { useRegistrationsByTournament } from "../api/registrationHooks";
@@ -80,7 +83,9 @@ const RegistrationForm: React.FC = () => {
   } = useCreateRegistration();
   const [registroTerminado, setRegistroTerminado] = useState(false);
   const { data: selectedTournament } = useTournament(selectedTournamentId);
-  // Equipos ya registrados en el torneo
+  // Todas las registrations para filtrar equipos ya registrados en cualquier torneo
+  const { data: allRegistrations = [] } = useRegistrations();
+  // Equipos ya registrados en el torneo específico
   const { data: registrationsByTournament = [] } =
     useRegistrationsByTournament(selectedTournamentId);
 
@@ -89,9 +94,16 @@ const RegistrationForm: React.FC = () => {
   // Estado para equipos a registrar
   const [pendingTeams, setPendingTeams] = useState<Team[]>([]);
 
-  // Filtrar equipos basado en el término de búsqueda
-  const filteredTeams = teams.filter((team) =>
-    team.name.toLowerCase().includes(teamSearchTerm.toLowerCase())
+  // Obtener IDs de equipos que ya están registrados en cualquier torneo
+  const registeredTeamIds = allRegistrations.map((reg) =>
+    typeof reg.teamId === "string" ? reg.teamId : reg.teamId?._id
+  );
+
+  // Filtrar equipos basado en el término de búsqueda y que no estén registrados en ningún torneo
+  const filteredTeams = teams.filter(
+    (team) =>
+      team.name.toLowerCase().includes(teamSearchTerm.toLowerCase()) &&
+      !registeredTeamIds.includes(team._id)
   );
 
   // Función para manejar la selección de equipo con teclado
@@ -185,16 +197,6 @@ const RegistrationForm: React.FC = () => {
     if (!team) return;
     if (pendingTeams.some((t) => t._id === team._id)) {
       setError("Este equipo ya está en la lista para registrar.");
-      return;
-    }
-    // Verificar si ya está registrado en el torneo
-    const yaRegistrado = registrationsByTournament.some((reg) =>
-      typeof reg.teamId === "string"
-        ? reg.teamId === team._id
-        : reg.teamId?._id === team._id
-    );
-    if (yaRegistrado) {
-      setError("Este equipo ya está registrado en el torneo.");
       return;
     }
     setPendingTeams((prev) => [...prev, team]);
@@ -310,6 +312,10 @@ const RegistrationForm: React.FC = () => {
               >
                 Equipo
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Solo se muestran equipos que no están registrados en ningún
+                torneo
+              </p>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <div className="relative">
@@ -358,29 +364,6 @@ const RegistrationForm: React.FC = () => {
                 </p>
               )}
             </div>
-
-            {/* Advertencia visual si el equipo seleccionado ya está registrado */}
-            {(() => {
-              const values = getValues();
-              if (values.teamId) {
-                const team = teams.find((t) => t._id === values.teamId);
-                if (team) {
-                  const yaRegistrado = registrationsByTournament.some((reg) =>
-                    typeof reg.teamId === "string"
-                      ? reg.teamId === team._id
-                      : reg.teamId?._id === team._id
-                  );
-                  if (yaRegistrado) {
-                    return (
-                      <div className="mt-2 text-yellow-700 bg-yellow-100 border border-yellow-300 rounded px-3 py-2 text-sm">
-                        ⚠️ Este equipo ya está registrado en la división.
-                      </div>
-                    );
-                  }
-                }
-              }
-              return null;
-            })()}
 
             {pendingTeams.length > 0 && (
               <div className="mb-4">
