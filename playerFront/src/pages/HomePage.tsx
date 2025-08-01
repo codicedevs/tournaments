@@ -78,7 +78,7 @@ export function HomePage() {
         <div className="bg-gradient-to-r from-black to-orange-600 p-6">
           <h2 className="text-3xl font-bold text-white flex items-center gap-3">
             <TrophyIcon size={32} />
-            {(tournaments.find((t) => t._id === selectedTournamentId)?.name) ??
+            {tournaments.find((t) => t._id === selectedTournamentId)?.name ??
               "Dashboard del Torneo"}
           </h2>
           <p className="text-orange-100 mt-2">
@@ -95,41 +95,17 @@ export function HomePage() {
             <div className="space-y-8">
               {/* Next Matches Section */}
               <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="bg-white p-4">
-                  <h3 className="text-xl font-bold text-black flex items-center gap-2">
-                    <CalendarIcon size={24} />
-                    Próximos Partidos
-                  </h3>
-                </div>
-                <div className="p-1">
-                  <NextMatches tournamentId={selectedTournamentId} />
-                </div>
+                <NextMatches tournamentId={selectedTournamentId} />
               </div>
 
               {/* Position Table Section */}
               <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="bg-white p-4">
-                  <h3 className="text-xl font-bold text-black flex items-center gap-2">
-                    <TrophyIcon size={24} />
-                    Tabla de Posiciones
-                  </h3>
-                </div>
-                <div className="p-1">
-                  <PositionTable tournamentId={selectedTournamentId} />
-                </div>
+                <PositionTable tournamentId={selectedTournamentId} />
               </div>
 
               {/* Top Scorers Section */}
               <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="bg-white p-4">
-                  <h3 className="text-xl font-bold text-black flex items-center gap-2">
-                    <TargetIcon size={24} />
-                    Tabla de Goleadores
-                  </h3>
-                </div>
-                <div className="p-1">
-                  <TopScorers tournamentId={selectedTournamentId} />
-                </div>
+                <TopScorers tournamentId={selectedTournamentId} />
               </div>
             </div>
           </div>

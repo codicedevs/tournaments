@@ -63,8 +63,7 @@ export function NextMatches({ tournamentId }: NextMatchesProps) {
       Math.min(prev + 1, Math.max(matches.length - 1, 0))
     );
 
-  const prevSlide = () =>
-    setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  const prevSlide = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
 
   if (!tournamentId) {
     return (
@@ -84,12 +83,12 @@ export function NextMatches({ tournamentId }: NextMatchesProps) {
 
   return (
     <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      {/* <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-black flex items-center">
-          <span className="w-1 h-6 bg-black rounded mr-3"></span>
-          Próximos partidos
-        </h2>
-      </div> */}
+      <div className="bg-white p-4">
+        <h3 className="text-xl font-bold text-black flex items-center gap-2">
+          <CalendarIcon size={24} />
+          Próximos Partidos
+        </h3>
+      </div>
       <div className="relative">
         {/* Slider container */}
         <div className="overflow-hidden">

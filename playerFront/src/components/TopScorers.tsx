@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { playersApi, Player } from "../api/http";
+import { TargetIcon } from "lucide-react";
 
 interface TopScorersProps {
   tournamentId: string | undefined;
@@ -32,13 +33,12 @@ export function TopScorers({ tournamentId }: TopScorersProps) {
 
   return (
     <section className="bg-white rounded-xl border border-gray-200 overflow-hidden h-full mt-6">
-      {/* <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-black flex items-center">
-          <span className="w-1 h-6 bg-black rounded mr-3"></span>
-          Tabla de goleadores
-        </h2>
-      </div> */}
-
+      <div className="bg-white p-4">
+        <h3 className="text-xl font-bold text-black flex items-center gap-2">
+          <TargetIcon size={24} />
+          Tabla de Goleadores
+        </h3>
+      </div>
       {!tournamentId && (
         <p className="p-6 text-center text-gray-500">
           Selecciona un torneo para ver los goleadores.
