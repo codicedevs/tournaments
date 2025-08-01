@@ -5,7 +5,11 @@ import { ArrowLeftIcon, UploadIcon, XIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateUserWithPlayer, useUpdateUser } from "../../api/userHooks";
+import {
+  useCreateUserWithPlayer,
+  useCreateUser,
+  useUpdateUser,
+} from "../../api/userHooks";
 import { useTeams } from "../../api/teamHooks";
 import { usePlayerByUserId } from "../../api/playerHooks";
 import { UserRole, roleLabels } from "../../models/User";
@@ -72,10 +76,17 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
   // Hooks
   const {
     mutate: createUserWithPlayer,
-    isPending: isCreating,
-    isError: isCreateError,
-    error: createError,
+    isPending: isCreatingWithPlayer,
+    isError: isCreateWithPlayerError,
+    error: createWithPlayerError,
   } = useCreateUserWithPlayer();
+
+  const {
+    mutate: createUser,
+    isPending: isCreatingUser,
+    isError: isCreateUserError,
+    error: createUserError,
+  } = useCreateUser();
 
   const {
     mutate: updateUser,
@@ -87,9 +98,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
   const { data: teams = [] } = useTeams();
   const { data: playerData } = usePlayerByUserId(userId);
 
-  const isPending = isCreating || isUpdating;
-  const isError = isCreateError || isUpdateError;
-  const error = createError || updateError;
+  const isPending = isCreatingWithPlayer || isCreatingUser || isUpdating;
+  const isError = isCreateWithPlayerError || isCreateUserError || isUpdateError;
+  const error = createWithPlayerError || createUserError || updateError;
 
   // Estado para manejar errores del formulario
   const [formError, setFormError] = useState<string>("");
@@ -103,6 +114,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     setValue,
     setError,
     reset,
+    trigger,
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -114,6 +126,44 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
 
   const selectedRole = watch("role");
   const isAdmin = currentUser?.role === "Admin";
+
+  // Función helper para manejar errores
+  const handleFormError = (error: any, fieldName?: keyof UserFormData) => {
+    const errorMessage = error.response?.data?.message || error.message;
+
+    // Limpiar errores previos
+    setFormError("");
+
+    if (fieldName && errorMessage && errorMessage.includes("DNI")) {
+      setError(fieldName, {
+        type: "manual",
+        message: errorMessage, // Mostrar exactamente lo que devuelve el backend
+      });
+
+      // Hacer scroll al campo con error
+      setTimeout(() => {
+        const element = document.querySelector(
+          `[name="${fieldName}"]`
+        ) as HTMLElement;
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.focus();
+        }
+      }, 100);
+    } else {
+      setFormError(errorMessage); // Mostrar exactamente lo que devuelve el backend
+
+      // Hacer scroll al mensaje de error general
+      setTimeout(() => {
+        const errorElement = document.querySelector(
+          ".bg-red-50"
+        ) as HTMLElement;
+        if (errorElement) {
+          errorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+    }
+  };
 
   // Inicializar datos si estamos en modo edición
   useEffect(() => {
@@ -163,30 +213,41 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     }
 
     if (mode === "create") {
-      createUserWithPlayer(userData, {
-        onSuccess: () => {
-          const identifier = data.email || data.username || "Usuario";
-          setFormSuccess(
-            `Usuario creado exitosamente!\n\nCredenciales temporales:\nIdentificador: ${identifier}\nContraseña: ${password}\n\nEl usuario deberá cambiar su contraseña en el primer login.`
-          );
-          // Navegar después de 3 segundos para que el usuario vea el mensaje
-          setTimeout(() => {
-            navigate("/users");
-          }, 3000);
-        },
-        onError: (error: any) => {
-          // Verificar si es un error de DNI duplicado
-          const errorMessage = error.response?.data?.message || error.message;
-          if (errorMessage && errorMessage.includes("DNI ya está registrado")) {
-            setError("dni", {
-              type: "manual",
-              message: "El DNI ya está registrado en el sistema",
-            });
-          } else {
-            setFormError(errorMessage || "Error al crear el usuario");
-          }
-        },
-      });
+      // Usar createUserWithPlayer solo si es Player, sino usar createUser
+      if (data.role === "Player") {
+        createUserWithPlayer(userData, {
+          onSuccess: () => {
+            const identifier = data.email || data.username || "Usuario";
+            setFormSuccess(
+              `Usuario creado exitosamente!\n\nCredenciales temporales:\nIdentificador: ${identifier}\nContraseña: ${password}\n\nEl usuario deberá cambiar su contraseña en el primer login.`
+            );
+            // Navegar después de 3 segundos para que el usuario vea el mensaje
+            setTimeout(() => {
+              navigate("/users");
+            }, 3000);
+          },
+          onError: (error: any) => {
+            handleFormError(error, "dni");
+          },
+        });
+      } else {
+        // Para roles que no son Player, usar createUser normal
+        createUser(userData, {
+          onSuccess: () => {
+            const identifier = data.email || data.username || "Usuario";
+            setFormSuccess(
+              `Usuario creado exitosamente!\n\nCredenciales temporales:\nIdentificador: ${identifier}\nContraseña: ${password}\n\nEl usuario deberá cambiar su contraseña en el primer login.`
+            );
+            // Navegar después de 3 segundos para que el usuario vea el mensaje
+            setTimeout(() => {
+              navigate("/users");
+            }, 3000);
+          },
+          onError: (error: any) => {
+            handleFormError(error, "dni");
+          },
+        });
+      }
     } else {
       updateUser(
         {
@@ -202,19 +263,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
             }, 2000);
           },
           onError: (error: any) => {
-            // Verificar si es un error de DNI duplicado
-            const errorMessage = error.response?.data?.message || error.message;
-            if (
-              errorMessage &&
-              errorMessage.includes("DNI ya está registrado")
-            ) {
-              setError("dni", {
-                type: "manual",
-                message: "El DNI ya está registrado en el sistema",
-              });
-            } else {
-              setFormError(errorMessage || "Error al actualizar el usuario");
-            }
+            handleFormError(error, "dni");
           },
         }
       );
@@ -485,6 +534,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
               <input
                 type="text"
                 {...register("dni")}
+                name="dni"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="12345678"
               />

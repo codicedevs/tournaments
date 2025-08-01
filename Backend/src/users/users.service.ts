@@ -279,6 +279,16 @@ export class UsersService {
       );
     }
 
+    // Validar que el DNI sea único si se proporciona
+    if (createUserDto.dni) {
+      const existingUser = await this.userModel
+        .findOne({ dni: createUserDto.dni })
+        .exec();
+      if (existingUser) {
+        throw new ConflictException('El DNI ya está registrado en el sistema');
+      }
+    }
+
     const session = await this.userModel.db.startSession();
     session.startTransaction();
     try {

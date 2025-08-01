@@ -43,6 +43,7 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: async (user: any) => {
       const { data } = await api.post("/users", user, {});
+
       return data;
     },
     onSuccess: () => {
@@ -52,15 +53,14 @@ export function useCreateUser() {
 }
 
 export function useCreateUserWithPlayer() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userData: any) => {
-      const res = await fetch(`${API_BASE_URL}/users/with-player`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-      if (!res.ok) throw new Error("Error al crear usuario y player");
-      return res.json();
+      const { data } = await api.post("/users/with-player", userData);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }
