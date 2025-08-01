@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
 import { tournamentsApi, Tournament } from "../api/http";
 import { PositionTable } from "../components/PositionTable";
+import { TopScorers } from "../components/TopScorers";
+import { NextMatches } from "../components/NextMatches";
+import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
+import {
+  TrophyIcon,
+  CalendarIcon,
+  TargetIcon,
+  UsersIcon,
+  Loader2Icon,
+} from "lucide-react";
 
 export function HomePage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournamentId, setSelectedTournamentId] =
-    useState<string | undefined>();
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    string | undefined
+  >();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,40 +37,80 @@ export function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Filtra por el torneo que se te cante</h1>
+  const renderLoadingState = () => (
+    <div className="flex items-center justify-center py-12">
+      <Loader2Icon size={48} className="text-orange-600 animate-spin" />
+      <span className="ml-3 text-lg text-gray-600">
+        Cargando datos del torneo...
+      </span>
+    </div>
+  );
 
-      <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="tournament">
-          Seleccionar torneo
-        </label>
-        {loading ? (
-          <p className="text-gray-500">Cargando torneos...</p>
-        ) : error ? (
-          <p className="text-red-600">{error}</p>
-        ) : (
-          <select
-            id="tournament"
-            className="border border-gray-300 rounded px-3 py-2 w-full md:w-64"
-            value={selectedTournamentId ?? ""}
-            onChange={(e) =>
-              setSelectedTournamentId(
-                e.target.value === "" ? undefined : e.target.value
-              )
-            }
-          >
-            <option value="">-- Selecciona un torneo --</option>
-            {tournaments.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.name} - {t.season}
-              </option>
-            ))}
-          </select>
+  const renderErrorState = () => (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+      <div className="text-red-500 mb-4">⚠️</div>
+      <h3 className="text-lg font-semibold text-red-800 mb-2">
+        Error al cargar datos
+      </h3>
+      <p className="text-red-600">{error}</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <WelcomeDivisionSelector
+        title="¡Bienvenido a Loyal League!"
+        description="Sigue todos los partidos, resultados y estadísticas de tu división favorita"
+        tournaments={tournaments}
+        selectedTournamentId={selectedTournamentId ?? ""}
+        onTournamentChange={(tournamentId) =>
+          setSelectedTournamentId(
+            tournamentId === "" ? undefined : tournamentId
+          )
+        }
+        loading={loading}
+        error={error}
+      />
+
+      {/* Main Dashboard */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-7xl mx-auto">
+        <div className="bg-gradient-to-r from-black to-orange-600 p-6">
+          <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+            <TrophyIcon size={32} />
+            {tournaments.find((t) => t._id === selectedTournamentId)?.name ??
+              "Dashboard del Torneo"}
+          </h2>
+          <p className="text-orange-100 mt-2">
+            Toda la información de tu liga en un solo lugar
+          </p>
+        </div>
+
+        {loading && renderLoadingState()}
+        {error && renderErrorState()}
+
+        {!loading && !error && (
+          <div className="p-6 space-y-8">
+            {/* Content Sections */}
+            <div className="space-y-8">
+              {/* Next Matches Section */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <NextMatches tournamentId={selectedTournamentId} />
+              </div>
+
+              {/* Position Table Section */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <PositionTable tournamentId={selectedTournamentId} />
+              </div>
+
+              {/* Top Scorers Section */}
+              <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <TopScorers tournamentId={selectedTournamentId} />
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      <PositionTable tournamentId={selectedTournamentId} />
     </div>
   );
 }

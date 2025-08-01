@@ -6,7 +6,8 @@ import {
   Matchday,
   Match,
 } from "../api/http";
-import { CalendarIcon, ClockIcon } from "lucide-react";
+import { CalendarIcon, ClockIcon, ChevronDownIcon, ChevronUpIcon, AlertCircleIcon, Loader2Icon } from "lucide-react";
+import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
 
 export function FixturesPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -14,6 +15,7 @@ export function FixturesPage() {
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedMatchdays, setExpandedMatchdays] = useState<Set<string>>(new Set());
 
   // Fetch tournaments on mount
   useEffect(() => {
@@ -59,19 +61,29 @@ export function FixturesPage() {
     })();
   }, [selectedTournamentId, tournaments]);
 
+  const toggleMatchday = (matchdayId: string) => {
+    const newExpanded = new Set(expandedMatchdays);
+    if (newExpanded.has(matchdayId)) {
+      newExpanded.delete(matchdayId);
+    } else {
+      newExpanded.add(matchdayId);
+    }
+    setExpandedMatchdays(newExpanded);
+  };
+
   const renderMatch = (match: Match) => (
     <article
       key={match._id}
-      className="border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1"
     >
-      <div className="flex justify-between items-center text-gray-500 text-sm mb-2">
-        <div className="flex items-center gap-1">
-          <CalendarIcon size={16} />
-          <span>{new Date(match.date).toLocaleDateString("es-AR")}</span>
+      <div className="flex justify-between items-center text-gray-600 text-sm mb-4">
+        <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
+          <CalendarIcon size={16} className="text-blue-600" />
+          <span className="font-medium">{new Date(match.date).toLocaleDateString("es-AR")}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <ClockIcon size={16} />
-          <span>
+        <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+          <ClockIcon size={16} className="text-green-600" />
+          <span className="font-medium">
             {new Date(match.date).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -80,72 +92,144 @@ export function FixturesPage() {
         </div>
       </div>
       <div className="flex justify-between items-center">
-        <span className="font-semibold flex-1 text-center truncate">
-          {(match as any).teamA?.name || "--"}
-        </span>
-        <span className="mx-3 font-bold text-gray-600">VS</span>
-        <span className="font-semibold flex-1 text-center truncate">
-          {(match as any).teamB?.name || "--"}
-        </span>
+        <div className="flex-1 text-center">
+          <span className="font-bold text-lg text-gray-800 block truncate">
+            {(match as any).teamA?.name || "--"}
+          </span>
+        </div>
+        <div className="mx-6 bg-gradient-to-r from-orange-600 to-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+          VS
+        </div>
+        <div className="flex-1 text-center">
+          <span className="font-bold text-lg text-gray-800 block truncate">
+            {(match as any).teamB?.name || "--"}
+          </span>
+        </div>
       </div>
     </article>
   );
 
-  return (
-    <section className="bg-white rounded-xl border border-gray-200 overflow-hidden p-6 max-w-4xl mx-auto space-y-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h2 className="text-xl font-bold text-indigo-700 flex items-center">
-          <span className="w-1 h-6 bg-indigo-600 rounded mr-3"></span>
-          Fixture
-        </h2>
-      </div>
-
-      {/* Tournament Select */}
-      <div>
-        <label htmlFor="tournament" className="block text-sm font-medium mb-1">
-          Seleccionar torneo
-        </label>
-        <select
-          id="tournament"
-          className="border rounded px-3 py-2 w-full max-w-sm"
-          value={selectedTournamentId}
-          onChange={(e) => setSelectedTournamentId(e.target.value)}
-        >
-          <option value="">-- Seleccione --</option>
-          {tournaments.map((t) => (
-            <option key={t._id} value={t._id}>
-              {t.name} - {t.season}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {loading && <p>Cargando jornadas...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      {/* Matchdays List */}
-      {!loading && !error && matchdays.length > 0 && (
-        <div className="space-y-4">
-          {matchdays.map((md) => (
-            <details key={md._id} className="border border-gray-200 rounded-lg">
-              <summary className="font-semibold p-4 cursor-pointer select-none flex items-center justify-between">
-                <span>
-                  Jornada {md.order}
-                  {md.date && ` - ${new Date(md.date).toLocaleDateString("es-AR")}`}
-                </span>
-                <span className="text-sm text-gray-500">Ver partidos</span>
-              </summary>
-              <div className="grid gap-4 p-4 border-t border-gray-100">
-                {md.matches?.length ? (
-                  md.matches.map((m) => renderMatch(m as Match))
-                ) : (
-                  <p>No hay partidos</p>
-                )}
-              </div>
-            </details>
-          ))}
+  const renderLoadingSkeleton = () => (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-6 bg-gray-200 rounded-lg w-32 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+          </div>
+          <div className="space-y-3">
+            {[1, 2].map((j) => (
+              <div key={j} className="h-20 bg-gray-100 rounded-xl animate-pulse"></div>
+            ))}
+          </div>
         </div>
-      )}
-    </section>
+      ))}
+    </div>
+  );
+
+  const renderError = () => (
+    <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+      <AlertCircleIcon size={48} className="text-red-500 mx-auto mb-4" />
+      <h3 className="text-lg font-semibold text-red-800 mb-2">¡Oops! Algo salió mal</h3>
+      <p className="text-red-600">{error}</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <WelcomeDivisionSelector
+        title="Fixture de Partidos"
+        description="Consulta todos los partidos programados y resultados de tu división"
+        tournaments={tournaments}
+        selectedTournamentId={selectedTournamentId}
+        onTournamentChange={setSelectedTournamentId}
+      />
+
+      {/* Content Section */}
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-6xl mx-auto">
+        <div className="bg-gradient-to-r from-black to-orange-600 p-6">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <CalendarIcon size={28} />
+            Calendario de Partidos
+          </h2>
+          <p className="text-blue-100 mt-2">Explora todas las jornadas y sus partidos</p>
+        </div>
+
+        <div className="p-6">
+          {loading && renderLoadingSkeleton()}
+          {error && renderError()}
+
+          {/* Matchdays List */}
+          {!loading && !error && matchdays.length > 0 && (
+            <div className="space-y-6">
+              {matchdays.map((md) => {
+                const isExpanded = expandedMatchdays.has(md._id);
+                return (
+                  <div
+                    key={md._id}
+                    className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <button
+                      onClick={() => toggleMatchday(md._id)}
+                      className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-purple-50 p-6 text-left transition-all duration-300 flex items-center justify-between group"
+                    >
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
+                          Jornada {md.order}
+                        </h3>
+                        {/* {md.date && (
+                          <p className="text-gray-600 mt-1">
+                            {new Date(md.date).toLocaleDateString("es-AR", {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        )} */}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {md.matches?.length || 0} partidos
+                        </span>
+                        {isExpanded ? (
+                          <ChevronUpIcon size={24} className="text-gray-500 group-hover:text-blue-600 transition-colors" />
+                        ) : (
+                          <ChevronDownIcon size={24} className="text-gray-500 group-hover:text-blue-600 transition-colors" />
+                        )}
+                      </div>
+                    </button>
+                    
+                    {isExpanded && (
+                      <div className="bg-gray-50 border-t border-gray-200 p-6 animate-in slide-in-from-top-2 duration-300">
+                        {md.matches?.length ? (
+                          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                            {md.matches.map((m) => renderMatch(m as Match))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <CalendarIcon size={48} className="text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600 text-lg">No hay partidos programados para esta jornada</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!loading && !error && matchdays.length === 0 && (
+            <div className="text-center py-12">
+              <CalendarIcon size={64} className="text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay jornadas disponibles</h3>
+              <p className="text-gray-500">Selecciona un torneo para ver las jornadas y partidos</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }

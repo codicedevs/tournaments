@@ -3,6 +3,7 @@ import axios from "axios";
 // Base URL can be configured via environment variable or default to localhost
 export const http = axios.create({
   baseURL: "http://localhost:6969",
+  //baseURL: "http://localhost:6969",
   //withCredentials: true,
 });
 
@@ -154,6 +155,13 @@ export const playersApi = {
 
   getByUserId: async (userId: string) => {
     const { data } = await http.get<Player[]>(`/players/by-user/${userId}`);
+    return data;
+  },
+
+  getByTournament: async (tournamentId: string) => {
+    const { data } = await http.get<Player[]>(
+      `/players/by-tournament/${tournamentId}`
+    );
     return data;
   },
 
