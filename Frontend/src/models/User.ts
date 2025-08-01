@@ -20,6 +20,7 @@ export interface User {
   name: string;
   username?: string;
   dni?: string;
+  birthDate?: string;
   occupation?: string;
   healthInsurance?: string;
   role: UserRole;

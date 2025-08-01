@@ -94,7 +94,7 @@ const TournamentRegistrations: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(`/divisions`)}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
@@ -113,13 +113,7 @@ const TournamentRegistrations: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Equipos Registrados
-            </h1>
-            <p className="text-gray-600">{tournament?.name || "División"}</p>
-          </div>
+        <div className="flex justify-end items-center mb-6">
           <button
             onClick={() => navigate(`/divisions/${tournamentId}/register-team`)}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
@@ -199,9 +193,22 @@ const TournamentRegistrations: React.FC = () => {
                       key={registration._id}
                       className={
                         selected.includes(registration._id)
-                          ? "bg-blue-50"
-                          : "hover:bg-gray-50"
+                          ? "bg-blue-50 cursor-pointer"
+                          : "hover:bg-gray-50 cursor-pointer"
                       }
+                      onClick={(e) => {
+                        // Evitar navegación si se hace clic en checkbox o botones
+                        if (
+                          (e.target as HTMLElement).closest(
+                            'input[type="checkbox"]'
+                          ) ||
+                          (e.target as HTMLElement).closest("button")
+                        ) {
+                          return;
+                        }
+                        // Navegar al formulario de edición del equipo
+                        navigate(`/teams/${team.id}/edit`);
+                      }}
                     >
                       <td className="px-4 py-4 text-center">
                         <input

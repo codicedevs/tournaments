@@ -281,7 +281,22 @@ const TeamList: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTeams.map((team: Team) => (
-                  <tr key={team._id} className="hover:bg-gray-50">
+                  <tr
+                    key={team._id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={(e) => {
+                      // Evitar navegación si se hace clic en checkbox o botones
+                      if (
+                        (e.target as HTMLElement).closest(
+                          'input[type="checkbox"]'
+                        ) ||
+                        (e.target as HTMLElement).closest("button")
+                      ) {
+                        return;
+                      }
+                      navigate(`/teams/${team._id}/edit`);
+                    }}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"

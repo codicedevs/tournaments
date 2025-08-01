@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCreateTeam, useCheckTeamName } from "../api/teamHooks";
-import { usePlayers } from "../api/playerHooks";
+import {
+  useCreateTeam,
+  useUpdateTeam,
+  useCheckTeamName,
+  useTeam,
+} from "../api/teamHooks";
+import { useApp } from "../context/AppContext";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
@@ -20,28 +25,43 @@ const teamSchema = z.object({
     .min(1, "El correo del delegado es requerido"),
   coach: z.string().optional(),
   profileImage: z.instanceof(File).optional().or(z.string().optional()),
-  createdById: z.string().min(1, "El ID del creador es requerido"),
-  players: z.array(z.string()).optional(),
 });
 
 type TeamFormData = z.infer<typeof teamSchema>;
 
-const TeamForm: React.FC = () => {
+interface TeamFormProps {
+  mode: "create" | "edit";
+  teamId?: string;
+  initialData?: any;
+}
+
+const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const params = useParams();
+  const { user: currentUser } = useApp();
+
+  // Get teamId from URL params if not provided as prop
+  const actualTeamId = teamId || params.teamId;
+  const [formError, setFormError] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     mutate: createTeam,
-    isPending,
-    isError,
-    error: apiError,
-    data,
+    isPending: isCreating,
+    isError: isCreateError,
+    error: createError,
   } = useCreateTeam();
 
-  // Fetch players for the dropdown
-  const { data: players = [], isLoading: isLoadingPlayers } = usePlayers();
+  const {
+    mutate: updateTeam,
+    isPending: isUpdating,
+    isError: isUpdateError,
+    error: updateError,
+  } = useUpdateTeam();
+
+  // Get team data for edit mode
+  const { data: team, isLoading: isTeamLoading } = useTeam(actualTeamId || "");
 
   const {
     register,
@@ -49,18 +69,36 @@ const TeamForm: React.FC = () => {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<TeamFormData>({
     resolver: zodResolver(teamSchema),
-    defaultValues: { players: [] },
   });
 
   // Watch the team name for validation
   const teamName = watch("name");
 
-  // Check if team name already exists
+  // Check if team name already exists (only for create mode)
   const { data: nameCheckData, isLoading: isCheckingName } =
     useCheckTeamName(teamName);
-  const nameExists = nameCheckData?.exists;
+  const nameExists = mode === "create" && nameCheckData?.exists;
+
+  // Initialize form data for edit mode
+  useEffect(() => {
+    if (mode === "edit" && team) {
+      reset({
+        name: team.name || "",
+        captainFullName: "", // These fields are not in the Team model, will be empty for edit
+        captainPhoneNumber: "",
+        captainEmail: "",
+        coach: team.coach || "",
+        profileImage:
+          typeof team.profileImage === "string" ? team.profileImage : undefined,
+      });
+      setImagePreview(
+        typeof team.profileImage === "string" ? team.profileImage : null
+      );
+    }
+  }, [mode, team, reset]);
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,24 +117,78 @@ const TeamForm: React.FC = () => {
   };
 
   const onSubmit = (data: TeamFormData) => {
-    setError("");
+    setFormError("");
 
-    // Prevent submission if team name already exists
-    if (nameExists) {
-      setError(
+    // Prevent submission if team name already exists (only for create mode)
+    if (mode === "create" && nameExists) {
+      setFormError(
         "El nombre del equipo ya está en uso. Por favor, elija otro nombre."
       );
       return;
     }
 
-    // The createTeam hook will now handle the file upload internally
-    createTeam(data, {
-      onSuccess: () => navigate("/teams"),
-      onError: (error: any) => {
-        setError(error.response?.data?.message || "Error al crear el equipo");
-      },
-    });
+    // Add the current user as creator for create mode
+    const teamData = {
+      ...data,
+      createdById: currentUser?.id || "",
+    };
+
+    if (mode === "create") {
+      createTeam(teamData, {
+        onSuccess: () => navigate("/teams"),
+        onError: (error: any) => {
+          setFormError(
+            error.response?.data?.message || "Error al crear el equipo"
+          );
+        },
+      });
+    } else {
+      // For update mode, handle FormData if there's a new image
+      let payload: any = {};
+      let isFormData = false;
+
+      if (data.profileImage instanceof File) {
+        const formData = new FormData();
+        formData.append("name", data.name);
+        formData.append("captainFullName", data.captainFullName);
+        formData.append("captainPhoneNumber", data.captainPhoneNumber);
+        formData.append("captainEmail", data.captainEmail);
+        if (data.coach) formData.append("coach", data.coach);
+        formData.append("profileImage", data.profileImage);
+        payload = formData;
+        isFormData = true;
+      } else {
+        payload = {
+          name: data.name,
+          captainFullName: data.captainFullName,
+          captainPhoneNumber: data.captainPhoneNumber,
+          captainEmail: data.captainEmail,
+          coach: data.coach || undefined,
+          profileImage: data.profileImage,
+        };
+      }
+
+      updateTeam(
+        {
+          id: actualTeamId!,
+          data: payload,
+          isFormData,
+        },
+        {
+          onSuccess: () => navigate("/teams"),
+          onError: (error: any) => {
+            setFormError(
+              error.response?.data?.message || "Error al actualizar el equipo"
+            );
+          },
+        }
+      );
+    }
   };
+
+  const isPending = isCreating || isUpdating;
+  const isError = isCreateError || isUpdateError;
+  const apiError = createError || updateError;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,7 +203,9 @@ const TeamForm: React.FC = () => {
         </button>
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-blue-600 text-white">
-            <h1 className="text-xl font-bold">Crear Nuevo Equipo</h1>
+            <h1 className="text-xl font-bold">
+              {mode === "create" ? "Crear Nuevo Equipo" : "Editar Equipo"}
+            </h1>
           </div>
 
           <div className="flex justify-end px-6 pt-4">
@@ -140,9 +234,9 @@ const TeamForm: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-            {error && (
+            {formError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
-                {error}
+                {formError}
               </div>
             )}
             {isError && apiError && (
@@ -167,8 +261,9 @@ const TeamForm: React.FC = () => {
                     nameExists ? "border-red-500" : "border-gray-300"
                   } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
                   placeholder="Ingrese el nombre del equipo"
+                  disabled={isPending}
                 />
-                {isCheckingName && (
+                {mode === "create" && isCheckingName && (
                   <div className="absolute right-3 top-2">
                     <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
                   </div>
@@ -199,6 +294,7 @@ const TeamForm: React.FC = () => {
                 {...register("captainFullName")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el nombre completo del delegado"
+                disabled={isPending}
               />
               {errors.captainFullName && (
                 <div className="text-red-600 text-sm mt-1">
@@ -220,6 +316,7 @@ const TeamForm: React.FC = () => {
                 {...register("captainPhoneNumber")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el teléfono del delegado"
+                disabled={isPending}
               />
               {errors.captainPhoneNumber && (
                 <div className="text-red-600 text-sm mt-1">
@@ -241,6 +338,7 @@ const TeamForm: React.FC = () => {
                 {...register("captainEmail")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el correo electrónico del delegado"
+                disabled={isPending}
               />
               {errors.captainEmail && (
                 <div className="text-red-600 text-sm mt-1">
@@ -262,42 +360,11 @@ const TeamForm: React.FC = () => {
                 {...register("coach")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Nombre del entrenador"
+                disabled={isPending}
               />
               {errors.coach && (
                 <div className="text-red-600 text-sm mt-1">
                   {errors.coach.message}
-                </div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label
-                htmlFor="createdById"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Creador
-              </label>
-              <select
-                id="createdById"
-                {...register("createdById")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                disabled={isLoadingPlayers}
-              >
-                <option value="">Seleccione un creador</option>
-                {players.map((player) => (
-                  <option key={player._id} value={player._id}>
-                    {player.name}
-                  </option>
-                ))}
-              </select>
-              {isLoadingPlayers && (
-                <div className="text-sm text-gray-500 mt-1">
-                  Cargando jugadores...
-                </div>
-              )}
-              {errors.createdById && (
-                <div className="text-red-600 text-sm mt-1">
-                  {errors.createdById.message}
                 </div>
               )}
             </div>
@@ -307,15 +374,20 @@ const TeamForm: React.FC = () => {
                 type="button"
                 onClick={() => navigate("/teams")}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isPending}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {isPending ? "Guardando..." : "Guardar"}
+                {isPending
+                  ? "Guardando..."
+                  : mode === "create"
+                  ? "Crear Equipo"
+                  : "Guardar Cambios"}
               </button>
             </div>
           </form>

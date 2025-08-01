@@ -111,6 +111,53 @@ export class RegistrationsService {
       throw new NotFoundException(`Registration with ID ${id} not found`);
     }
 
+    // Obtener el tournamentId y teamId de la registration
+    const { tournamentId, teamId } = registration;
+
+    // Obtener todas las fases del torneo
+    const phases = await this.phaseModel.find({ tournamentId });
+    const phaseIds = phases.map((phase) => phase._id);
+
+    // Obtener todos los matchdays de las fases
+    const matchdays = await this.matchdayModel.find({
+      phaseId: { $in: phaseIds },
+    });
+    const matchdayIds = matchdays.map((matchday) => matchday._id);
+
+    // Limpiar los partidos donde participa este equipo
+    await this.matchModel.updateMany(
+      {
+        matchDayId: { $in: matchdayIds },
+        $or: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
+      },
+      [
+        {
+          $set: {
+            homeScore: 0,
+            awayScore: 0,
+            result: null,
+            events: [],
+            // Marcar el equipo correspondiente como vacío
+            homeTeamId: {
+              $cond: {
+                if: { $eq: ['$homeTeamId', teamId] },
+                then: null,
+                else: '$homeTeamId',
+              },
+            },
+            awayTeamId: {
+              $cond: {
+                if: { $eq: ['$awayTeamId', teamId] },
+                then: null,
+                else: '$awayTeamId',
+              },
+            },
+          },
+        },
+      ],
+    );
+
+    // Eliminar la registration
     return this.registrationModel.findByIdAndDelete(id).exec();
   }
 

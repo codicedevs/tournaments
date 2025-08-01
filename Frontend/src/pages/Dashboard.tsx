@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
       <Header />
       <main className="container mx-auto py-10 px-6">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4 font-serif">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Panel de Control
           </h1>
           <p className="text-lg text-gray-600 font-light">
@@ -84,7 +84,7 @@ const Dashboard: React.FC = () => {
                     <div className="bg-white/95 backdrop-blur-sm p-3 rounded-xl text-gray-800 border border-white/60 shadow-lg">
                       {item.icon}
                     </div>
-                    <h2 className="ml-4 text-2xl font-bold text-white font-serif drop-shadow-lg">
+                    <h2 className="ml-4 text-2xl font-bold text-white drop-shadow-lg">
                       {item.title}
                     </h2>
                   </div>
@@ -121,9 +121,7 @@ const Dashboard: React.FC = () => {
             >
               <div className="flex items-center gap-4">
                 <EyeIcon size={24} className="group-hover:animate-pulse" />
-                <span className="font-serif text-lg">
-                  Ver Partidos por Veedor
-                </span>
+                <span className="text-lg">Ver Partidos por Veedor</span>
               </div>
 
               {/* Efecto de brillo */}

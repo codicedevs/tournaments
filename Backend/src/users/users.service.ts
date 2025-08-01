@@ -1,4 +1,11 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  forwardRef,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -25,9 +32,19 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     // Validar que al menos email o username esté presente
     if (!createUserDto.email && !createUserDto.username) {
-      throw new Error(
+      throw new BadRequestException(
         'Debe proporcionar al menos un email o nombre de usuario',
       );
+    }
+
+    // Validar que el DNI sea único si se proporciona
+    if (createUserDto.dni) {
+      const existingUser = await this.userModel
+        .findOne({ dni: createUserDto.dni })
+        .exec();
+      if (existingUser) {
+        throw new ConflictException('El DNI ya está registrado en el sistema');
+      }
     }
 
     // Hashear la contraseña antes de guardar
@@ -54,7 +71,20 @@ export class UsersService {
     // Obtener el usuario actual para comparar el rol
     const currentUser = await this.userModel.findById(id).exec();
     if (!currentUser) {
-      throw new Error('Usuario no encontrado');
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Validar que el DNI sea único si se está actualizando
+    if (updateUserDto.dni && updateUserDto.dni !== currentUser.dni) {
+      const existingUser = await this.userModel
+        .findOne({
+          dni: updateUserDto.dni,
+          _id: { $ne: id }, // Excluir el usuario actual
+        })
+        .exec();
+      if (existingUser) {
+        throw new ConflictException('El DNI ya está registrado en el sistema');
+      }
     }
 
     const session = await this.userModel.db.startSession();
@@ -92,7 +122,7 @@ export class UsersService {
               .session(session)
               .exec();
             if (!team) {
-              throw new Error(
+              throw new NotFoundException(
                 `Equipo con ID ${updateUserDto.teamId} no encontrado`,
               );
             }
@@ -113,7 +143,7 @@ export class UsersService {
             .session(session)
             .exec();
           if (!team) {
-            throw new Error(
+            throw new NotFoundException(
               `Equipo con ID ${updateUserDto.teamId} no encontrado`,
             );
           }
@@ -186,7 +216,7 @@ export class UsersService {
   async updatePassword(userId: string, updatePasswordDto: UpdatePasswordDto) {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
-      throw new Error('Usuario no encontrado');
+      throw new NotFoundException('Usuario no encontrado');
     }
 
     // Validar contraseña actual
@@ -195,12 +225,12 @@ export class UsersService {
       user.password,
     );
     if (!isCurrentPasswordValid) {
-      throw new Error('La contraseña actual es incorrecta');
+      throw new BadRequestException('La contraseña actual es incorrecta');
     }
 
     // Validar que las contraseñas coincidan
     if (updatePasswordDto.newPassword !== updatePasswordDto.confirmPassword) {
-      throw new Error('Las contraseñas no coinciden');
+      throw new BadRequestException('Las contraseñas no coinciden');
     }
 
     // Hashear la nueva contraseña
@@ -219,7 +249,7 @@ export class UsersService {
     // Buscar el usuario para verificar su rol
     const user = await this.userModel.findById(id).exec();
     if (!user) {
-      throw new Error('Usuario no encontrado');
+      throw new NotFoundException('Usuario no encontrado');
     }
 
     // Si es Player, usar el servicio de players para eliminar correctamente
@@ -244,7 +274,7 @@ export class UsersService {
   ) {
     // Validar que al menos email o username esté presente
     if (!createUserDto.email && !createUserDto.username) {
-      throw new Error(
+      throw new BadRequestException(
         'Debe proporcionar al menos un email o nombre de usuario',
       );
     }
@@ -285,7 +315,7 @@ export class UsersService {
             .session(session)
             .exec();
           if (!team) {
-            throw new Error(
+            throw new NotFoundException(
               `Equipo con ID ${createUserDto.teamId} no encontrado`,
             );
           }

@@ -71,15 +71,7 @@ const UserList: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Lista de usuarios
-            </h1>
-            <p className="text-gray-600">
-              Aquí se muestran todos los usuarios del sistema y su rol.
-            </p>
-          </div>
+        <div className="flex justify-end items-center mb-6">
           <button
             onClick={() => navigate("/users/new")}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"

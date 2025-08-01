@@ -28,8 +28,11 @@ export class User extends Document {
   @Prop()
   username: string;
 
-  @Prop()
+  @Prop({ unique: true, sparse: true })
   dni: string;
+
+  @Prop()
+  birthDate: Date;
 
   @Prop()
   occupation: string;

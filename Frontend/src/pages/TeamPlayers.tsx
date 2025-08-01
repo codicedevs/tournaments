@@ -106,7 +106,18 @@ const TeamPlayers: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {playersList.map((player: any) => (
-                  <tr key={player._id}>
+                  <tr
+                    key={player._id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={(e) => {
+                      // Evitar navegación si se hace clic en botones
+                      if ((e.target as HTMLElement).closest("button")) {
+                        return;
+                      }
+                      // Navegar al formulario de edición del usuario
+                      navigate(`/users/${player.userId?._id}/edit`);
+                    }}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {player.userId?.profilePicture ? (
@@ -135,9 +146,10 @@ const TeamPlayers: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
-                        onClick={() => navigate(`/players/${player._id}/edit`)}
+                        onClick={() =>
+                          navigate(`/users/${player.userId?._id}/edit`)
+                        }
                         className="text-blue-600 hover:text-blue-900 mr-4"
-                        disabled={true}
                       >
                         Editar
                       </button>

@@ -5,6 +5,8 @@ import {
   IsEnum,
   IsBoolean,
   IsArray,
+  IsDateString,
+  ValidateIf,
 } from 'class-validator';
 import { Role } from '../entities/user.entity';
 
@@ -24,6 +26,17 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString({ message: 'El DNI debe ser una cadena de texto' })
   dni?: string;
+
+  @IsOptional()
+  @ValidateIf(
+    (o) =>
+      o.birthDate !== undefined && o.birthDate !== null && o.birthDate !== '',
+  )
+  @IsDateString(
+    {},
+    { message: 'La fecha de nacimiento debe ser una fecha válida' },
+  )
+  birthDate?: string;
 
   @IsOptional()
   @IsString({ message: 'La ocupación debe ser una cadena de texto' })

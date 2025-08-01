@@ -26,7 +26,7 @@ import RegistrationForm from "./pages/RegistrationForm";
 import PhaseDetail from "./pages/PhaseDetail";
 import PhaseFixture from "./pages/PhaseFixture";
 import MatchdayList from "./pages/MatchdayList";
-import EditTeamForm from "./pages/EditTeamForm";
+
 import UserEdit from "./pages/UserEdit";
 import ViewerMatchList from "./pages/ViewerMatchList";
 import ConfirmTeams from "./pages/ComfirmTeams";
@@ -77,10 +77,14 @@ const router = createBrowserRouter([
     loader: authLoader,
   },
   { path: "/teams", element: <TeamList />, loader: authLoader },
-  { path: "/teams/new", element: <TeamForm />, loader: authLoader },
+  {
+    path: "/teams/new",
+    element: <TeamForm mode="create" />,
+    loader: authLoader,
+  },
   {
     path: "/teams/:teamId/edit",
-    element: <EditTeamForm />,
+    element: <TeamForm mode="edit" />,
     loader: authLoader,
   },
   {
