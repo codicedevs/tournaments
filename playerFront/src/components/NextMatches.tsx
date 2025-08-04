@@ -5,7 +5,7 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 import { tournamentsApi, matchdaysApi, Match } from "../api/http";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface NextMatchesProps {
   tournamentId: string | undefined;
@@ -13,9 +13,6 @@ interface NextMatchesProps {
 
 export function NextMatches({ tournamentId }: NextMatchesProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
 

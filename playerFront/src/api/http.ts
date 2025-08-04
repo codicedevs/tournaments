@@ -52,6 +52,7 @@ export interface Match {
   phaseId: string;
   teamA: Team;
   teamB: Team;
+  fieldNumber?: string;
 }
 
 // ----------  Tournaments  ----------

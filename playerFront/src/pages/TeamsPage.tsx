@@ -10,20 +10,12 @@ import {
 } from "../api/http";
 import { Modal } from "../components/Modal";
 import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
-import {
-  TrophyIcon,
-  UsersIcon,
-  TargetIcon,
-  ShieldIcon,
-  Loader2Icon,
-  AlertCircleIcon,
-} from "lucide-react";
+import { TrophyIcon, UsersIcon, TargetIcon, ShieldIcon, AlertCircleIcon } from "lucide-react";
+import { PageLoader } from "../components/PageLoader";
 
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [teamRegistrations, setTeamRegistrations] = useState<Registration[]>(
-    []
-  );
+  const [teamRegistrations, setTeamRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -31,16 +23,22 @@ export function TeamsPage() {
   const [playersLoading, setPlayersLoading] = useState(false);
   const [playersError, setPlayersError] = useState<string | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournamentId, setSelectedTournamentId] = useState<string>("");
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>(() =>
+    localStorage.getItem("selectedTournamentId") || ""
+  );
 
   // Fetch tournaments on mount and preselect the first one
   useEffect(() => {
     (async () => {
       try {
         const tData = await tournamentsApi.getAll();
+        console.log(tData, "laallaa");
         setTournaments(tData);
-        if (tData.length > 0) {
-          setSelectedTournamentId(tData[0]._id);
+        // Preselect first tournament if none stored
+        if (tData.length > 0 && !selectedTournamentId) {
+          const defaultId = tData[0]._id;
+          setSelectedTournamentId(defaultId);
+          localStorage.setItem("selectedTournamentId", defaultId);
         }
       } catch {
         setError("Error fetching tournaments");
@@ -64,11 +62,15 @@ export function TeamsPage() {
         const regs: any[] = await registrationApi.getByTournament(
           selectedTournamentId
         );
-        // Cada registro tiene el equipo populado en teamId
-        const tournamentTeams: Team[] = regs.map((r) => r.teamId as Team);
-        console.log(tournamentTeams);
+
+        // Filtra registros sin equipo para evitar valores nulos y fallos de renderizado
+        const validRegs = regs.filter((r) => r.teamId);
+
+        // Cada registro tiene el equipo poblado en teamId
+        const tournamentTeams: Team[] = validRegs.map((r) => r.teamId as Team);
+        console.log("tournament teams", tournamentTeams);
         setTeams(tournamentTeams);
-        setTeamRegistrations(regs);
+        setTeamRegistrations(validRegs);
       } catch {
         setError("Error fetching teams");
       } finally {
@@ -78,7 +80,18 @@ export function TeamsPage() {
     fetchTeams();
   }, [selectedTournamentId]);
 
-  const getTeamStats = (team: Team) => {
+  const getTeamStats = (team?: Team) => {
+    if (!team) {
+      return {
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        points: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+      };
+    }
     const registration = teamRegistrations.find(
       (r) => (r.teamId as any)?._id === team._id || r.teamId === team._id
     );
@@ -122,10 +135,7 @@ export function TeamsPage() {
   };
 
   const renderLoadingState = () => (
-    <div className="flex items-center justify-center py-12">
-      <Loader2Icon size={48} className="text-orange-600 animate-spin" />
-      <span className="ml-3 text-lg text-gray-600">Cargando equipos...</span>
-    </div>
+    <PageLoader message="Cargando equipos..." />
   );
 
   const renderErrorState = () => (
@@ -154,7 +164,14 @@ export function TeamsPage() {
         description="Conoce todos los equipos participantes y sus jugadores"
         tournaments={tournaments}
         selectedTournamentId={selectedTournamentId}
-        onTournamentChange={setSelectedTournamentId}
+        onTournamentChange={(id) => {
+          setSelectedTournamentId(id);
+          if (id === "") {
+            localStorage.removeItem("selectedTournamentId");
+          } else {
+            localStorage.setItem("selectedTournamentId", id);
+          }
+        }}
       />
 
       {/* Content Section */}
@@ -286,6 +303,19 @@ export function TeamsPage() {
               );
             })}
           </div>
+
+          {/* Empty state */}
+          {!loading && !error && teams.length === 0 && (
+            <div className="text-center py-12">
+              <ShieldIcon size={64} className="text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No hay equipos registrados en esta división
+              </h3>
+              <p className="text-gray-500">
+                Selecciona otra división para ver sus equipos
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -307,11 +337,11 @@ export function TeamsPage() {
                       <thead>
                         <tr className="border-b">
                           <th className="py-1 pr-4 font-semibold">Jugador</th>
-                          <th className="py-1 px-2">PJ</th>
-                          <th className="py-1 px-2">G</th>
-                          <th className="py-1 px-2">A</th>
-                          <th className="py-1 px-2 text-yellow-600">TA</th>
-                          <th className="py-1 px-2 text-red-600">TR</th>
+                          <th className="py-1 px-2 text-center">PJ</th>
+                          <th className="py-1 px-2 text-center">G</th>
+                          <th className="py-1 px-2 text-center">A</th>
+                          <th className="py-1 px-2 text-center text-yellow-600">TA</th>
+                          <th className="py-1 px-2 text-center text-red-600">TR</th>
                         </tr>
                       </thead>
                       <tbody>

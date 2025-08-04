@@ -6,29 +6,46 @@ import {
   Matchday,
   Match,
 } from "../api/http";
-import { CalendarIcon, ClockIcon, ChevronDownIcon, ChevronUpIcon, AlertCircleIcon, Loader2Icon } from "lucide-react";
+import {
+  CalendarIcon,
+  ClockIcon,
+  MapPinned,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  AlertCircleIcon,
+} from "lucide-react";
 import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
+import { PageLoader } from "../components/PageLoader";
 
 export function FixturesPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [selectedTournamentId, setSelectedTournamentId] = useState<string>("");
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string>(
+    () => localStorage.getItem("selectedTournamentId") || ""
+  );
   const [matchdays, setMatchdays] = useState<Matchday[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedMatchdays, setExpandedMatchdays] = useState<Set<string>>(new Set());
+  const [expandedMatchdays, setExpandedMatchdays] = useState<Set<string>>(
+    new Set()
+  );
 
   // Fetch tournaments on mount
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
         const data = await tournamentsApi.getAll();
         setTournaments(data);
-        // Preselect the first tournament so the page shows fixture data by default
-        if (data.length > 0) {
-          setSelectedTournamentId(data[0]._id);
+        // Preselect the first tournament if none stored
+        if (data.length > 0 && !selectedTournamentId) {
+          const defaultId = data[0]._id;
+          setSelectedTournamentId(defaultId);
+          localStorage.setItem("selectedTournamentId", defaultId);
         }
       } catch {
         setError("Error obteniendo torneos");
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -74,13 +91,23 @@ export function FixturesPage() {
   const renderMatch = (match: Match) => (
     <article
       key={match._id}
-      className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1"
+      className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col min-h-[148px]"
     >
       <div className="flex justify-between items-center text-gray-600 text-sm mb-4">
         <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
           <CalendarIcon size={16} className="text-blue-600" />
-          <span className="font-medium">{new Date(match.date).toLocaleDateString("es-AR")}</span>
+          <span className="font-medium">
+            {new Date(match.date).toLocaleDateString("es-AR")}
+          </span>
         </div>
+
+        <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
+          <MapPinned size={16} className="text-indigo-600" />
+          <span className="font-medium">
+            Cancha N° {(match as any).fieldNumber ?? "-"}
+          </span>
+        </div>
+
         <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
           <ClockIcon size={16} className="text-green-600" />
           <span className="font-medium">
@@ -91,19 +118,15 @@ export function FixturesPage() {
           </span>
         </div>
       </div>
-      <div className="flex justify-between items-center">
-        <div className="flex-1 text-center">
-          <span className="font-bold text-lg text-gray-800 block truncate">
-            {(match as any).teamA?.name || "--"}
-          </span>
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
+        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+          {(match as any).teamA?.name || "--"}
         </div>
-        <div className="mx-6 bg-gradient-to-r from-orange-600 to-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+        <div className="justify-self-center px-4 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow">
           VS
         </div>
-        <div className="flex-1 text-center">
-          <span className="font-bold text-lg text-gray-800 block truncate">
-            {(match as any).teamB?.name || "--"}
-          </span>
+        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+          {(match as any).teamB?.name || "--"}
         </div>
       </div>
     </article>
@@ -119,7 +142,10 @@ export function FixturesPage() {
           </div>
           <div className="space-y-3">
             {[1, 2].map((j) => (
-              <div key={j} className="h-20 bg-gray-100 rounded-xl animate-pulse"></div>
+              <div
+                key={j}
+                className="h-20 bg-gray-100 rounded-xl animate-pulse"
+              ></div>
             ))}
           </div>
         </div>
@@ -130,10 +156,16 @@ export function FixturesPage() {
   const renderError = () => (
     <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
       <AlertCircleIcon size={48} className="text-red-500 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-red-800 mb-2">¡Oops! Algo salió mal</h3>
+      <h3 className="text-lg font-semibold text-red-800 mb-2">
+        ¡Oops! Algo salió mal
+      </h3>
       <p className="text-red-600">{error}</p>
     </div>
   );
+
+  if (loading && tournaments.length === 0) {
+    return <PageLoader message="Cargando división..." />;
+  }
 
   return (
     <div className="space-y-8">
@@ -143,7 +175,14 @@ export function FixturesPage() {
         description="Consulta todos los partidos programados y resultados de tu división"
         tournaments={tournaments}
         selectedTournamentId={selectedTournamentId}
-        onTournamentChange={setSelectedTournamentId}
+        onTournamentChange={(id) => {
+          setSelectedTournamentId(id);
+          if (id === "") {
+            localStorage.removeItem("selectedTournamentId");
+          } else {
+            localStorage.setItem("selectedTournamentId", id);
+          }
+        }}
       />
 
       {/* Content Section */}
@@ -153,12 +192,14 @@ export function FixturesPage() {
             <CalendarIcon size={28} />
             Calendario de Partidos
           </h2>
-          <p className="text-blue-100 mt-2">Explora todas las jornadas y sus partidos</p>
+          <p className="text-blue-100 mt-2">
+            Explora todas las jornadas y sus partidos
+          </p>
         </div>
 
         <div className="p-6">
           {loading && renderLoadingSkeleton()}
-          {error && renderError()}
+          {!loading && error && renderError()}
 
           {/* Matchdays List */}
           {!loading && !error && matchdays.length > 0 && (
@@ -194,13 +235,19 @@ export function FixturesPage() {
                           {md.matches?.length || 0} partidos
                         </span>
                         {isExpanded ? (
-                          <ChevronUpIcon size={24} className="text-gray-500 group-hover:text-blue-600 transition-colors" />
+                          <ChevronUpIcon
+                            size={24}
+                            className="text-gray-500 group-hover:text-blue-600 transition-colors"
+                          />
                         ) : (
-                          <ChevronDownIcon size={24} className="text-gray-500 group-hover:text-blue-600 transition-colors" />
+                          <ChevronDownIcon
+                            size={24}
+                            className="text-gray-500 group-hover:text-blue-600 transition-colors"
+                          />
                         )}
                       </div>
                     </button>
-                    
+
                     {isExpanded && (
                       <div className="bg-gray-50 border-t border-gray-200 p-6 animate-in slide-in-from-top-2 duration-300">
                         {md.matches?.length ? (
@@ -209,8 +256,13 @@ export function FixturesPage() {
                           </div>
                         ) : (
                           <div className="text-center py-8">
-                            <CalendarIcon size={48} className="text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 text-lg">No hay partidos programados para esta jornada</p>
+                            <CalendarIcon
+                              size={48}
+                              className="text-gray-400 mx-auto mb-4"
+                            />
+                            <p className="text-gray-600 text-lg">
+                              No hay partidos programados para esta jornada
+                            </p>
                           </div>
                         )}
                       </div>
@@ -224,8 +276,12 @@ export function FixturesPage() {
           {!loading && !error && matchdays.length === 0 && (
             <div className="text-center py-12">
               <CalendarIcon size={64} className="text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay jornadas disponibles</h3>
-              <p className="text-gray-500">Selecciona un torneo para ver las jornadas y partidos</p>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                No hay jornadas disponibles
+              </h3>
+              <p className="text-gray-500">
+                Selecciona un torneo para ver las jornadas y partidos
+              </p>
             </div>
           )}
         </div>

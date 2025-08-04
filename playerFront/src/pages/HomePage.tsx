@@ -2,21 +2,16 @@ import { useEffect, useState } from "react";
 import { tournamentsApi, Tournament } from "../api/http";
 import { PositionTable } from "../components/PositionTable";
 import { TopScorers } from "../components/TopScorers";
-import { NextMatches } from "../components/NextMatches";
+import { NextMatchesTable } from "../components/NextMatchesTable";
 import { WelcomeDivisionSelector } from "../components/WelcomeDivisionSelector";
-import {
-  TrophyIcon,
-  CalendarIcon,
-  TargetIcon,
-  UsersIcon,
-  Loader2Icon,
-} from "lucide-react";
+import { PageLoader } from "../components/PageLoader";
+import { TrophyIcon } from "lucide-react";
 
 export function HomePage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState<
     string | undefined
-  >();
+  >(() => localStorage.getItem("selectedTournamentId") || undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,9 +21,11 @@ export function HomePage() {
       .getAll()
       .then((data) => {
         setTournaments(data);
-        // Preselect the first tournament so the page starts with data
-        if (data.length > 0) {
-          setSelectedTournamentId(data[0]._id);
+        // Preselect the first tournament if none has been chosen before
+        if (data.length > 0 && !selectedTournamentId) {
+          const defaultId = data[0]._id;
+          setSelectedTournamentId(defaultId);
+          localStorage.setItem("selectedTournamentId", defaultId);
         }
       })
       .catch(() =>
@@ -38,12 +35,7 @@ export function HomePage() {
   }, []);
 
   const renderLoadingState = () => (
-    <div className="flex items-center justify-center py-12">
-      <Loader2Icon size={48} className="text-orange-600 animate-spin" />
-      <span className="ml-3 text-lg text-gray-600">
-        Cargando datos del torneo...
-      </span>
-    </div>
+    <PageLoader message="Cargando datos del torneo..." />
   );
 
   const renderErrorState = () => (
@@ -64,11 +56,15 @@ export function HomePage() {
         description="Sigue todos los partidos, resultados y estadísticas de tu división favorita"
         tournaments={tournaments}
         selectedTournamentId={selectedTournamentId ?? ""}
-        onTournamentChange={(tournamentId) =>
-          setSelectedTournamentId(
-            tournamentId === "" ? undefined : tournamentId
-          )
-        }
+        onTournamentChange={(tournamentId) => {
+          if (tournamentId === "") {
+            setSelectedTournamentId(undefined);
+            localStorage.removeItem("selectedTournamentId");
+          } else {
+            setSelectedTournamentId(tournamentId);
+            localStorage.setItem("selectedTournamentId", tournamentId);
+          }
+        }}
         loading={loading}
         error={error}
       />
@@ -95,7 +91,7 @@ export function HomePage() {
             <div className="space-y-8">
               {/* Next Matches Section */}
               <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <NextMatches tournamentId={selectedTournamentId} />
+                <NextMatchesTable tournamentId={selectedTournamentId} />
               </div>
 
               {/* Position Table Section */}
