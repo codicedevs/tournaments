@@ -15,6 +15,7 @@ import { Match } from './entities/match.entity';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { MatchEventDto } from './dto/match-event.dto';
+import { UpdateMatchEventDto } from './dto/update-match-event.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { MatchObservations } from './entities/match.entity';
@@ -101,6 +102,32 @@ export class MatchesController {
     @Body() event: MatchEventDto,
   ): Promise<Match> {
     return this.matchesService.addEvent(id, event);
+  }
+
+  @Patch(':id/events/:eventIndex')
+  async updateEvent(
+    @Param('id') id: string,
+    @Param('eventIndex') eventIndex: string,
+    @Body() updateEventDto: UpdateMatchEventDto,
+  ): Promise<Match> {
+    const index = parseInt(eventIndex, 10);
+    if (isNaN(index) || index < 0) {
+      throw new BadRequestException('Invalid event index');
+    }
+    return this.matchesService.updateEvent(id, index, updateEventDto);
+  }
+
+  @Delete(':id/events/:eventIndex')
+  async deleteEvent(
+    @Param('id') id: string,
+    @Param('eventIndex') eventIndex: string,
+  ): Promise<Match> {
+    console.log('deleteEvent', id, eventIndex);
+    const index = parseInt(eventIndex, 10);
+    if (isNaN(index) || index < 0) {
+      throw new BadRequestException('Invalid event index');
+    }
+    return this.matchesService.deleteEvent(id, index);
   }
 
   @Post(':id/complete')
