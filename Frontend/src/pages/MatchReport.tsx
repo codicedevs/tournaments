@@ -254,10 +254,21 @@ const MatchReport: React.FC<
     <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl my-10 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-br from-gray-800 to-gray-700 text-white px-10 py-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-light mb-1">Ficha Final del Partido</h1>
-          <div className="text-lg opacity-90">
-            {teamA.name} vs {teamB.name}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors"
+            title="Volver"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-8-7 8-7" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-3xl font-light mb-1">Ficha Final del Partido</h1>
+            <div className="text-lg opacity-90">
+              {teamA.name} vs {teamB.name}
+            </div>
           </div>
         </div>
         {soloLectura ? (
