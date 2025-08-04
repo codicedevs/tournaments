@@ -194,6 +194,7 @@ export const createPlayerByUser = async ({
     userId,
     teamId,
   });
+  console.log("pipo", res);
   return res.data;
 };
 
