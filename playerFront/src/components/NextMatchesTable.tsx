@@ -49,50 +49,65 @@ export function NextMatchesTable({ tournamentId }: NextMatchesProps) {
     load();
   }, [tournamentId]);
 
-  const renderMatchCard = (match: Match) => (
-    <article
-      key={match._id}
-      className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-orange-300 transition-all duration-300 flex flex-col h-full min-h-[148px] hover:-translate-y-1"
-    >
-      {/* Fecha y hora */}
-      <div className="flex justify-between items-center text-gray-600 text-xs mb-2">
-        <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
-          <CalendarIcon size={14} className="text-blue-600" />
-          <span>
-            {new Date(match.date).toLocaleDateString("es-AR")}
-          </span>
+  const renderMatchCard = (match: Match) => {
+    const showStatusArr = ["Finalizado", "Completado", "En juego"];
+    const showStatus = showStatusArr.includes(match.status ?? "");
+    const showScore =
+      showStatus &&
+      match.homeScore !== undefined &&
+      match.awayScore !== undefined;
+    return (
+      <article
+        key={match._id}
+        className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-orange-300 transition-all duration-300 flex flex-col h-full min-h-[148px] hover:-translate-y-1"
+      >
+        {/* Fecha y hora */}
+        <div className="flex justify-between items-center text-gray-600 text-xs mb-2">
+          <div className="flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded-full">
+            <CalendarIcon size={14} className="text-blue-600" />
+            <span>
+              {new Date(match.date).toLocaleDateString("es-AR")}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
+            <ClockIcon size={14} className="text-green-600" />
+            <span>
+              {new Date(match.date).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full">
-          <ClockIcon size={14} className="text-green-600" />
-          <span>
-            {new Date(match.date).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        </div>
-      </div>
 
-      {/* Equipos */}
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
-        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-          {(match as any).teamA?.name ?? "Equipo A"}
+        {/* Equipos */}
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
+          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+            {(match as any).teamA?.name ?? "Equipo A"}
+          </div>
+          <div className="justify-self-center px-3 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow min-w-[60px] text-center">
+            {showScore ? `${match.homeScore} - ${match.awayScore}` : "VS"}
+          </div>
+          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+            {(match as any).teamB?.name ?? "Equipo B"}
+          </div>
         </div>
-        <div className="justify-self-center px-3 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow">
-          VS
-        </div>
-        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-          {(match as any).teamB?.name ?? "Equipo B"}
-        </div>
-      </div>
 
-      {/* Cancha */}
-      <div className="flex items-center gap-1 text-xs text-gray-500 mt-3">
-        <MapPinned size={14} className="shrink-0" />
-        <span className="truncate">Cancha N° {match.fieldNumber ?? "-"}</span>
-      </div>
-    </article>
-  );
+        {/* Estado */}
+        {showStatus && (
+          <div className="text-center mt-1 text-xs font-semibold text-indigo-600">
+            {match.status}
+          </div>
+        )}
+
+        {/* Cancha */}
+        <div className="flex items-center gap-1 text-xs text-gray-500 mt-2">
+          <MapPinned size={14} className="shrink-0" />
+          <span className="truncate">Cancha N° {match.fieldNumber ?? "-"}</span>
+        </div>
+      </article>
+    );
+  };
 
   if (!tournamentId) {
     return (

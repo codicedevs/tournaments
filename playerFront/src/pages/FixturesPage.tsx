@@ -88,49 +88,66 @@ export function FixturesPage() {
     setExpandedMatchdays(newExpanded);
   };
 
-  const renderMatch = (match: Match) => (
-    <article
-      key={match._id}
-      className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col min-h-[148px]"
-    >
-      <div className="flex justify-between items-center text-gray-600 text-sm mb-4">
-        <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
-          <CalendarIcon size={16} className="text-blue-600" />
-          <span className="font-medium">
-            {new Date(match.date).toLocaleDateString("es-AR")}
-          </span>
-        </div>
+  const renderMatch = (match: Match) => {
+    const showStatus = [
+      "Finalizado",
+      "Completado",
+      "En juego",
+    ].includes(match.status ?? "");
 
-        <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
-          <MapPinned size={16} className="text-indigo-600" />
-          <span className="font-medium">
-            Cancha N° {(match as any).fieldNumber ?? "-"}
-          </span>
-        </div>
+    const showScore =
+      showStatus &&
+      match.homeScore !== undefined &&
+      match.awayScore !== undefined;
+    return (
+      <article
+        key={match._id}
+        className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col min-h-[148px]"
+      >
+        <div className="flex justify-between items-center text-gray-600 text-sm mb-4">
+          <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
+            <CalendarIcon size={16} className="text-blue-600" />
+            <span className="font-medium">
+              {new Date(match.date).toLocaleDateString("es-AR")}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
-          <ClockIcon size={16} className="text-green-600" />
-          <span className="font-medium">
-            {new Date(match.date).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+          <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
+            <MapPinned size={16} className="text-indigo-600" />
+            <span className="font-medium">
+              Cancha N° {match.fieldNumber ?? "-"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+            <ClockIcon size={16} className="text-green-600" />
+            <span className="font-medium">
+              {new Date(match.date).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
-        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-          {(match as any).teamA?.name || "--"}
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
+          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+            {match.teamA?.name || "--"}
+          </div>
+          <div className="justify-self-center px-4 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow min-w-[64px] text-center">
+            {showScore ? `${match.homeScore} - ${match.awayScore}` : "VS"}
+          </div>
+          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
+            {match.teamB?.name || "--"}
+          </div>
         </div>
-        <div className="justify-self-center px-4 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow">
-          VS
-        </div>
-        <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-          {(match as any).teamB?.name || "--"}
-        </div>
-      </div>
-    </article>
-  );
+        {showStatus && (
+          <div className="text-center mt-1 text-xs font-semibold text-indigo-600">
+            {match.status}
+          </div>
+        )}
+      </article>
+    );
+  };
 
   const renderLoadingSkeleton = () => (
     <div className="space-y-4">

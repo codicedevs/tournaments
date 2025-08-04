@@ -53,6 +53,9 @@ export interface Match {
   teamA: Team;
   teamB: Team;
   fieldNumber?: string;
+  homeScore?: number;
+  awayScore?: number;
+  status?: string;
 }
 
 // ----------  Tournaments  ----------
