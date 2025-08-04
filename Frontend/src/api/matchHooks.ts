@@ -134,6 +134,14 @@ export function useCompleteMatch() {
       );
       return response.data;
     },
+    onSuccess: () => {
+      // Invalidate match queries
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["match"] });
+      // Invalidate standings/registrations to refresh points
+      queryClient.invalidateQueries({ queryKey: ["registrations"] });
+      queryClient.invalidateQueries({ queryKey: ["standings"] });
+    },
   });
 }
 
