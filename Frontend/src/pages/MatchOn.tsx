@@ -6,7 +6,12 @@ import {
   MatchOnProps,
 } from "../interfaces/interfaces.match";
 import { formatTime } from "../utils/functions";
-import { useMatchById, useUpdateMatch } from "../api/matchHooks";
+import {
+  useMatchById,
+  useUpdateMatch,
+  useUpdateMatchEvent,
+  useDeleteMatchEvent,
+} from "../api/matchHooks";
 import type { Team } from "../models/Match";
 import { useNavigate } from "react-router-dom";
 import { translateEventType } from "../utils/functions";
@@ -22,91 +27,334 @@ interface EventListProps {
   teamB: Team;
 }
 
-const EventList: React.FC<EventListProps> = React.memo(({ match, teamA, teamB }) => {
-  const listRef = useRef<HTMLDivElement>(null);
-  const savedScroll = useRef(0);
+const EventList: React.FC<EventListProps> = React.memo(
+  ({ match, teamA, teamB }) => {
+    const listRef = useRef<HTMLDivElement>(null);
+    const savedScroll = useRef(0);
+    const [editingEvent, setEditingEvent] = useState<number | null>(null);
+    const [editForm, setEditForm] = useState({
+      type: "",
+      minute: 0,
+      team: "TeamA" as "TeamA" | "TeamB",
+      playerId: "",
+    });
 
-  const handleScroll = () => {
-    if (listRef.current) savedScroll.current = listRef.current.scrollTop;
-  };
+    const { mutate: updateEvent, isPending: isUpdating } =
+      useUpdateMatchEvent();
+    const { mutate: deleteEvent, isPending: isDeleting } =
+      useDeleteMatchEvent();
 
-  useLayoutEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = savedScroll.current;
-  });
+    const handleScroll = () => {
+      if (listRef.current) savedScroll.current = listRef.current.scrollTop;
+    };
 
-  // auto-scroll al fondo (solo si usuario estaba abajo)
-  useEffect(() => {
-    if (!listRef.current) return;
-    const { clientHeight, scrollHeight } = listRef.current;
-    const nearBottom = scrollHeight - (savedScroll.current + clientHeight) < 40;
-    if (nearBottom) {
-      savedScroll.current = scrollHeight;
-      listRef.current.scrollTop = scrollHeight;
-    }
-  }, [match?.events?.length]);
+    useLayoutEffect(() => {
+      if (listRef.current) listRef.current.scrollTop = savedScroll.current;
+    });
 
-  return (
-    <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow mb-8">
-      <div className="text-xl font-semibold mb-4">Registro de Eventos</div>
-      <div
-        className="max-h-64 overflow-y-auto"
-        ref={listRef}
-        onScroll={handleScroll}
-      >
-        {!match?.events || match.events.length === 0 ? (
-          <div className="text-gray-500 text-center py-8">No hay eventos registrados</div>
-        ) : (
-          <ul className="space-y-2">
-            {match.events.map((event: any) => (
-              <li
-                key={event.id || event._id || event.timestamp}
-                className="border rounded p-3 flex flex-col md:flex-row md:items-center gap-2"
-              >
-                <span className="font-bold">[{translateEventType(event.type)}]</span>
-                {typeof event.minute === "number" && (
-                  <span className="text-gray-500">{event.minute}'</span>
-                )}
-                {event.type === "goal" && event.player && (
-                  <span>
-                    ⚽ Gol de <b>{event.player.name || event.player.name}</b>
-                    {event.player.jerseyNumber && <> (#{event.player.jerseyNumber})</>}
-                    {event.team && (
-                      <>
-                        {' '}para{' '}
-                        <b>{event.team === 'TeamA' ? teamA.name : teamB.name}</b>
-                      </>
-                    )}
-                  </span>
-                )}
-                {(event.type === 'yellowCard' || event.type === 'blueCard' || event.type === 'redCard') && event.player && (
-                  <span>
-                    {event.type === 'yellowCard' && '🟨'}
-                    {event.type === 'blueCard' && '🟦'}
-                    {event.type === 'redCard' && '🟥'} Tarjeta para{' '}
-                    <b>{event.player.name || event.player.user?.name}</b>
-                    {event.player.jerseyNumber && <> (#{event.player.jerseyNumber})</>}
-                    {event.team && (
-                      <>
-                        {' '}de{' '}
-                        <b>{event.team === 'TeamA' ? teamA.name : teamB.name}</b>
-                      </>
-                    )}
-                  </span>
-                )}
-                {['start_first_half', 'end_first_half', 'start_second_half', 'end_second_half'].includes(event.type) && (
-                  <span className="italic text-gray-600">{translateEventType(event.type)}</span>
-                )}
-                {/* Otros eventos */}
-                {!['goal', 'card', 'start_first_half', 'end_first_half', 'start_second_half', 'end_second_half'].includes(event.type) &&
-                  event.description && <span>{event.description}</span>}
-              </li>
-            ))}
-          </ul>
-        )}
+    // auto-scroll al fondo (solo si usuario estaba abajo)
+    useEffect(() => {
+      if (!listRef.current) return;
+      const { clientHeight, scrollHeight } = listRef.current;
+      const nearBottom =
+        scrollHeight - (savedScroll.current + clientHeight) < 40;
+      if (nearBottom) {
+        savedScroll.current = scrollHeight;
+        listRef.current.scrollTop = scrollHeight;
+      }
+    }, [match?.events?.length]);
+
+    const handleEditEvent = (eventIndex: number, event: any) => {
+      setEditingEvent(eventIndex);
+      setEditForm({
+        type: event.type,
+        minute: event.minute || 0,
+        team: event.team || "TeamA",
+        playerId: event.playerId || "",
+      });
+    };
+
+    const handleSaveEdit = () => {
+      if (editingEvent !== null && match?._id) {
+        updateEvent({
+          matchId: match._id,
+          eventIndex: editingEvent,
+          data: editForm,
+        });
+        setEditingEvent(null);
+      }
+    };
+
+    const handleCancelEdit = () => {
+      setEditingEvent(null);
+    };
+
+    const handleDeleteEvent = (eventIndex: number) => {
+      if (
+        match?._id &&
+        window.confirm("¿Estás seguro de que quieres eliminar este evento?")
+      ) {
+        deleteEvent({
+          matchId: match._id,
+          eventIndex,
+        });
+      }
+    };
+
+    return (
+      <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow mb-8">
+        <div className="text-xl font-semibold mb-4">Registro de Eventos</div>
+        <div
+          className="max-h-64 overflow-y-auto"
+          ref={listRef}
+          onScroll={handleScroll}
+        >
+          {!match?.events || match.events.length === 0 ? (
+            <div className="text-gray-500 text-center py-8">
+              No hay eventos registrados
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {match.events.map((event: any, eventIndex: number) => (
+                <li
+                  key={event.id || event._id || event.timestamp}
+                  className="border rounded p-3 flex flex-col md:flex-row md:items-center gap-2"
+                >
+                  {editingEvent === eventIndex ? (
+                    // Modo edición
+                    <div className="w-full space-y-2">
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <select
+                          value={editForm.type}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, type: e.target.value })
+                          }
+                          className="border rounded px-2 py-1 text-sm"
+                        >
+                          <option value="goal">Gol</option>
+                          <option value="yellowCard">Tarjeta Amarilla</option>
+                          <option value="redCard">Tarjeta Roja</option>
+                          <option value="blueCard">Tarjeta Azul</option>
+                          <option value="start_first_half">
+                            Inicio Primer Tiempo
+                          </option>
+                          <option value="end_first_half">
+                            Fin Primer Tiempo
+                          </option>
+                          <option value="start_second_half">
+                            Inicio Segundo Tiempo
+                          </option>
+                          <option value="end_second_half">
+                            Fin Segundo Tiempo
+                          </option>
+                        </select>
+                        <input
+                          type="number"
+                          value={editForm.minute}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              minute: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          placeholder="Minuto"
+                          className="border rounded px-2 py-1 text-sm w-20"
+                        />
+                        <select
+                          value={editForm.team}
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              team: e.target.value as "TeamA" | "TeamB",
+                            })
+                          }
+                          className="border rounded px-2 py-1 text-sm"
+                        >
+                          <option value="TeamA">{teamA.name}</option>
+                          <option value="TeamB">{teamB.name}</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={isUpdating}
+                          className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                        >
+                          {isUpdating ? "Guardando..." : "Guardar"}
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Modo visualización
+                    <>
+                      {[
+                        "start_first_half",
+                        "end_first_half",
+                        "start_second_half",
+                        "end_second_half",
+                      ].includes(event.type) ? (
+                        // Eventos del sistema
+                        <span className="italic text-gray-600">
+                          {translateEventType(event.type)}:{" "}
+                          {event.timestamp
+                            ? new Date(event.timestamp).toLocaleTimeString(
+                                "es-AR",
+                                {
+                                  timeZone: "America/Argentina/Buenos_Aires",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )
+                            : "N/A"}
+                        </span>
+                      ) : (
+                        // Eventos normales
+                        <>
+                          <span className="font-bold">
+                            [{translateEventType(event.type)}]
+                          </span>
+                          {typeof event.minute === "number" && (
+                            <span className="text-gray-500">
+                              {event.minute}'
+                            </span>
+                          )}
+                          {event.type === "goal" && event.player && (
+                            <span>
+                              ⚽ Gol de{" "}
+                              <b>{event.player.name || event.player.name}</b>
+                              {event.player.jerseyNumber && (
+                                <> (#{event.player.jerseyNumber})</>
+                              )}
+                              {event.team && (
+                                <>
+                                  {" "}
+                                  para{" "}
+                                  <b>
+                                    {event.team === "TeamA"
+                                      ? teamA.name
+                                      : teamB.name}
+                                  </b>
+                                </>
+                              )}
+                            </span>
+                          )}
+                          {(event.type === "yellowCard" ||
+                            event.type === "blueCard" ||
+                            event.type === "redCard") &&
+                            event.player && (
+                              <span>
+                                {event.type === "yellowCard" && "🟨"}
+                                {event.type === "blueCard" && "🟦"}
+                                {event.type === "redCard" && "🟥"} Tarjeta para{" "}
+                                <b>
+                                  {event.player.name || event.player.user?.name}
+                                </b>
+                                {event.player.jerseyNumber && (
+                                  <> (#{event.player.jerseyNumber})</>
+                                )}
+                                {event.team && (
+                                  <>
+                                    {" "}
+                                    de{" "}
+                                    <b>
+                                      {event.team === "TeamA"
+                                        ? teamA.name
+                                        : teamB.name}
+                                    </b>
+                                  </>
+                                )}
+                              </span>
+                            )}
+                        </>
+                      )}
+                      {/* Otros eventos */}
+                      {![
+                        "goal",
+                        "card",
+                        "start_first_half",
+                        "end_first_half",
+                        "start_second_half",
+                        "end_second_half",
+                      ].includes(event.type) &&
+                        event.description && <span>{event.description}</span>}
+
+                      {/* Botones de acción - para todos los eventos */}
+                      {
+                        <div className="flex gap-1 ml-auto">
+                          <button
+                            onClick={() => handleEditEvent(eventIndex, event)}
+                            className="text-gray-400 hover:text-blue-500 transition-colors duration-200 p-1 rounded"
+                            title="Editar evento"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEvent(eventIndex)}
+                            disabled={isDeleting}
+                            className="text-gray-400 hover:text-red-500 transition-colors duration-200 p-1 rounded disabled:opacity-50"
+                            title="Eliminar evento"
+                          >
+                            {isDeleting ? (
+                              <svg
+                                className="w-4 h-4 animate-spin"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      }
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 const MatchOn: React.FC<MatchOnProps> = ({
   matchId,

@@ -14,6 +14,7 @@ import { Matchday } from '../matchdays/entities/matchday.entity';
 import { Phase } from '../phases/entities/phase.entity';
 import { MatchEventType } from './enums/match-event-type.enum';
 import { MatchEventDto } from './dto/match-event.dto';
+import { UpdateMatchEventDto } from './dto/update-match-event.dto';
 import { Player } from '../players/entities/player.entity';
 import { MatchStatus } from './enums/match-status.enum';
 
@@ -726,5 +727,436 @@ export class MatchesService {
       throw new NotFoundException(`Match with ID ${matchId} not found`);
     }
     return match;
+  }
+
+  async updateEvent(
+    matchId: string,
+    eventIndex: number,
+    updateEventDto: UpdateMatchEventDto,
+  ): Promise<Match> {
+    const match = await this.matchModel.findById(matchId);
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${matchId} not found`);
+    }
+
+    if (match.status === MatchStatus.COMPLETED) {
+      throw new BadRequestException('Cannot edit events in a completed match');
+    }
+
+    if (!match.events || eventIndex < 0 || eventIndex >= match.events.length) {
+      throw new BadRequestException('Invalid event index');
+    }
+
+    const event = match.events[eventIndex];
+    const systemEvents = [
+      'start_first_half',
+      'end_first_half',
+      'start_second_half',
+      'end_second_half',
+    ];
+
+    // Permitir editar eventos del sistema
+    // Los eventos del sistema ahora se pueden editar
+
+    // Validar jugador si se está actualizando
+    if (updateEventDto.playerId) {
+      const player = await this.playerModel.findById(
+        new Types.ObjectId(updateEventDto.playerId),
+      );
+      if (!player) {
+        throw new NotFoundException(
+          `Player with ID ${updateEventDto.playerId} not found`,
+        );
+      }
+
+      // Validar que el jugador pertenece al equipo correcto
+      if (!player.teamId) {
+        throw new BadRequestException(
+          'El jugador no pertenece a ningún equipo',
+        );
+      }
+      const teamId =
+        updateEventDto.team === 'TeamA' ? match.teamA : match.teamB;
+      if (player.teamId.toString() !== teamId.toString()) {
+        throw new BadRequestException(
+          'Player does not belong to the specified team',
+        );
+      }
+    }
+
+    // Guardar el evento original para revertir estadísticas
+    const originalEvent = { ...event };
+
+    // Actualizar el evento
+    if (updateEventDto.type !== undefined) event.type = updateEventDto.type;
+    if (updateEventDto.minute !== undefined)
+      event.minute = updateEventDto.minute;
+    if (updateEventDto.team !== undefined) event.team = updateEventDto.team;
+    if (updateEventDto.playerId !== undefined) {
+      event.playerId = new Types.ObjectId(updateEventDto.playerId);
+    }
+
+    // Revertir estadísticas del evento original
+    await this.revertEventStatistics(match, originalEvent);
+
+    // Aplicar estadísticas del evento actualizado
+    await this.applyEventStatistics(match, event);
+
+    // Recalcular scores y resultado
+    await this.recalculateMatchScores(match);
+
+    return match.save();
+  }
+
+  async deleteEvent(matchId: string, eventIndex: number): Promise<Match> {
+    const match = await this.matchModel.findById(matchId);
+    if (!match) {
+      throw new NotFoundException(`Match with ID ${matchId} not found`);
+    }
+
+    if (match.status === MatchStatus.COMPLETED) {
+      throw new BadRequestException(
+        'Cannot delete events in a completed match',
+      );
+    }
+
+    if (!match.events || eventIndex < 0 || eventIndex >= match.events.length) {
+      throw new BadRequestException('Invalid event index');
+    }
+
+    const event = match.events[eventIndex];
+    const systemEvents = [
+      'start_first_half',
+      'end_first_half',
+      'start_second_half',
+      'end_second_half',
+    ];
+
+    // Permitir eliminar eventos del sistema
+    // Los eventos del sistema ahora se pueden eliminar
+
+    // Revertir estadísticas del evento
+    await this.revertEventStatistics(match, event);
+
+    // Eliminar el evento del array
+    match.events.splice(eventIndex, 1);
+
+    // Recalcular scores y resultado
+    await this.recalculateMatchScores(match);
+
+    return match.save();
+  }
+
+  private async revertEventStatistics(match: any, event: any): Promise<void> {
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) return;
+
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) return;
+
+    const tournamentId = phase.tournamentId;
+
+    switch (event.type) {
+      case MatchEventType.GOAL:
+        // Revertir goles
+        if (event.team === 'TeamA') {
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamA.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsFor': -1 } },
+          );
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsAgainst': -1 } },
+          );
+        } else {
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsFor': -1 } },
+          );
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamA.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsAgainst': -1 } },
+          );
+        }
+        // Revertir estadísticas del jugador
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.goals': -1 },
+          });
+        }
+        break;
+
+      case MatchEventType.YELLOW_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.yellowCards': -1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.yellowCards': -1 },
+          });
+        }
+        break;
+
+      case MatchEventType.RED_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.redCards': -1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.redCards': -1 },
+          });
+        }
+        break;
+
+      case MatchEventType.BLUE_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.blueCards': -1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.blueCards': -1 },
+          });
+        }
+        break;
+    }
+  }
+
+  private async applyEventStatistics(match: any, event: any): Promise<void> {
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) return;
+
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) return;
+
+    const tournamentId = phase.tournamentId;
+
+    switch (event.type) {
+      case MatchEventType.GOAL:
+        // Aplicar goles
+        if (event.team === 'TeamA') {
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamA.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsFor': 1 } },
+          );
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsAgainst': 1 } },
+          );
+        } else {
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamB.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsFor': 1 } },
+          );
+          await this.registrationModel.findOneAndUpdate(
+            {
+              teamId: match.teamA.toString(),
+              tournamentId: tournamentId.toString(),
+            },
+            { $inc: { 'stats.goalsAgainst': 1 } },
+          );
+        }
+        // Aplicar estadísticas del jugador
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.goals': 1 },
+          });
+        }
+        break;
+
+      case MatchEventType.YELLOW_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.yellowCards': 1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.yellowCards': 1 },
+          });
+        }
+        break;
+
+      case MatchEventType.RED_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.redCards': 1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.redCards': 1 },
+          });
+        }
+        break;
+
+      case MatchEventType.BLUE_CARD:
+        await this.registrationModel.findOneAndUpdate(
+          {
+            teamId:
+              event.team === 'TeamA'
+                ? match.teamA.toString()
+                : match.teamB.toString(),
+            tournamentId: tournamentId.toString(),
+          },
+          { $inc: { 'stats.blueCards': 1 } },
+        );
+        if (event.playerId) {
+          await this.playerModel.findByIdAndUpdate(event.playerId, {
+            $inc: { 'stats.blueCards': 1 },
+          });
+        }
+        break;
+    }
+  }
+
+  private async recalculateMatchScores(match: any): Promise<void> {
+    // Recalcular goles
+    const teamAGoals = match.events.filter(
+      (e) => e.team === 'TeamA' && e.type === MatchEventType.GOAL,
+    ).length;
+    const teamBGoals = match.events.filter(
+      (e) => e.team === 'TeamB' && e.type === MatchEventType.GOAL,
+    ).length;
+
+    match.homeScore = teamAGoals;
+    match.awayScore = teamBGoals;
+
+    // Actualizar el resultado
+    if (teamAGoals > teamBGoals) {
+      match.result = 'TeamA';
+    } else if (teamBGoals > teamAGoals) {
+      match.result = 'TeamB';
+    } else {
+      match.result = 'Draw';
+    }
+
+    // Recalcular estadísticas de fair play y goal difference para ambos equipos
+    const matchday = await this.matchdayModel.findById(match.matchDayId);
+    if (!matchday) return;
+
+    const phase = await this.phaseModel.findById(matchday.phaseId);
+    if (!phase) return;
+
+    const tournamentId = phase.tournamentId;
+
+    // Recalcular para TeamA
+    const teamARegistration = await this.registrationModel.findOne({
+      teamId: match.teamA.toString(),
+      tournamentId: tournamentId.toString(),
+    });
+
+    if (teamARegistration) {
+      const fairPlayScore =
+        (teamARegistration.stats.yellowCards || 0) * -1 +
+        (teamARegistration.stats.blueCards || 0) * -2 +
+        (teamARegistration.stats.redCards || 0) * -3;
+      const goalDifference =
+        (teamARegistration.stats.goalsFor || 0) -
+        (teamARegistration.stats.goalsAgainst || 0);
+      const scoreWeight =
+        (teamARegistration.stats.points || 0) * 10_000_000 +
+        (100_000 + fairPlayScore) * 1_000 +
+        goalDifference;
+
+      await this.registrationModel.findOneAndUpdate(
+        {
+          teamId: match.teamA.toString(),
+          tournamentId: tournamentId.toString(),
+        },
+        {
+          $set: {
+            'stats.fairPlayScore': fairPlayScore,
+            'stats.goalDifference': goalDifference,
+            'stats.scoreWeight': scoreWeight,
+          },
+        },
+      );
+    }
+
+    // Recalcular para TeamB
+    const teamBRegistration = await this.registrationModel.findOne({
+      teamId: match.teamB.toString(),
+      tournamentId: tournamentId.toString(),
+    });
+
+    if (teamBRegistration) {
+      const fairPlayScore =
+        (teamBRegistration.stats.yellowCards || 0) * -1 +
+        (teamBRegistration.stats.blueCards || 0) * -2 +
+        (teamBRegistration.stats.redCards || 0) * -3;
+      const goalDifference =
+        (teamBRegistration.stats.goalsFor || 0) -
+        (teamBRegistration.stats.goalsAgainst || 0);
+      const scoreWeight =
+        (teamBRegistration.stats.points || 0) * 10_000_000 +
+        (100_000 + fairPlayScore) * 1_000 +
+        goalDifference;
+
+      await this.registrationModel.findOneAndUpdate(
+        {
+          teamId: match.teamB.toString(),
+          tournamentId: tournamentId.toString(),
+        },
+        {
+          $set: {
+            'stats.fairPlayScore': fairPlayScore,
+            'stats.goalDifference': goalDifference,
+            'stats.scoreWeight': scoreWeight,
+          },
+        },
+      );
+    }
   }
 }

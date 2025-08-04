@@ -251,3 +251,86 @@ export function useUpdateMatchObservations() {
     },
   });
 }
+
+// --- Event Management Hooks ---
+
+export interface UpdateEventData {
+  type?: string;
+  minute?: number;
+  team?: "TeamA" | "TeamB";
+  playerId?: string;
+}
+
+export const updateMatchEvent = async (
+  matchId: string,
+  eventIndex: number,
+  data: UpdateEventData
+): Promise<Match> => {
+  const res = await axios.patch(
+    `${API_BASE}/matches/${matchId}/events/${eventIndex}`,
+    data
+  );
+  return res.data;
+};
+
+export const deleteMatchEvent = async (
+  matchId: string,
+  eventIndex: number
+): Promise<Match> => {
+  const res = await axios.delete(
+    `${API_BASE}/matches/${matchId}/events/${eventIndex}`
+  );
+  return res.data;
+};
+
+export function useUpdateMatchEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      matchId,
+      eventIndex,
+      data,
+    }: {
+      matchId: string;
+      eventIndex: number;
+      data: UpdateEventData;
+    }) => {
+      return updateMatchEvent(matchId, eventIndex, data);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["match", variables.matchId] });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["registrations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["registrations", "tournament"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}
+
+export function useDeleteMatchEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      matchId,
+      eventIndex,
+    }: {
+      matchId: string;
+      eventIndex: number;
+    }) => {
+      return deleteMatchEvent(matchId, eventIndex);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["match", variables.matchId] });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["registrations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["registrations", "tournament"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    },
+  });
+}
