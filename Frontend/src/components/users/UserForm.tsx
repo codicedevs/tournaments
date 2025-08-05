@@ -18,31 +18,24 @@ import { useApp } from "../../context/AppContext";
 import axios from "axios";
 import { API_BASE_URL } from "../../config";
 
-const userSchema = z
-  .object({
-    name: z.string().min(1, "El nombre es requerido"),
-    email: z.string().email("Correo electrónico inválido").optional(),
-    username: z.string().optional(),
-    dni: z.string().optional(),
-    birthDate: z.string().optional(),
-    occupation: z.string().optional(),
-    healthInsurance: z.string().optional(),
-    role: z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]),
-    teamId: z.string().optional(),
-    phone: z.string().optional(),
-    isVerified: z.boolean().optional(),
-    isBlacklisted: z.boolean().optional(),
-  })
-  .refine(
-    (data) => {
-      // Al menos uno de email o username debe estar presente
-      return data.email || data.username;
-    },
-    {
-      message: "Debe proporcionar al menos un email o nombre de usuario",
-      path: ["email"], // Mostrar el error en el campo email
-    }
-  );
+const userSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido"),
+  email: z
+    .string()
+    .email("Correo electrónico inválido")
+    .or(z.literal("")) // cadena vacía aceptada
+    .optional(),
+  username: z.string().optional(),
+  dni: z.string().optional(),
+  birthDate: z.string().optional(),
+  occupation: z.string().optional(),
+  healthInsurance: z.string().optional(),
+  role: z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]),
+  teamId: z.string().optional(),
+  phone: z.string().optional(),
+  isVerified: z.boolean().optional(),
+  isBlacklisted: z.boolean().optional(),
+});
 
 type UserFormData = z.infer<typeof userSchema>;
 
@@ -177,7 +170,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         occupation: initialData.occupation || "",
         healthInsurance: initialData.healthInsurance || "",
         role: initialData.role || UserRole.PLAYER,
-        teamId: initialData.teamId || "",
+        teamId: initialData.teamId ?? "",
         phone: initialData.phone || "",
         isVerified: initialData.isVerified || false,
         isBlacklisted: initialData.isBlacklisted || false,
@@ -187,6 +180,17 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
       setUploadedPdfs(initialData.pdfs || []);
     }
   }, [mode, initialData, reset]);
+
+  // Si es un jugador, sincronizar teamId con los datos del Player
+  useEffect(() => {
+    if (
+      mode === "edit" &&
+      initialData?.role === UserRole.PLAYER &&
+      playerData?.teamId !== undefined
+    ) {
+      setValue("teamId", playerData.teamId ?? "");
+    }
+  }, [mode, initialData?.role, playerData, setValue]);
 
   const onSubmit = (data: UserFormData) => {
     // Limpiar errores y mensajes previos
@@ -398,7 +402,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                     >
                       <path
                         fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                         clipRule="evenodd"
                       />
                     </svg>

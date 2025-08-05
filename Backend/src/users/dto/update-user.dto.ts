@@ -9,9 +9,11 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Role } from '../entities/user.entity';
+import { Transform } from 'class-transformer';
 
 export class UpdateUserDto {
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsEmail({}, { message: 'El email debe tener un formato válido' })
   email?: string;
 
