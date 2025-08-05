@@ -15,6 +15,7 @@ import {
 import type { Team } from "../models/Match";
 import { useNavigate } from "react-router-dom";
 import { translateEventType } from "../utils/functions";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 // ---------------------------------------------
 // Componente independiente EventList
@@ -619,7 +620,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
       <div className="flex gap-4">
         {!matchEnded && (
           <>
-            {secondHalfStarted && timerRunning && (
+            {matchStarted && timerRunning && (
               <button
                 className="bg-yellow-400 text-white px-4 py-2 rounded-lg font-bold"
                 onClick={() => setTimerRunning(false)}
@@ -627,7 +628,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
                 Pausar
               </button>
             )}
-            {secondHalfStarted && !timerRunning && (
+            {matchStarted && !timerRunning && (
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold"
                 onClick={() => setTimerRunning(true)}
@@ -635,13 +636,10 @@ const MatchOn: React.FC<MatchOnProps> = ({
                 Reanudar
               </button>
             )}
-            {secondHalfStarted && (
+            {matchStarted && (
               <button
                 className="bg-gray-400 text-white px-4 py-2 rounded-lg font-bold"
-                onClick={() => {
-                  setTimer(0);
-                  setTimerRunning(false);
-                }}
+                onClick={() => setResetModalOpen(true)}
               >
                 Reset
               </button>
@@ -680,16 +678,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
         {matchStarted && !firstHalfEnded && (
           <button
             className="bg-red-500 text-white py-3 rounded-xl font-bold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-            onClick={() => {
-              handleRegisterSystemEvent(
-                "end_first_half",
-                Math.floor(timer / 60)
-              );
-              setTimer(0);
-              setTimerRunning(false);
-              setFirstHalfEnded(true);
-            }}
-            disabled={!isMatchInPlay()}
+            onClick={() => setEndFirstHalfModalOpen(true)}
           >
             Terminar Primer Tiempo
           </button>
@@ -711,14 +700,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
         {secondHalfStarted && !matchEnded && (
           <button
             className="bg-red-700 text-white py-3 rounded-xl font-bold text-lg"
-            onClick={() => {
-              handleRegisterSystemEvent(
-                "end_second_half",
-                Math.floor(timer / 60)
-              );
-              setTimerRunning(false);
-              setMatchEnded(true);
-            }}
+            onClick={() => setEndMatchModalOpen(true)}
           >
             Terminar Partido
           </button>
@@ -837,6 +819,11 @@ const MatchOn: React.FC<MatchOnProps> = ({
     </div>
   );
 
+  // Estados para los modales de confirmación
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [endFirstHalfModalOpen, setEndFirstHalfModalOpen] = useState(false);
+  const [endMatchModalOpen, setEndMatchModalOpen] = useState(false);
+
   // --- Render principal ---
   return (
     <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl my-10 overflow-hidden">
@@ -866,9 +853,49 @@ const MatchOn: React.FC<MatchOnProps> = ({
         )}
         {/* Se pasa match y nombres para reutilizar en EventList */}
         <EventList match={match} teamA={teamA} teamB={teamB} />
-      </div>
 
-      <EventModal />
+        <EventModal />
+
+        {/* Modales de confirmación */}
+        <ConfirmationModal
+          open={resetModalOpen}
+          title="Reiniciar Cronómetro"
+          message="¿Reiniciar el cronómetro? Esta acción no se puede deshacer."
+          onCancel={() => setResetModalOpen(false)}
+          onConfirm={() => {
+            setTimer(0);
+            setTimerRunning(false);
+            setResetModalOpen(false);
+          }}
+        />
+
+        <ConfirmationModal
+          open={endFirstHalfModalOpen}
+          title="Finalizar Primer Tiempo"
+          message="¿Seguro que quieres finalizar el primer tiempo?"
+          onCancel={() => setEndFirstHalfModalOpen(false)}
+          onConfirm={() => {
+            handleRegisterSystemEvent("end_first_half", Math.floor(timer / 60));
+            setTimer(0);
+            setTimerRunning(false);
+            setFirstHalfEnded(true);
+            setEndFirstHalfModalOpen(false);
+          }}
+        />
+
+        <ConfirmationModal
+          open={endMatchModalOpen}
+          title="Finalizar Partido"
+          message="¿Seguro que quieres finalizar el partido?"
+          onCancel={() => setEndMatchModalOpen(false)}
+          onConfirm={() => {
+            handleRegisterSystemEvent("end_second_half", Math.floor(timer / 60));
+            setTimerRunning(false);
+            setMatchEnded(true);
+            setEndMatchModalOpen(false);
+          }}
+        />
+      </div>
     </div>
   );
 };
