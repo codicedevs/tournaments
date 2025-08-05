@@ -71,7 +71,20 @@ const UserList: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex justify-end items-center mb-6">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-4">
+            {selected.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+              >
+                <Trash2Icon size={18} />
+                <span>
+                  Borrar {selected.length} usuario{selected.length > 1 ? "s" : ""}
+                </span>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => navigate("/users/new")}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
@@ -196,17 +209,6 @@ const UserList: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-        {selected.length > 0 && (
-          <div className="my-4 flex justify-end">
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md shadow"
-              onClick={handleDeleteSelected}
-              disabled={deleteUsers.isPending}
-            >
-              Borrar seleccionados ({selected.length})
-            </button>
           </div>
         )}
       </main>
