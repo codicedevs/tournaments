@@ -260,12 +260,24 @@ const MatchReport: React.FC<
             className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors"
             title="Volver"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-8-7 8-7" />
+            <svg
+              className="w-8 h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M15 19l-8-7 8-7"
+              />
             </svg>
           </button>
           <div>
-            <h1 className="text-3xl font-light mb-1">Ficha Final del Partido</h1>
+            <h1 className="text-3xl font-light mb-1">
+              Ficha Final del Partido
+            </h1>
             <div className="text-lg opacity-90">
               {teamA.name} vs {teamB.name}
             </div>
@@ -683,10 +695,7 @@ const MatchReport: React.FC<
               </>
             )}
           </div>
-          <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow flex flex-col">
-            <div className="text-lg font-semibold mb-2 text-center">
-              Navegación
-            </div>
+          <div className="bg-white rounded-2xl p-8 border-2 border-gray-200 shadow flex flex-col ">
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl w-full mb-2"
               onClick={() => {
@@ -698,12 +707,6 @@ const MatchReport: React.FC<
               }}
             >
               📋 Mis Partidos
-            </button>
-            <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-xl w-full mb-2">
-              📊 Reportes
-            </button>
-            <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-xl w-full">
-              ⚙️ Configuración
             </button>
           </div>
         </div>
