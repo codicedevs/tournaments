@@ -45,6 +45,10 @@ const EventList: React.FC<EventListProps> = React.memo(
     const { mutate: deleteEvent, isPending: isDeleting } =
       useDeleteMatchEvent();
 
+    const startSecondHalfIndex = match?.events
+      ? match.events.findIndex((e: any) => e.type === "start_second_half")
+      : -1;
+
     const handleScroll = () => {
       if (listRef.current) savedScroll.current = listRef.current.scrollTop;
     };
@@ -222,7 +226,10 @@ const EventList: React.FC<EventListProps> = React.memo(
                           </span>
                           {typeof event.minute === "number" && (
                             <span className="text-gray-500">
-                              {event.minute}'
+                              {event.minute}'{' '}
+                              {startSecondHalfIndex !== -1 && eventIndex > startSecondHalfIndex
+                                ? "ST"
+                                : "PT"}
                             </span>
                           )}
                           {event.type === "goal" && event.player && (
