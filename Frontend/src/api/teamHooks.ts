@@ -4,14 +4,16 @@ import { Team } from "../models/Team";
 import { API_BASE_URL } from "../config";
 const API_BASE = API_BASE_URL;
 
-// Function to check if team name exists
+// Function to check if team name exists (with optional excludeId)
 export const checkTeamName = async (
-  name: string
+  name: string,
+  excludeId?: string
 ): Promise<{ exists: boolean }> => {
   if (!name || name.length < 3) return { exists: false };
-  const res = await axios.get(
-    `${API_BASE}/teams/check-name?name=${encodeURIComponent(name)}`
-  );
+  const url = new URL(`${API_BASE}/teams/check-name`);
+  url.searchParams.append("name", name);
+  if (excludeId) url.searchParams.append("excludeId", excludeId);
+  const res = await axios.get(url.toString());
   return res.data;
 };
 
@@ -141,12 +143,12 @@ export function useTeam(id: string, populate?: boolean) {
   });
 }
 
-export function useCheckTeamName(name: string) {
+export function useCheckTeamName(name: string, excludeId?: string) {
   return useQuery({
-    queryKey: ["checkTeamName", name],
-    queryFn: () => checkTeamName(name),
+    queryKey: ["checkTeamName", name, excludeId],
+    queryFn: () => checkTeamName(name, excludeId),
     enabled: !!name && name.length >= 3,
-    staleTime: 10000,
+    staleTime: 5000,
   });
 }
 

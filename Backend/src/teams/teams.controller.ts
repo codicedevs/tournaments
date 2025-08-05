@@ -24,12 +24,12 @@ export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 
   @Get('check-name')
-  async checkNameExists(@Query('name') name: string) {
+  async checkNameExists(@Query('name') name: string, @Query('excludeId') excludeId?: string) {
     if (!name || name.length < 3) {
       return { exists: false };
     }
 
-    const exists = await this.teamsService.checkNameExists(name);
+    const exists = await this.teamsService.checkNameExists(name, excludeId);
     return { exists };
   }
 

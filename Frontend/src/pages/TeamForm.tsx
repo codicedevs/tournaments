@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
-import { ArrowLeftIcon, Upload } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,14 +15,13 @@ import { useApp } from "../context/AppContext";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
-  captainFullName: z.string().min(1, "El nombre del delegado es requerido"),
-  captainPhoneNumber: z
-    .string()
-    .min(1, "El teléfono del delegado es requerido"),
-  captainEmail: z
+  referentName: z.string().min(1, "El nombre del delegado es requerido"),
+  referentPhoneNumber: z.string().optional(),
+  referentEmail: z
     .string()
     .email("Debe ser un correo electrónico válido")
-    .min(1, "El correo del delegado es requerido"),
+    .or(z.literal(""))
+    .optional(),
   coach: z.string().optional(),
   profileImage: z.instanceof(File).optional().or(z.string().optional()),
 });
@@ -77,19 +76,19 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   // Watch the team name for validation
   const teamName = watch("name");
 
-  // Check if team name already exists (only for create mode)
+  // Check if team name already exists
   const { data: nameCheckData, isLoading: isCheckingName } =
-    useCheckTeamName(teamName);
-  const nameExists = mode === "create" && nameCheckData?.exists;
+    useCheckTeamName(teamName, mode === "edit" ? actualTeamId : undefined);
+  const nameExists = nameCheckData?.exists;
 
   // Initialize form data for edit mode
   useEffect(() => {
     if (mode === "edit" && team) {
       reset({
         name: team.name || "",
-        captainFullName: "", // These fields are not in the Team model, will be empty for edit
-        captainPhoneNumber: "",
-        captainEmail: "",
+        referentName: team.referentName || "",
+        referentPhoneNumber: team.referentPhoneNumber || "",
+        referentEmail: team.referentEmail || "",
         coach: team.coach || "",
         profileImage:
           typeof team.profileImage === "string" ? team.profileImage : undefined,
@@ -119,8 +118,8 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   const onSubmit = (data: TeamFormData) => {
     setFormError("");
 
-    // Prevent submission if team name already exists (only for create mode)
-    if (mode === "create" && nameExists) {
+    // Prevent submission if team name already exists
+    if (nameExists) {
       setFormError(
         "El nombre del equipo ya está en uso. Por favor, elija otro nombre."
       );
@@ -150,9 +149,9 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
       if (data.profileImage instanceof File) {
         const formData = new FormData();
         formData.append("name", data.name);
-        formData.append("captainFullName", data.captainFullName);
-        formData.append("captainPhoneNumber", data.captainPhoneNumber);
-        formData.append("captainEmail", data.captainEmail);
+        formData.append("referentName", data.referentName);
+        if (data.referentPhoneNumber) formData.append("referentPhoneNumber", data.referentPhoneNumber);
+        if (data.referentEmail) formData.append("referentEmail", data.referentEmail);
         if (data.coach) formData.append("coach", data.coach);
         formData.append("profileImage", data.profileImage);
         payload = formData;
@@ -160,9 +159,9 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
       } else {
         payload = {
           name: data.name,
-          captainFullName: data.captainFullName,
-          captainPhoneNumber: data.captainPhoneNumber,
-          captainEmail: data.captainEmail,
+          referentName: data.referentName,
+          referentPhoneNumber: data.referentPhoneNumber || undefined,
+          referentEmail: data.referentEmail || undefined,
           coach: data.coach || undefined,
           profileImage: data.profileImage,
         };
@@ -263,7 +262,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
                   placeholder="Ingrese el nombre del equipo"
                   disabled={isPending}
                 />
-                {mode === "create" && isCheckingName && (
+                {isCheckingName && (
                   <div className="absolute right-3 top-2">
                     <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
                   </div>
@@ -291,14 +290,14 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
               <input
                 id="captainFullName"
                 type="text"
-                {...register("captainFullName")}
+                {...register("referentName")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el nombre completo del delegado"
                 disabled={isPending}
               />
-              {errors.captainFullName && (
+              {errors.referentName && (
                 <div className="text-red-600 text-sm mt-1">
-                  {errors.captainFullName.message}
+                  {errors.referentName.message}
                 </div>
               )}
             </div>
@@ -313,14 +312,14 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
               <input
                 id="captainPhoneNumber"
                 type="text"
-                {...register("captainPhoneNumber")}
+                {...register("referentPhoneNumber")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el teléfono del delegado"
                 disabled={isPending}
               />
-              {errors.captainPhoneNumber && (
+              {errors.referentPhoneNumber && (
                 <div className="text-red-600 text-sm mt-1">
-                  {errors.captainPhoneNumber.message}
+                  {errors.referentPhoneNumber.message}
                 </div>
               )}
             </div>
@@ -335,14 +334,14 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
               <input
                 id="captainEmail"
                 type="email"
-                {...register("captainEmail")}
+                {...register("referentEmail")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el correo electrónico del delegado"
                 disabled={isPending}
               />
-              {errors.captainEmail && (
+              {errors.referentEmail && (
                 <div className="text-red-600 text-sm mt-1">
-                  {errors.captainEmail.message}
+                  {errors.referentEmail.message}
                 </div>
               )}
             </div>

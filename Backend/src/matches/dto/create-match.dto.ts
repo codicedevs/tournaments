@@ -6,7 +6,6 @@ import {
   IsOptional,
   Min,
 } from 'class-validator';
-import { Types } from 'mongoose';
 import { MatchStatus } from '../enums/match-status.enum';
 
 export class CreateMatchDto {

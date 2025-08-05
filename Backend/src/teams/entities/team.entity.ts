@@ -8,7 +8,7 @@ export type TeamDocument = Team & Document;
 
 @Schema()
 export class Team extends Document {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   name: string;
 
   @Prop({ required: false })
@@ -22,6 +22,15 @@ export class Team extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
   createdById: User;
+
+  @Prop()
+  referentName: string;
+
+  @Prop()
+  referentPhoneNumber?: string;
+
+  @Prop()
+  referentEmail?: string;
 
   @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Player' }] })
   players: (Player | Types.ObjectId | string)[];

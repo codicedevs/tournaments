@@ -182,10 +182,16 @@ export class TeamsService {
       .exec();
   }
 
-  async checkNameExists(name: string): Promise<boolean> {
-    const team = await this.teamModel.findOne({
+  async checkNameExists(name: string, excludeId?: string): Promise<boolean> {
+    const query: any = {
       name: { $regex: new RegExp(`^${name}$`, 'i') },
-    });
+    };
+
+    if (excludeId) {
+      query._id = { $ne: new Types.ObjectId(excludeId) };
+    }
+
+    const team = await this.teamModel.findOne(query);
     return !!team;
   }
 

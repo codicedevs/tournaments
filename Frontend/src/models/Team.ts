@@ -8,6 +8,9 @@ export interface Team {
   profileImage?: string;
   createdAt?: Date;
   createdById: string | User;
+  referentName: string;
+  referentPhoneNumber?: string;
+  referentEmail?: string;
   players?: string[] | User[];
   captain?: string | User;
   registrations?: Registration[];
