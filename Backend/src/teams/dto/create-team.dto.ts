@@ -28,6 +28,7 @@ export class CreateTeamDto {
   createdById: string;
 
   @IsString({ each: true })
+  @IsOptional()
   players?: string[];
 
   @IsString()
