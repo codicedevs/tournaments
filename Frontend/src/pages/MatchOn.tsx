@@ -453,6 +453,32 @@ const MatchOn: React.FC<MatchOnProps> = ({
     setAwayScore(away);
   }, [match?.events]);
 
+  // Verificar si el partido está en juego basándose en los eventos
+  const isMatchInPlay = () => {
+    if (!match?.events) return false;
+
+    const hasStartedFirstHalf = match.events.some(
+      (e: any) => e.type === "start_first_half"
+    );
+    const hasEndedFirstHalf = match.events.some(
+      (e: any) => e.type === "end_first_half"
+    );
+    const hasStartedSecondHalf = match.events.some(
+      (e: any) => e.type === "start_second_half"
+    );
+    const hasEndedSecondHalf = match.events.some(
+      (e: any) => e.type === "end_second_half"
+    );
+
+    // El partido está en juego si:
+    // 1. Comenzó el primer tiempo y no terminó, O
+    // 2. Comenzó el segundo tiempo y no terminó
+    return (
+      (hasStartedFirstHalf && !hasEndedFirstHalf) ||
+      (hasStartedSecondHalf && !hasEndedSecondHalf)
+    );
+  };
+
   // Jugadores según equipo seleccionado
   const playersForSelectedTeam =
     selectedTeam === "home"
@@ -637,7 +663,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
             setEventType("goal");
             setEventModalOpen(true);
           }}
-          disabled={!matchStarted}
+          disabled={!isMatchInPlay()}
         >
           ⚽ Registrar Gol
         </button>
@@ -647,7 +673,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
             setEventType("card");
             setEventModalOpen(true);
           }}
-          disabled={!matchStarted}
+          disabled={!isMatchInPlay()}
         >
           🟨 Registrar Tarjeta
         </button>
@@ -663,7 +689,7 @@ const MatchOn: React.FC<MatchOnProps> = ({
               setTimerRunning(false);
               setFirstHalfEnded(true);
             }}
-            disabled={!matchStarted}
+            disabled={!isMatchInPlay()}
           >
             Terminar Primer Tiempo
           </button>

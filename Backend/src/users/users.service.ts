@@ -49,10 +49,18 @@ export class UsersService {
 
     // Hashear la contraseña antes de guardar
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const newUser = new this.userModel({
+
+    // Procesar el DNI: si es string vacío, convertirlo a null
+    const userData = {
       ...createUserDto,
       password: hashedPassword,
-    });
+      dni:
+        createUserDto.dni && createUserDto.dni.trim() !== ''
+          ? createUserDto.dni
+          : null,
+    };
+
+    const newUser = new this.userModel(userData);
     return newUser.save();
   }
 
@@ -197,9 +205,18 @@ export class UsersService {
         }
       }
 
+      // Procesar el DNI: si es string vacío, convertirlo a null
+      const updateData = {
+        ...updateUserDto,
+        dni:
+          updateUserDto.dni && updateUserDto.dni.trim() !== ''
+            ? updateUserDto.dni
+            : null,
+      };
+
       // Actualizar el usuario
       const updatedUser = await this.userModel
-        .findByIdAndUpdate(id, updateUserDto, { new: true, session })
+        .findByIdAndUpdate(id, updateData, { new: true, session })
         .exec();
 
       await session.commitTransaction();
@@ -295,16 +312,18 @@ export class UsersService {
       // Hashear la contraseña antes de crear el usuario
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
+      // Procesar el DNI: si es string vacío, convertirlo a null
+      const userData = {
+        ...createUserDto,
+        password: hashedPassword,
+        dni:
+          createUserDto.dni && createUserDto.dni.trim() !== ''
+            ? createUserDto.dni
+            : null,
+      };
+
       // 1. Crear el usuario
-      const user = await this.userModel.create(
-        [
-          {
-            ...createUserDto,
-            password: hashedPassword,
-          },
-        ],
-        { session },
-      );
+      const user = await this.userModel.create([userData], { session });
       const createdUser = user[0];
 
       // 2. Si el rol es Player, crear el player asociado

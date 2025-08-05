@@ -21,7 +21,8 @@ import { serverSetting } from './settings';
   imports: [
     ConfigModule.forRoot(),
     MongooseModule.forRoot(
-      `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/tournaments?retryWrites=true&w=majority&appName=DbPrueba`,
+      `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/TestTournaments?retryWrites=true&w=majority&appName=DbPrueba`,
+      // `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/tournaments?retryWrites=true&w=majority&appName=DbPrueba`,
     ),
     MulterModule.register({
       storage: diskStorage({
