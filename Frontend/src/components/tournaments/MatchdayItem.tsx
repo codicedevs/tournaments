@@ -224,7 +224,9 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
             <div className="space-y-2 overflow-x-auto">
               {matches.map((match: Match) => {
                 const dateObj = match.date ? parseISO(match.date) : null;
-                const dayHour = dateObj ? dateObj.toLocaleString() : "-";
+                const dayHour = dateObj
+                  ? format(dateObj, "dd/MM/yyyy HH:mm", { locale: es })
+                  : "-";
                 return (
                   <div
                     key={match._id}

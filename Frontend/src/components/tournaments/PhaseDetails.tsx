@@ -2,6 +2,8 @@ import React from "react";
 import { Phase } from "../../models/Phase";
 import { Tournament } from "../../models/Tournament";
 import { Matchday } from "../../models/Matchday";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface PhaseDetailsProps {
   phase: Phase;
@@ -26,7 +28,7 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
     if (matchdays.length === 0) {
       return {
         date: phase.createdAt
-          ? new Date(phase.createdAt).toLocaleDateString()
+          ? format(new Date(phase.createdAt), "dd/MM/yyyy", { locale: es })
           : "-",
         type: "Fase creada",
         description: "Fecha de creación de la fase",
@@ -44,14 +46,14 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
       );
       const firstMatch = sortedMatches[0];
       return {
-        date: new Date(firstMatch.date).toLocaleDateString(),
+        date: format(new Date(firstMatch.date), "dd/MM/yyyy", { locale: es }),
         type: "Primer partido",
         description: `fecha ${firstMatchday.order}`,
       };
     } else if (firstMatchday.date) {
       // Si no hay matches pero hay fecha del matchday
       return {
-        date: new Date(firstMatchday.date).toLocaleDateString(),
+        date: format(new Date(firstMatchday.date), "dd/MM/yyyy", { locale: es }),
         type: "Jornada programada",
         description: `Fecha ${firstMatchday.order}`,
       };
@@ -59,7 +61,7 @@ const PhaseDetails: React.FC<PhaseDetailsProps> = ({
       // Fallback a la fecha de creación de la fase
       return {
         date: phase.createdAt
-          ? new Date(phase.createdAt).toLocaleDateString()
+          ? format(new Date(phase.createdAt), "dd/MM/yyyy", { locale: es })
           : "-",
         type: "Fase creada",
         description: "Fecha de creación de la fase",
