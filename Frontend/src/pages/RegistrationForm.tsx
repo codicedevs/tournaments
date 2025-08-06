@@ -241,7 +241,7 @@ const RegistrationForm: React.FC = () => {
 
     await Promise.all(promises);
 
-    navigate("/divisions");
+    navigate(`/divisions/${selectedTournamentId}/registrations`);
   };
 
   const handleRemovePending = (id: string) => {

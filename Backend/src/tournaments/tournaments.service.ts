@@ -5,6 +5,7 @@ import { Tournament } from './entities/tournament.entity';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { Phase, PhaseType } from '../phases/entities/phase.entity';
+import { Registration } from '../registrations/entities/registration.entity';
 
 @Injectable()
 export class TournamentsService {
@@ -13,6 +14,8 @@ export class TournamentsService {
     private readonly tournamentModel: Model<Tournament>,
     @InjectModel(Phase.name)
     private readonly phaseModel: Model<Phase>,
+    @InjectModel(Registration.name)
+    private readonly registrationModel: Model<Registration>,
   ) {}
 
   async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
@@ -68,6 +71,15 @@ export class TournamentsService {
   }
 
   async remove(id: string): Promise<Tournament | null> {
-    return this.tournamentModel.findByIdAndDelete(id).exec();
+    // Primero eliminamos el torneo
+    const deletedTournament = await this.tournamentModel
+      .findByIdAndDelete(id)
+      .exec();
+    // Si el torneo existía, eliminamos todas las inscripciones asociadas
+    if (deletedTournament) {
+      await this.registrationModel.deleteMany({ tournamentId: id }).exec();
+    }
+
+    return deletedTournament;
   }
 }
