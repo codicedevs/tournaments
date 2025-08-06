@@ -24,6 +24,8 @@ import {
 
 import { Modal } from "antd";
 import { es } from "date-fns/locale";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface MatchdayItemProps {
   matchday: Matchday;
@@ -357,18 +359,22 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <span className="text-xs text-gray-500">Fecha</span>
-                    <input
-                      type="date"
-                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400"
-                      value={
-                        fieldValues[match._id]?.date ||
-                        (match.date
-                          ? new Date(match.date).toISOString().slice(0, 10)
-                          : "")
+                    <DatePicker
+                      locale={es}
+                      dateFormat="dd/MM/yyyy"
+                      selected={(() => {
+                        const dateStr = fieldValues[match._id]?.date ?? match.date;
+                        return dateStr ? new Date(dateStr) : null;
+                      })()}
+                      onChange={(date: Date | null) =>
+                        handleFieldChange(
+                          match._id,
+                          "date",
+                          date ? date.toISOString().split("T")[0] : ""
+                        )
                       }
-                      onChange={(e) =>
-                        handleFieldChange(match._id, "date", e.target.value)
-                      }
+                      className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-blue-400 w-full"
+                      placeholderText="dd/mm/aaaa"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
