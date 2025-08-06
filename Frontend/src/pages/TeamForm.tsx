@@ -12,6 +12,8 @@ import {
   useTeam,
 } from "../api/teamHooks";
 import { useApp } from "../context/AppContext";
+import { useTournaments } from "../api/tournamentHooks";
+import { useCreateRegistration } from "../api/registrationHooks";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
@@ -24,6 +26,7 @@ const teamSchema = z.object({
     .optional(),
   coach: z.string().optional(),
   profileImage: z.instanceof(File).optional().or(z.string().optional()),
+  tournamentId: z.string().optional(),
 });
 
 type TeamFormData = z.infer<typeof teamSchema>;
@@ -71,6 +74,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
     reset,
   } = useForm<TeamFormData>({
     resolver: zodResolver(teamSchema),
+    defaultValues: { tournamentId: "" },
   });
 
   // Watch the team name for validation
@@ -80,6 +84,12 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   const { data: nameCheckData, isLoading: isCheckingName } =
     useCheckTeamName(teamName, mode === "edit" ? actualTeamId : undefined);
   const nameExists = nameCheckData?.exists;
+
+  // Fetch tournaments for selection (only needed in create mode)
+  const { data: tournaments = [], isLoading: isLoadingTournaments } = useTournaments();
+
+  // Registration mutation
+  const { mutate: createRegistration, isPending: isRegistering } = useCreateRegistration();
 
   // Initialize form data for edit mode
   useEffect(() => {
@@ -127,14 +137,32 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
     }
 
     // Add the current user as creator for create mode
-    const teamData = {
+    const teamData: any = {
       ...data,
       createdById: currentUser?.id || "",
     };
+    delete teamData.tournamentId; // Not part of Team entity
 
     if (mode === "create") {
       createTeam(teamData, {
-        onSuccess: () => navigate("/teams"),
+        onSuccess: (newTeam) => {
+          if (data.tournamentId) {
+            createRegistration(
+              { teamId: newTeam._id, tournamentId: data.tournamentId },
+              {
+                onSuccess: () => navigate("/teams"),
+                onError: (error: any) => {
+                  setFormError(
+                    error.response?.data?.message ||
+                      "Error al registrar el equipo en la division"
+                  );
+                },
+              }
+            );
+          } else {
+            navigate("/teams");
+          }
+        },
         onError: (error: any) => {
           setFormError(
             error.response?.data?.message || "Error al crear el equipo"
@@ -185,7 +213,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
     }
   };
 
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isRegistering || isLoadingTournaments;
   const isError = isCreateError || isUpdateError;
   const apiError = createError || updateError;
 
@@ -367,6 +395,35 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
                 </div>
               )}
             </div>
+
+            {mode === "create" && (
+              <div className="mb-4">
+                <label
+                  htmlFor="tournamentId"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Division
+                </label>
+                <select
+                  id="tournamentId"
+                  {...register("tournamentId")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isPending}
+                >
+                  <option value="">Seleccione una division</option>
+                  {tournaments.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.tournamentId && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {errors.tournamentId.message}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 mt-6">
               <button

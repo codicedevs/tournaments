@@ -1,11 +1,23 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/layout/Header";
-import { ArrowLeftIcon, UploadIcon } from "lucide-react";
-import { useTeams, useAddPlayerToTeam } from "../api/teamHooks";
-import { RegisterPlayerData } from "../api/playerHooks";
+import { ArrowLeftIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTeams } from "../api/teamHooks";
+import { useCreateUserWithPlayer } from "../api/userHooks";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
+
+// Zod schema – only name & DNI are obligatorios
+const playerSchema = z.object({
+  name: z.string().min(1, "El nombre es requerido"),
+  dni: z.string().min(1, "El DNI es requerido"),
+  teamId: z.string().optional(),
+});
+
+type PlayerFormData = z.infer<typeof playerSchema>;
 
 interface RegisterPlayerProps {
   teamId?: string;
@@ -20,87 +32,46 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
 }) => {
   const navigate = useNavigate();
   const { teamId: paramTeamId } = useParams<{ teamId: string }>();
+  const currentTeamId = propTeamId || paramTeamId || undefined;
+
   const { data: teams = [] } = useTeams();
-  const { mutate: addPlayerToTeam, isPending } = useAddPlayerToTeam();
+  const { mutate: createPlayer, isPending } = useCreateUserWithPlayer();
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
+    null
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Función para determinar la ruta de regreso
-  const getBackRoute = () => {
-    if (propTeamId) {
-      // Si viene de un modal o contexto específico, usar onSuccess si está disponible
-      return `/teams/${propTeamId}/players`;
-    }
-    if (paramTeamId) {
-      // Si viene de una ruta de equipo específico
-      return `/teams/${paramTeamId}/players`;
-    }
-    // Fallback a la lista de equipos
-    return `/teams`;
-  };
-
-  const [formData, setFormData] = useState<RegisterPlayerData>({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
-    teamId: propTeamId || paramTeamId || "",
-    profilePicture: undefined,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm<PlayerFormData>({
+    resolver: zodResolver(playerSchema),
+    defaultValues: {
+      teamId: currentTeamId,
+    },
   });
 
-  // Si la prop teamId cambia, actualiza el formData
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      teamId: propTeamId || paramTeamId || "",
-    }));
-  }, [propTeamId, paramTeamId]);
-
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.teamId) {
-      alert("Por favor selecciona un equipo");
-      return;
+    if (currentTeamId) {
+      setValue("teamId", currentTeamId);
     }
+  }, [currentTeamId, setValue]);
 
-    addPlayerToTeam(
-      { teamId: formData.teamId, playerData: formData },
-      {
-        onSuccess: () => {
-          if (onSuccess) {
-            onSuccess();
-          } else {
-            navigate(`/teams/${formData.teamId}/players`);
-          }
-        },
-        onError: (error) => {
-          console.error(
-            "Error registrando y agregando jugador al equipo:",
-            error
-          );
-          alert("Error al registrar el jugador");
-        },
-      }
-    );
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPreviewUrl(URL.createObjectURL(file));
-      // Subir la imagen al backend
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+
       const formDataFile = new FormData();
       formDataFile.append("file", file);
       try {
@@ -111,158 +82,149 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
             headers: { "Content-Type": "multipart/form-data" },
           }
         );
-        setFormData((prev) => ({
-          ...prev,
-          profilePicture: res.data.url,
-        }));
-      } catch (error) {
-        console.error("Error subiendo imagen:", error);
-        alert("Error al subir la imagen");
+        setProfilePictureUrl(res.data.url);
+      } catch (err) {
+        alert("Error subiendo la imagen de perfil");
       }
     }
   };
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
+  const onSubmit = (data: PlayerFormData) => {
+    const username = `jugador${data.dni}`;
+    const password = "usuario123";
+
+    createPlayer(
+      {
+        ...data,
+        username,
+        password,
+        role: "Player",
+        profilePicture: profilePictureUrl || undefined,
+        mustChangePassword: true,
+        isVerified: true,
+      } as any,
+      {
+        onSuccess: () => {
+          onSuccess
+            ? onSuccess()
+            : navigate(
+                currentTeamId ? `/teams/${currentTeamId}/players` : "/players"
+              );
+        },
+        onError: (err: any) => {
+          alert(err.response?.data?.message || "Error al registrar jugador");
+        },
+      }
+    );
   };
 
-  if (hideLayout) {
-    return (
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Contenido del formulario sin layout */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-6">
-            <div
-              onClick={handleImageClick}
-              className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
-            >
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <UploadIcon className="w-8 h-8 text-gray-400" />
-              )}
-            </div>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <div className="flex-1">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Nombre Completo
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+  const backRoute = currentTeamId
+    ? `/teams/${currentTeamId}/players`
+    : "/players";
 
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Teléfono
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              value={formData.phone}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+  const FormCore = (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Avatar */}
+      <div className="flex justify-center">
+        <div
+          className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 border-2 border-blue-400"
+          onClick={handleAvatarClick}
+          title="Seleccionar avatar"
+        >
+          {avatarPreview ? (
+            <img
+              src={avatarPreview}
+              alt="Avatar preview"
+              className="w-full h-full rounded-full object-cover"
             />
-          </div>
-
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Correo Electrónico
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Contraseña
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="teamId"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Equipo
-            </label>
-            <select
-              id="teamId"
-              name="teamId"
-              required
-              value={formData.teamId}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Selecciona un equipo</option>
-              {teams.map((team) => (
-                <option key={team._id} value={team._id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          ) : (
+            <span className="text-gray-400">Avatar</span>
+          )}
         </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarChange}
+        />
+      </div>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+      {/* Nombre */}
+      <div>
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Nombre del Jugador
+        </label>
+        <input
+          type="text"
+          id="name"
+          {...register("name")}
+          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="Ingresa el nombre completo"
+        />
+        {errors.name && (
+          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+        )}
+      </div>
+
+      {/* DNI */}
+      <div>
+        <label
+          htmlFor="dni"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          DNI
+        </label>
+        <input
+          type="text"
+          id="dni"
+          {...register("dni")}
+          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          placeholder="Ingresa el número de DNI"
+        />
+        {errors.dni && (
+          <p className="mt-1 text-sm text-red-600">{errors.dni.message}</p>
+        )}
+      </div>
+
+      {/* Equipo (solo si no viene de contexto) */}
+      {!propTeamId && (
+        <div>
+          <label
+            htmlFor="teamId"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {isPending ? "Registrando..." : "Registrar Jugador"}
-          </button>
+            Equipo
+          </label>
+          <select
+            id="teamId"
+            {...register("teamId")}
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">Sin equipo</option>
+            {teams.map((team) => (
+              <option key={team._id} value={team._id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
         </div>
-      </form>
-    );
-  }
+      )}
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+      >
+        {isPending ? "Registrando..." : "Registrar Jugador"}
+      </button>
+    </form>
+  );
+
+  if (hideLayout) return FormCore;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -270,7 +232,7 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
       <main className="container mx-auto py-8 px-4">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate(getBackRoute())}
+            onClick={() => navigate(backRoute)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
@@ -281,171 +243,17 @@ const RegisterPlayer: React.FC<RegisterPlayerProps> = ({
             <h1 className="text-2xl font-bold text-gray-800">
               Registrar Jugador
             </h1>
-            <p className="text-gray-600">Crea una nueva cuenta de jugador</p>
+            <p className="text-gray-600">
+              Crea un nuevo usuario con rol Player
+            </p>
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white rounded-lg shadow p-6"
-          >
-            {/* Datos Personales */}
-            <div className="mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
-                Datos Personales
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center gap-6">
-                  <div
-                    onClick={handleImageClick}
-                    className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
-                  >
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <UploadIcon className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <div className="flex-1">
-                    <label
-                      htmlFor="name"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Nombre Completo
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Teléfono
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Datos de Inicio de Sesión */}
-            <div className="mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
-                Datos de Inicio de Sesión
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Correo Electrónico
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Contraseña
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Selección de Equipo */}
-            <div className="mb-8">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Equipo</h2>
-              <div>
-                <select
-                  id="teamId"
-                  name="teamId"
-                  required
-                  value={formData.teamId}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  disabled={!!propTeamId}
-                >
-                  {propTeamId ? (
-                    teams
-                      .filter((team) => team._id === propTeamId)
-                      .map((team) => (
-                        <option key={team._id} value={team._id}>
-                          {team.name}
-                        </option>
-                      ))
-                  ) : (
-                    <>
-                      <option value="">Selecciona un equipo</option>
-                      {teams.map((team) => (
-                        <option key={team._id} value={team._id}>
-                          {team.name}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <button
-                type="submit"
-                disabled={isPending}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-              >
-                {isPending ? "Registrando..." : "Registrar Jugador"}
-              </button>
-            </div>
-          </form>
+        <div className="max-w-lg mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 bg-blue-600 text-white">
+            <h1 className="text-xl font-bold">Nuevo Jugador</h1>
+          </div>
+          <div className="p-6">{FormCore}</div>
         </div>
       </main>
     </div>

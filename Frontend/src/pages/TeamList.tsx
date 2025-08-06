@@ -239,7 +239,7 @@ const TeamList: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -274,7 +274,10 @@ const TeamList: React.FC = () => {
                       ))}
                     </select>
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Jugadores
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -326,32 +329,24 @@ const TeamList: React.FC = () => {
                         <span className="text-gray-400">Sin divisiones</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => navigate(`/teams/${team._id}/players`)}
-                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 mr-3"
+                        className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
                         title="Ver jugadores"
                       >
                         <UsersIcon size={16} />
-                        <span>Ver Jugadores ({team.players?.length || 0})</span>
+                        <span>Ver los {team.players?.length || 0} jugadores</span>
                       </button>
-
-                      <button
-                        onClick={() => navigate(`/teams/${team._id}/edit`)}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 mr-3"
-                        title="Editar equipo"
-                      >
-                        <PencilIcon size={16} />
-                        <span>Editar</span>
-                      </button>
-
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleDeleteTeam(team._id)}
                         disabled={isDeleting || isDeleteLoading}
                         className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 disabled:text-red-300"
                         title="Eliminar equipo"
                       >
-                        <Trash2Icon size={16} />
+                        <Trash2Icon size={18} />
                       </button>
                     </td>
                   </tr>
