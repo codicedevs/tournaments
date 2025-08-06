@@ -109,7 +109,18 @@ const RegistrationForm: React.FC = () => {
   // Función para manejar la selección de equipo con teclado
   const handleTeamKeyDown = (e: React.KeyboardEvent) => {
     if (!isTeamDropdownOpen) {
-      if (e.key === "Enter" || e.key === "ArrowDown") {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const values = getValues();
+        // Si ya hay un equipo seleccionado en el input, agregarlo directamente
+        if (values.teamId) {
+          handleAddTeam();
+        } else {
+          // Abrir el dropdown para seleccionar
+          setIsTeamDropdownOpen(true);
+          setSelectedTeamIndex(0);
+        }
+      } else if (e.key === "ArrowDown") {
         e.preventDefault();
         setIsTeamDropdownOpen(true);
         setSelectedTeamIndex(0);
