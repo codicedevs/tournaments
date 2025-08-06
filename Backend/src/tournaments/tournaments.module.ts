@@ -4,12 +4,17 @@ import { Tournament, TournamentSchema } from './entities/tournament.entity';
 import { Phase, PhaseSchema } from '../phases/entities/phase.entity';
 import { TournamentsService } from './tournaments.service';
 import { TournamentsController } from './tournaments.controller';
+import {
+  Registration,
+  RegistrationSchema,
+} from 'src/registrations/entities/registration.entity';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Tournament.name, schema: TournamentSchema },
       { name: Phase.name, schema: PhaseSchema },
+      { name: Registration.name, schema: RegistrationSchema },
     ]),
   ],
   providers: [TournamentsService],
