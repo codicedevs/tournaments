@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
-import { TrophyIcon, UsersIcon, UserIcon, EyeIcon } from "lucide-react";
+import { TrophyIcon, UserRound, EyeIcon, ShieldIcon } from "lucide-react";
 import PongGame from "./PongGame";
 
 const Dashboard: React.FC = () => {
@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
     {
       title: "Equipos",
       description: "Crear y gestionar equipos",
-      icon: <UsersIcon size={28} />,
+      icon: <ShieldIcon size={28} />,
       primaryAction: () => navigate("/teams"),
       secondaryAction: () => navigate("/teams/new"),
       primaryLabel: "Ver Equipos",
@@ -34,7 +34,7 @@ const Dashboard: React.FC = () => {
     {
       title: "Usuarios",
       description: "Crear y gestionar usuarios",
-      icon: <UserIcon size={28} />,
+      icon: <UserRound size={28} />,
       primaryAction: () => navigate("/users"),
       secondaryAction: () => navigate("/users/new"),
       primaryLabel: "Ver Usuarios",

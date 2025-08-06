@@ -1,6 +1,12 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeftIcon, PlusIcon, UserMinusIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  ShieldPlusIcon,
+  ShieldOffIcon,
+  UserMinusIcon,
+} from "lucide-react";
 import Header from "../components/layout/Header";
 import {
   useRegistrationsByTournament,
@@ -113,13 +119,22 @@ const TournamentRegistrations: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-end items-center mb-6">
+        <div className="flex justify-end items-center mb-6 gap-2">
+          {/* Registrar equipo existente en la división */}
           <button
             onClick={() => navigate(`/divisions/${tournamentId}/register-team`)}
+            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
+          >
+            <ShieldPlusIcon size={18} />
+            <span>Registrar Equipo</span>
+          </button>
+          {/* Crear nuevo equipo desde esta pantalla */}
+          <button
+            onClick={() => navigate(`/teams/new?tournamentId=${tournamentId}`)}
             className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
           >
             <PlusIcon size={18} />
-            <span>Registrar Equipo</span>
+            <span>Crear Equipo</span>
           </button>
         </div>
 
@@ -148,7 +163,7 @@ const TournamentRegistrations: React.FC = () => {
               }
               className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
             >
-              <PlusIcon size={18} />
+              <ShieldPlusIcon size={18} />
               <span>Registrar Primer Equipo</span>
             </button>
           </div>
@@ -171,16 +186,16 @@ const TournamentRegistrations: React.FC = () => {
                       }}
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Equipo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Entrenador
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fecha de Registro
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -217,26 +232,26 @@ const TournamentRegistrations: React.FC = () => {
                           onChange={() => toggleSelect(registration._id)}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                         {team.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                         {team.coach}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                         {new Date(
                           registration.registrationDate
-                        ).toLocaleDateString()}
+                        ).toLocaleDateString('es-ES')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                         <button
                           onClick={() =>
                             handleDeleteRegistration(registration._id)
                           }
                           className="inline-flex items-center gap-1 text-red-600 hover:text-red-800"
                         >
-                          <UserMinusIcon size={16} />
-                          <span>Eliminar</span>
+                          <ShieldOffIcon size={18} />
+                          <span>Quitar del torneo</span>
                         </button>
                       </td>
                     </tr>

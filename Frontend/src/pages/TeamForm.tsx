@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../components/layout/Header";
 import { ArrowLeftIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -40,6 +40,8 @@ interface TeamFormProps {
 const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   const navigate = useNavigate();
   const params = useParams();
+  const [searchParams] = useSearchParams();
+  const preselectedTournamentId = searchParams.get("tournamentId") || "";
   const { user: currentUser } = useApp();
 
   // Get teamId from URL params if not provided as prop
@@ -74,7 +76,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
     reset,
   } = useForm<TeamFormData>({
     resolver: zodResolver(teamSchema),
-    defaultValues: { tournamentId: "" },
+    defaultValues: { tournamentId: preselectedTournamentId },
   });
 
   // Watch the team name for validation
@@ -143,6 +145,11 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
     };
     delete teamData.tournamentId; // Not part of Team entity
 
+    // Decide to which page redirect after create
+    const redirectAfterCreate = preselectedTournamentId
+      ? `/divisions/${preselectedTournamentId}/registrations`
+      : "/teams";
+
     if (mode === "create") {
       createTeam(teamData, {
         onSuccess: (newTeam) => {
@@ -150,7 +157,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
             createRegistration(
               { teamId: newTeam._id, tournamentId: data.tournamentId },
               {
-                onSuccess: () => navigate("/teams"),
+                onSuccess: () => navigate(redirectAfterCreate),
                 onError: (error: any) => {
                   setFormError(
                     error.response?.data?.message ||
@@ -160,7 +167,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
               }
             );
           } else {
-            navigate("/teams");
+            navigate(redirectAfterCreate);
           }
         },
         onError: (error: any) => {
