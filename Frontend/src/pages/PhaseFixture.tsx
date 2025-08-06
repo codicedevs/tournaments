@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeftIcon, CalendarIcon, AlertTriangleIcon } from "lucide-react";
@@ -10,12 +10,13 @@ import { usePhaseMatchdays, useGenerateFixtures } from "../api/fixtureHooks";
 import { useDeleteMatchdaysByPhase } from "../api/fixtureHooks";
 import { useTournament } from "../api/tournamentHooks";
 import { useRegistrationsByTournament } from "../api/registrationHooks";
-import axios from "axios";
+import DatePicker from "react-datepicker";
+import { es } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
 
 const fixtureFormSchema = z.object({
   isLocalAway: z.boolean(),
-  startDate: z.string(),
-  weekDay: z.string(),
+  startDate: z.string().nonempty("La fecha es obligatoria"),
 });
 
 type FixtureFormData = z.infer<typeof fixtureFormSchema>;
@@ -35,12 +36,12 @@ const PhaseFixture: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm<FixtureFormData>({
     resolver: zodResolver(fixtureFormSchema),
     defaultValues: {
       isLocalAway: true,
       startDate: "",
-      weekDay: "",
     },
   });
 
@@ -81,7 +82,7 @@ const PhaseFixture: React.FC = () => {
         phaseId,
         isLocalAway: data.isLocalAway,
         startDate: data.startDate,
-        weekDay: data.weekDay,
+        weekDay: new Date(data.startDate).getDay().toString(),
       },
       {
         onSuccess: () => {
@@ -109,7 +110,7 @@ const PhaseFixture: React.FC = () => {
           phaseId,
           isLocalAway: pendingData.isLocalAway,
           startDate: pendingData.startDate,
-          weekDay: pendingData.weekDay,
+          weekDay: new Date(pendingData.startDate).getDay().toString(),
         },
         {
           onSuccess: () => {
@@ -199,48 +200,30 @@ const PhaseFixture: React.FC = () => {
                   </p>
                 </div>
                 <div className="mb-4">
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="startDate"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Fecha de inicio
                   </label>
-                  <input
-                    id="startDate"
-                    type="date"
-                    {...register("startDate")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  <Controller
+                    control={control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <DatePicker
+                        locale={es}
+                        dateFormat="dd/MM/yyyy"
+                        selected={field.value ? new Date(field.value) : null}
+                        onChange={(date: Date | null) =>
+                          field.onChange(
+                            date ? date.toISOString().split("T")[0] : ""
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholderText="dd/mm/aaaa"
+                      />
+                    )}
                   />
                   {errors.startDate && (
                     <p className="mt-1 text-sm text-red-600">
                       {errors.startDate.message}
-                    </p>
-                  )}
-                </div>
-                <div className="mb-4">
-                  <label
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                    htmlFor="weekDay"
-                  >
-                    Día de la semana
-                  </label>
-                  <select
-                    id="weekDay"
-                    {...register("weekDay")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Seleccione un día</option>
-                    <option value="0">Domingo</option>
-                    <option value="1">Lunes</option>
-                    <option value="2">Martes</option>
-                    <option value="3">Miércoles</option>
-                    <option value="4">Jueves</option>
-                    <option value="5">Viernes</option>
-                    <option value="6">Sábado</option>
-                  </select>
-                  {errors.weekDay && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.weekDay.message}
                     </p>
                   )}
                 </div>
