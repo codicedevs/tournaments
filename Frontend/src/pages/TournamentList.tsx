@@ -12,13 +12,28 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { useTournaments, useDeleteTournament } from "../api/tournamentHooks";
+import { useRegistrations } from "../api/registrationHooks";
 
 const TournamentList: React.FC = () => {
   const navigate = useNavigate();
   const { data: tournaments = [], isLoading, isError } = useTournaments();
   const { mutate: deleteTournament, isPending: isDeleting } =
     useDeleteTournament();
+  const { data: registrations = [] } = useRegistrations();
   const [selected, setSelected] = React.useState<string[]>([]);
+
+  // Map to hold number of teams registered per tournament
+  const registrationsByTournament = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    registrations.forEach((reg) => {
+      const tid =
+        typeof reg.tournamentId === "string"
+          ? reg.tournamentId
+          : (reg.tournamentId as any)._id;
+      map[tid] = (map[tid] || 0) + 1;
+    });
+    return map;
+  }, [registrations]);
 
   const handleSelect = (id: string) => {
     setSelected((prev) =>
@@ -248,7 +263,7 @@ const TournamentList: React.FC = () => {
               >
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-1">
                     <div className="flex-1">
                       <h3 className="text-3xl font-bold mb-2">
                         {tournament.name}
@@ -261,6 +276,20 @@ const TournamentList: React.FC = () => {
                             Con Fases
                           </span>
                         )} */}
+                      </div>
+
+                      {/* Registered teams count */}
+                      <div className="flex items-center gap-2 text-white mt-3">
+                        <ShieldIcon size={16} className="text-white" />
+                        <span className="text-sm font-medium">
+                          {registrationsByTournament[tournament._id] || 0}{" "}
+                          equipo
+                          {(registrationsByTournament[tournament._id] || 0) ===
+                          1
+                            ? ""
+                            : "s"}{" "}
+                          registrados
+                        </span>
                       </div>
                     </div>
                     <input
