@@ -5,7 +5,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-import * as fs from "fs";
+import * as fs from 'fs';
 /**
  * Obtiene la configuración del protocolo del servidor, http o https según si encuentra los certificados o no.
  * @returns Devuelve los parámetros para la configuración del protocolo
@@ -59,5 +59,6 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(process.env.PORT ?? 6969);
+  console.log(`Server is running on port ${process.env.PORT ?? 6969}`);
 }
 bootstrap();
