@@ -187,9 +187,21 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     if (
       mode === "edit" &&
       initialData?.role === UserRole.PLAYER &&
-      playerData?.teamId !== undefined
+      playerData &&
+      Array.isArray(playerData) &&
+      playerData.length > 0
     ) {
-      setValue("teamId", playerData.teamId ?? "");
+      const player = playerData[0] as any; // API returns an array of Players
+      // teamId puede venir como ObjectId o como objeto poblado.
+      let resolvedTeamId: string | undefined;
+      if (player.teamId) {
+        if (typeof player.teamId === "string") {
+          resolvedTeamId = player.teamId;
+        } else if (typeof player.teamId === "object") {
+          resolvedTeamId = player.teamId._id ?? player.teamId.id;
+        }
+      }
+      setValue("teamId", resolvedTeamId ?? "");
     }
   }, [mode, initialData?.role, playerData, setValue]);
 
@@ -577,7 +589,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={dayPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(e.target.value, monthPart, yearPart))
+                              field.onChange(
+                                buildDate(e.target.value, monthPart, yearPart)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
@@ -596,7 +610,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={monthPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(dayPart, e.target.value, yearPart))
+                              field.onChange(
+                                buildDate(dayPart, e.target.value, yearPart)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
@@ -625,13 +641,17 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={yearPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(dayPart, monthPart, e.target.value))
+                              field.onChange(
+                                buildDate(dayPart, monthPart, e.target.value)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
                             <option value="">Año</option>
                             {Array.from({ length: 121 }, (_, i) => {
-                              const yr = (new Date().getFullYear() - i).toString();
+                              const yr = (
+                                new Date().getFullYear() - i
+                              ).toString();
                               return (
                                 <option key={yr} value={yr}>
                                   {yr}
