@@ -1,9 +1,10 @@
-// Archivo de configuración centralizado para la URL base de la API
-// export const API_BASE_URL = "http://192.168.1.8:3000";
-// export const API_BASE_URL = "https://tournaments.tera.ar";
-// export const API_BASE_URL = "http://localhost:6969";
+console.log("🔧 Environment variables:", {
+  VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+  MODE: import.meta.env.MODE,
+});
+
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:6969";
+  import.meta.env.VITE_API_BASE_URL || "https://torneosloyal.ar";
 
 // Contraseñas por rol - desde variables de entorno
 export const ROLE_PASSWORDS = {

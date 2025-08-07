@@ -87,6 +87,40 @@ async function bootstrap() {
   app.enableCors({
     origin: true, // Permite todos los orígenes en desarrollo
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+    ],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  // Middleware para manejar preflight requests específicamente para móviles
+  app.use((req, res, next) => {
+    // Log para diagnosticar problemas móviles
+    console.log(`📱 Request: ${req.method} ${req.url}`);
+    console.log(`📱 User-Agent: ${req.headers['user-agent']}`);
+    console.log(`📱 Origin: ${req.headers.origin}`);
+    console.log(`📱 Host: ${req.headers.host}`);
+
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      );
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, X-Requested-With, Accept',
+      );
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.status(204).end();
+      return;
+    }
+    next();
   });
 
   // Set up validation
