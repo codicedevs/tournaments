@@ -9,15 +9,13 @@ import { NavLink } from "react-router-dom";
 
 export function MobileNavigation() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-10">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-200 md:hidden z-10">
       <div className="grid grid-cols-3 h-16">
         <NavLink
           to="/"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center space-y-1 ${
-              isActive
-                ? "text-black"
-                : "text-gray-500 hover:text-indigo-600"
+              isActive ? "text-white" : "text-gray-400 hover:text-indigo-600"
             }`
           }
         >
@@ -29,9 +27,7 @@ export function MobileNavigation() {
           to="/fixture"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center space-y-1 ${
-              isActive
-                ? "text-black"
-                : "text-gray-500 hover:text-indigo-600"
+              isActive ? "text-white" : "text-gray-400 hover:text-indigo-600"
             }`
           }
         >
@@ -43,9 +39,7 @@ export function MobileNavigation() {
           to="/teams"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center space-y-1 ${
-              isActive
-                ? "text-black"
-                : "text-gray-500 hover:text-indigo-600"
+              isActive ? "text-white" : "text-gray-400 hover:text-indigo-600"
             }`
           }
         >
@@ -57,9 +51,7 @@ export function MobileNavigation() {
           to="/account"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center space-y-1 ${
-              isActive
-                ? "text-black"
-                : "text-gray-500 hover:text-indigo-600"
+              isActive ? "text-white" : "text-gray-400 hover:text-indigo-600"
             }`
           }
         >
