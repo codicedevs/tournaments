@@ -150,7 +150,7 @@ const PhaseDetail: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate(`/divisions`)}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -216,12 +216,12 @@ const PhaseDetail: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="ml-auto flex gap-3">
+          <div className="sm:ml-auto flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() =>
                 navigate(`/divisions/${tournamentId}/registrations`)
               }
-              className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
+              className="flex items-center justify-center gap-1 w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
             >
               <UsersIcon size={16} />
               <span>Administrar Equipos</span>
@@ -231,7 +231,7 @@ const PhaseDetail: React.FC = () => {
             </button>
             <button
               onClick={handleResetStats}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 border border-red-600 rounded-md hover:bg-red-50"
+              className="flex items-center justify-center gap-1 w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 border border-red-600 rounded-md hover:bg-red-50 transition"
             >
               <TrashIcon size={16} />
               Resetear Estadísticas

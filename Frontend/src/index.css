@@ -1,3 +1,10 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+/* Reserve space for mobile bottom navigation so content is not hidden */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 64px; /* same or larger than nav height */
+  }
+}

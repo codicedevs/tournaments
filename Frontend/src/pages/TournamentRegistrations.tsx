@@ -98,7 +98,7 @@ const TournamentRegistrations: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/divisions")}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -119,11 +119,11 @@ const TournamentRegistrations: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-end items-center mb-6 gap-2">
+        <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2 sm:gap-3 mb-6 w-full sm:w-auto">
           {/* Registrar equipo existente en la división */}
           <button
             onClick={() => navigate(`/divisions/${tournamentId}/register-team`)}
-            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition"
+            className="flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
           >
             <ShieldPlusIcon size={18} />
             <span>Registrar Equipo</span>
@@ -131,7 +131,7 @@ const TournamentRegistrations: React.FC = () => {
           {/* Crear nuevo equipo desde esta pantalla */}
           <button
             onClick={() => navigate(`/teams/new?tournamentId=${tournamentId}`)}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+            className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
           >
             <PlusIcon size={18} />
             <span>Crear Equipo</span>
@@ -168,8 +168,8 @@ const TournamentRegistrations: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3">
@@ -232,18 +232,18 @@ const TournamentRegistrations: React.FC = () => {
                           onChange={() => toggleSelect(registration._id)}
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 text-center">
                         {team.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900 text-center">
                         {team.coach}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-center">
                         {new Date(
                           registration.registrationDate
                         ).toLocaleDateString('es-ES')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
                         <button
                           onClick={() =>
                             handleDeleteRegistration(registration._id)

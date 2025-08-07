@@ -53,7 +53,7 @@ const UserList: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/dashboard")}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -71,12 +71,12 @@ const UserList: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
             {selected.length > 0 && (
               <button
                 onClick={handleDeleteSelected}
-                className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+                className="flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
               >
                 <Trash2Icon size={18} />
                 <span>
@@ -87,7 +87,7 @@ const UserList: React.FC = () => {
           </div>
           <button
             onClick={() => navigate("/users/new")}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+            className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
           >
             <PlusIcon size={18} />
             <span>Crear Usuario</span>
@@ -114,7 +114,7 @@ const UserList: React.FC = () => {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full text-xs sm:text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left">
@@ -176,19 +176,19 @@ const UserList: React.FC = () => {
                       />
                     </td>
                     <td
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-gray-900 cursor-pointer"
                       onClick={() => navigate(`/users/${user._id}/edit`)}
                     >
                       {user.name}
                     </td>
                     <td
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-gray-900 cursor-pointer"
                       onClick={() => navigate(`/users/${user._id}/edit`)}
                     >
                       {user.email}
                     </td>
                     <td
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                      className="px-6 py-4 whitespace-nowrap text-gray-900 cursor-pointer"
                       onClick={() => navigate(`/users/${user._id}/edit`)}
                     >
                       {roleLabels[user.role as UserRole] || user.role}

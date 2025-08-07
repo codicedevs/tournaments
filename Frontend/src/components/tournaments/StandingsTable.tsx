@@ -10,34 +10,34 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
     <div className="bg-white rounded-lg shadow p-4">
       <h2 className="text-lg font-bold mb-4">Tabla de Posiciones</h2>
       <div className="overflow-x-auto w-full">
-        <table className="min-w-[700px] text-sm text-left">
+        <table className="w-full text-xs sm:text-sm text-left">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Equipo
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 PJ
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 G
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 E
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 P
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 GF
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 GC
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 DG
               </th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-2 sm:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Pts
               </th>
             </tr>
@@ -64,31 +64,31 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
 
               return (
                 <tr key={team._id}>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                     {team.name}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {played}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {stats.wins}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {stats.draws}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {stats.losses}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {stats.goalsFor}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {stats.goalsAgainst}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {goalDiff}
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-center font-medium text-gray-900">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center font-medium text-gray-900">
                     {points}
                   </td>
                 </tr>

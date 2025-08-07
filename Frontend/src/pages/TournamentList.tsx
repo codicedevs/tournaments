@@ -90,7 +90,7 @@ const TournamentList: React.FC = () => {
       <Header />
       <main className="container mx-auto py-8 px-4">
         {/* Header Section */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
           <button
             onClick={() => navigate("/dashboard")}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -183,7 +183,7 @@ const TournamentList: React.FC = () => {
         </div> */}
 
         {/* Action Bar */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
               Lista de Divisiones
@@ -193,12 +193,12 @@ const TournamentList: React.FC = () => {
               disponible{tournaments.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {selected.length > 0 && (
               <button
                 onClick={handleDeleteSelected}
                 disabled={isDeleting}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition disabled:opacity-50 font-semibold hover:shadow-xl"
+                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition disabled:opacity-50 font-semibold hover:shadow-xl w-full sm:w-auto"
               >
                 <Trash2Icon size={18} />
                 <span>Borrar {selected.length}</span>
@@ -206,7 +206,7 @@ const TournamentList: React.FC = () => {
             )}
             <button
               onClick={() => navigate("/divisions/new")}
-              className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-lg font-semibold transition shadow-lg hover:shadow-xl"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-3 rounded-lg font-semibold transition shadow-lg hover:shadow-xl w-full sm:w-auto"
             >
               <PlusIcon size={18} />
               <span>Crear División</span>
