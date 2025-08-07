@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import defaultAvatar from "../../assets/LoyalLeague2.png?url";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 import { ArrowLeftIcon, ShieldIcon, UploadIcon, XIcon } from "lucide-react";
@@ -58,9 +59,11 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
 
   // Estados para archivos
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    defaultAvatar
+  );
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
-    null
+    defaultAvatar
   );
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [pdfUrls, setPdfUrls] = useState<string[]>([]);
@@ -189,8 +192,8 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         isVerified: initialData.isVerified || false,
         isBlacklisted: initialData.isBlacklisted || false,
       });
-      setProfilePictureUrl(initialData.profilePicture || null);
-      setAvatarPreview(initialData.profilePicture || null);
+      setProfilePictureUrl(initialData.profilePicture || defaultAvatar);
+      setAvatarPreview(initialData.profilePicture || defaultAvatar);
       setUploadedPdfs(initialData.pdfs || []);
     }
   }, [mode, initialData, reset]);
@@ -431,15 +434,11 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
               onClick={handleAvatarClick}
               title="Seleccionar avatar"
             >
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Avatar preview"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-gray-400">Avatar</span>
-              )}
+              <img
+                src={avatarPreview || defaultAvatar}
+                alt="Avatar preview"
+                className="w-full h-full rounded-full object-cover"
+              />
             </div>
             <input
               type="file"
