@@ -9,7 +9,7 @@ import { NavLink } from "react-router-dom";
 
 export function MobileNavigation() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-200 md:hidden z-10">
+    <nav className="fixed bottom-0 left-0 right-0 bg-black md:hidden z-10">
       <div className="grid grid-cols-3 h-16">
         <NavLink
           to="/"
