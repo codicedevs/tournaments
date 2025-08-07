@@ -4,7 +4,8 @@ import LoyalLogo from "../assets/LoyalLeague2.png?url";
 export function Header() {
   // const { user } = useApp();
   return (
-    <header className="bg-black text-white w-full fixed top-0 left-0 z-50 shadow-md">
+    // Header será fijo solo en pantallas medianas en adelante
+    <header className="bg-black text-white w-full md:fixed md:top-0 md:left-0 md:z-50 md:shadow-md">
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
         <img src={LoyalLogo} alt="Torneo Loyal" className="h-10 w-auto" />
         {/* Desktop navigation */}
