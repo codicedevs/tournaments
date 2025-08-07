@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
 import { ArrowLeftIcon, UploadIcon, XIcon } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -108,6 +108,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     setError,
     reset,
     trigger,
+    control,
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -553,10 +554,96 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Fecha de Nacimiento
               </label>
-              <input
-                type="date"
-                {...register("birthDate")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              <Controller
+                control={control}
+                name="birthDate"
+                render={({ field }) => (
+                  <div className="flex gap-2">
+                    {(() => {
+                      const dateOnly = field.value
+                        ? field.value.split("T")[0]
+                        : "";
+                      const [yearPart = "", monthPart = "", dayPart = ""] =
+                        dateOnly.split("-");
+
+                      const buildDate = (d: string, m: string, y: string) =>
+                        y && m && d
+                          ? `${y}-${m}-${d}`
+                          : `${y}${m ? `-${m}` : ""}${d ? `-${d}` : ""}`;
+
+                      return (
+                        <>
+                          {/* Día */}
+                          <select
+                            value={dayPart}
+                            onChange={(e) =>
+                              field.onChange(buildDate(e.target.value, monthPart, yearPart))
+                            }
+                            className="border px-2 py-2 rounded w-full"
+                          >
+                            <option value="">Día</option>
+                            {Array.from({ length: 31 }, (_, i) => (
+                              <option
+                                key={i + 1}
+                                value={(i + 1).toString().padStart(2, "0")}
+                              >
+                                {i + 1}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* Mes */}
+                          <select
+                            value={monthPart}
+                            onChange={(e) =>
+                              field.onChange(buildDate(dayPart, e.target.value, yearPart))
+                            }
+                            className="border px-2 py-2 rounded w-full"
+                          >
+                            <option value="">Mes</option>
+                            {[
+                              { value: "01", label: "Ene" },
+                              { value: "02", label: "Feb" },
+                              { value: "03", label: "Mar" },
+                              { value: "04", label: "Abr" },
+                              { value: "05", label: "May" },
+                              { value: "06", label: "Jun" },
+                              { value: "07", label: "Jul" },
+                              { value: "08", label: "Ago" },
+                              { value: "09", label: "Sep" },
+                              { value: "10", label: "Oct" },
+                              { value: "11", label: "Nov" },
+                              { value: "12", label: "Dic" },
+                            ].map((m) => (
+                              <option key={m.value} value={m.value}>
+                                {m.label}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* Año */}
+                          <select
+                            value={yearPart}
+                            onChange={(e) =>
+                              field.onChange(buildDate(dayPart, monthPart, e.target.value))
+                            }
+                            className="border px-2 py-2 rounded w-full"
+                          >
+                            <option value="">Año</option>
+                            {Array.from({ length: 121 }, (_, i) => {
+                              const yr = (new Date().getFullYear() - i).toString();
+                              return (
+                                <option key={yr} value={yr}>
+                                  {yr}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               />
               {errors.birthDate && (
                 <div className="text-red-600 text-sm mt-1">

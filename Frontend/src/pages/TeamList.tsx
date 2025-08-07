@@ -5,10 +5,9 @@ import {
   PlusIcon,
   ArrowLeftIcon,
   Trash2Icon,
-  PencilIcon,
   UserPlusIcon,
   UsersIcon,
-  SearchIcon,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useTeams, useDeleteTeam, useDeleteTeams } from "../api/teamHooks";
 import { useTeamsWithRegistrations } from "../api/teamHooks";
@@ -200,9 +199,9 @@ const TeamList: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={handleOpenTransfer}
-              className="flex items-center gap-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md transition"
+              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition"
             >
-              <UserPlusIcon size={18} />
+              <ArrowRightLeft size={18} />
               <span>Transferir Jugador</span>
             </button>
             <button
@@ -308,13 +307,13 @@ const TeamList: React.FC = () => {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 ">
                       {team.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {team.coach || "Sin entrenador"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                       {team.registrations && team.registrations.length > 0 ? (
                         <div className="space-y-1">
                           {team.registrations.map((registration: any) => (
@@ -336,7 +335,9 @@ const TeamList: React.FC = () => {
                         title="Ver jugadores"
                       >
                         <UsersIcon size={16} />
-                        <span>Ver los {team.players?.length || 0} jugadores</span>
+                        <span>
+                          Ver los {team.players?.length || 0} jugadores
+                        </span>
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">

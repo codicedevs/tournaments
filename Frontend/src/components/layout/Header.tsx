@@ -3,14 +3,14 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import {
   LogOutIcon,
-  HomeIcon,
   SettingsIcon,
   TrophyIcon,
-  UsersIcon,
+  UserRound,
   ShieldIcon,
   ChevronDownIcon,
   MenuIcon,
   XIcon,
+  VolleyballIcon,
 } from "lucide-react";
 
 const Header: React.FC = () => {
@@ -68,7 +68,7 @@ const Header: React.FC = () => {
             to="/dashboard"
             className="text-lg md:text-xl font-bold flex items-center gap-2 hover:text-blue-100 transition"
           >
-            <HomeIcon size={20} className="md:w-6 md:h-6" />
+            <VolleyballIcon size={30} className="md:w-9 md:h-9" />
             <span className="hidden sm:inline">Sistema de Torneos</span>
             <span className="sm:hidden">Sistema</span>
           </Link>
@@ -84,7 +84,7 @@ const Header: React.FC = () => {
                 : "text-blue-100 hover:bg-blue-700 hover:text-white"
             }`}
           >
-            <TrophyIcon size={16} />
+            <TrophyIcon size={28} />
             <span>Divisiones</span>
           </Link>
 
@@ -96,7 +96,7 @@ const Header: React.FC = () => {
                 : "text-blue-100 hover:bg-blue-700 hover:text-white"
             }`}
           >
-            <ShieldIcon size={16} />
+            <ShieldIcon size={28} />
             <span>Equipos</span>
           </Link>
 
@@ -108,7 +108,7 @@ const Header: React.FC = () => {
                 : "text-blue-100 hover:bg-blue-700 hover:text-white"
             }`}
           >
-            <UsersIcon size={16} />
+            <UserRound size={28} />
             <span>Usuarios</span>
           </Link>
         </nav>
@@ -213,7 +213,7 @@ const Header: React.FC = () => {
                   : "text-blue-100 hover:bg-blue-700 hover:text-white"
               }`}
             >
-              <UsersIcon size={18} />
+              <UserRound size={18} />
               <span>Usuarios</span>
             </Link>
 
