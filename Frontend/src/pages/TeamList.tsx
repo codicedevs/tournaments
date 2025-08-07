@@ -162,7 +162,7 @@ const TeamList: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="container mx-auto py-8 px-4">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/dashboard")}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
@@ -183,7 +183,7 @@ const TeamList: React.FC = () => {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
           <div>
             {selectedTeams.length > 0 && (
               <button
@@ -196,17 +196,17 @@ const TeamList: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={handleOpenTransfer}
-              className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition"
+              className="flex items-center justify-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
             >
               <ArrowRightLeft size={18} />
               <span>Transferir Jugador</span>
             </button>
             <button
               onClick={() => navigate("/teams/new")}
-              className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+              className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
             >
               <PlusIcon size={18} />
               <span>Crear Equipo</span>
@@ -239,7 +239,7 @@ const TeamList: React.FC = () => {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="w-full text-xs sm:text-sm divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="w-10 px-6 py-3 text-left">
@@ -307,13 +307,13 @@ const TeamList: React.FC = () => {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 ">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 ">
                       {team.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500">
                       {team.coach || "Sin entrenador"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-center">
                       {team.registrations && team.registrations.length > 0 ? (
                         <div className="space-y-1">
                           {team.registrations.map((registration: any) => (
@@ -328,7 +328,7 @@ const TeamList: React.FC = () => {
                         <span className="text-gray-400">Sin divisiones</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-center">
                       <button
                         onClick={() => navigate(`/teams/${team._id}/players`)}
                         className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
@@ -340,7 +340,7 @@ const TeamList: React.FC = () => {
                         </span>
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-500 text-center">
                       <button
                         onClick={() => handleDeleteTeam(team._id)}
                         disabled={isDeleting || isDeleteLoading}
