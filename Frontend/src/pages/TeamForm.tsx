@@ -14,6 +14,7 @@ import {
 import { useApp } from "../context/AppContext";
 import { useTournaments } from "../api/tournamentHooks";
 import { useCreateRegistration } from "../api/registrationHooks";
+import defaultTeamImage from "../assets/LoyalLeague2.png?url";
 
 const teamSchema = z.object({
   name: z.string().min(1, "El nombre del equipo es requerido"),
@@ -47,7 +48,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
   // Get teamId from URL params if not provided as prop
   const actualTeamId = teamId || params.teamId;
   const [formError, setFormError] = useState("");
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(defaultTeamImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -106,7 +107,7 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
           typeof team.profileImage === "string" ? team.profileImage : undefined,
       });
       setImagePreview(
-        typeof team.profileImage === "string" ? team.profileImage : null
+        typeof team.profileImage === "string" ? team.profileImage : defaultTeamImage
       );
     }
   }, [mode, team, reset]);
@@ -248,15 +249,11 @@ const TeamForm: React.FC<TeamFormProps> = ({ mode, teamId, initialData }) => {
               onClick={() => fileInputRef.current?.click()}
               title="Seleccionar escudo del equipo"
             >
-              {imagePreview ? (
-                <img
-                  src={imagePreview}
-                  alt="Escudo del equipo"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-gray-400">Escudo</span>
-              )}
+              <img
+                src={imagePreview || defaultTeamImage}
+                alt="Escudo del equipo"
+                className="w-full h-full rounded-full object-cover"
+              />
             </div>
             <input
               ref={fileInputRef}
