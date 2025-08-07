@@ -11,7 +11,7 @@ import {
   useUpdateUser,
 } from "../../api/userHooks";
 import { useTeams } from "../../api/teamHooks";
-import { usePlayerByUserId } from "../../api/playerHooks";
+import { usePlayerByUserId, useTransferPlayer } from "../../api/playerHooks";
 import { UserRole, roleLabels } from "../../models/User";
 import { ROLE_PASSWORDS } from "../../config";
 import { useApp } from "../../context/AppContext";
@@ -91,9 +91,25 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
   const { data: teams = [] } = useTeams();
   const { data: playerData } = usePlayerByUserId(userId);
 
-  const isPending = isCreatingWithPlayer || isCreatingUser || isUpdating;
-  const isError = isCreateWithPlayerError || isCreateUserError || isUpdateError;
-  const error = createWithPlayerError || createUserError || updateError;
+  const {
+    mutate: transferPlayer,
+    isPending: isTransfering,
+    isError: isTransferError,
+    error: transferError,
+  } = useTransferPlayer();
+
+  const isPending =
+    isCreatingWithPlayer || isCreatingUser || isUpdating || isTransfering;
+  const isError =
+    isCreateWithPlayerError ||
+    isCreateUserError ||
+    isUpdateError ||
+    isTransferError;
+  const error =
+    createWithPlayerError ||
+    createUserError ||
+    updateError ||
+    transferError;
 
   // Estado para manejar errores del formulario
   const [formError, setFormError] = useState<string>("");
@@ -266,6 +282,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         });
       }
     } else {
+      // --- Modo edición ---
       updateUser(
         {
           id: userId!,
@@ -273,11 +290,38 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         },
         {
           onSuccess: () => {
+            // Si es jugador y cambió de equipo, transferirlo
+            if (selectedRole === UserRole.PLAYER && playerData && Array.isArray(playerData) && playerData.length > 0) {
+              const currentPlayer = playerData[0] as any;
+              const currentTeamId = currentPlayer.teamId
+                ? typeof currentPlayer.teamId === "string"
+                  ? currentPlayer.teamId
+                  : currentPlayer.teamId._id ?? currentPlayer.teamId.id
+                : "";
+
+              if ((data.teamId || "") !== (currentTeamId || "")) {
+                transferPlayer(
+                  {
+                    playerId: currentPlayer._id,
+                    teamId: data.teamId || "",
+                  },
+                  {
+                    onSuccess: () => {
+                      setFormSuccess("Usuario y equipo actualizados exitosamente!");
+                      setTimeout(() => navigate("/users"), 2000);
+                    },
+                    onError: (error: any) => {
+                      handleFormError(error);
+                    },
+                  }
+                );
+                return; // Salir para evitar doble navegación
+              }
+            }
+
+            // Si no hubo transferencia, mostrar éxito normal
             setFormSuccess("Usuario actualizado exitosamente!");
-            // Navegar después de 2 segundos para que el usuario vea el mensaje
-            setTimeout(() => {
-              navigate("/users");
-            }, 2000);
+            setTimeout(() => navigate("/users"), 2000);
           },
           onError: (error: any) => {
             handleFormError(error, "dni");
