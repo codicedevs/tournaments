@@ -2,8 +2,7 @@ import axios from "axios";
 
 // Base URL can be configured via environment variable or default to localhost
 export const http = axios.create({
-  baseURL: "https://tournaments.tera.ar",
-  //baseURL: "http://localhost:6969",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://torneosloyal.ar",
   //withCredentials: true,
 });
 
