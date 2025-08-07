@@ -84,7 +84,10 @@ async function bootstrap() {
     protocol == 'https' ? { httpsOptions: { key, cert } } : undefined,
   );
   // Enable CORS
-  app.enableCors();
+  app.enableCors({
+    origin: true, // Permite todos los orígenes en desarrollo
+    credentials: true,
+  });
 
   // Set up validation
   app.useGlobalPipes(new ValidationPipe({ transform: true }));

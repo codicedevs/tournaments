@@ -13,6 +13,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Body() signInDto: SignInDto) {
+    console.log('login', signInDto);
     return this.authService.login(signInDto);
   }
 
