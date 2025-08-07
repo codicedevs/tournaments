@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
-import { ArrowLeftIcon, UploadIcon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, ShieldIcon, UploadIcon, XIcon } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import {
   useUpdateUser,
 } from "../../api/userHooks";
 import { useTeams } from "../../api/teamHooks";
-import { usePlayerByUserId } from "../../api/playerHooks";
+import { usePlayerByUserId, useTransferPlayer } from "../../api/playerHooks";
 import { UserRole, roleLabels } from "../../models/User";
 import { ROLE_PASSWORDS } from "../../config";
 import { useApp } from "../../context/AppContext";
@@ -91,9 +91,22 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
   const { data: teams = [] } = useTeams();
   const { data: playerData } = usePlayerByUserId(userId);
 
-  const isPending = isCreatingWithPlayer || isCreatingUser || isUpdating;
-  const isError = isCreateWithPlayerError || isCreateUserError || isUpdateError;
-  const error = createWithPlayerError || createUserError || updateError;
+  const {
+    mutate: transferPlayer,
+    isPending: isTransfering,
+    isError: isTransferError,
+    error: transferError,
+  } = useTransferPlayer();
+
+  const isPending =
+    isCreatingWithPlayer || isCreatingUser || isUpdating || isTransfering;
+  const isError =
+    isCreateWithPlayerError ||
+    isCreateUserError ||
+    isUpdateError ||
+    isTransferError;
+  const error =
+    createWithPlayerError || createUserError || updateError || transferError;
 
   // Estado para manejar errores del formulario
   const [formError, setFormError] = useState<string>("");
@@ -187,9 +200,21 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     if (
       mode === "edit" &&
       initialData?.role === UserRole.PLAYER &&
-      playerData?.teamId !== undefined
+      playerData &&
+      Array.isArray(playerData) &&
+      playerData.length > 0
     ) {
-      setValue("teamId", playerData.teamId ?? "");
+      const player = playerData[0] as any; // API returns an array of Players
+      // teamId puede venir como ObjectId o como objeto poblado.
+      let resolvedTeamId: string | undefined;
+      if (player.teamId) {
+        if (typeof player.teamId === "string") {
+          resolvedTeamId = player.teamId;
+        } else if (typeof player.teamId === "object") {
+          resolvedTeamId = player.teamId._id ?? player.teamId.id;
+        }
+      }
+      setValue("teamId", resolvedTeamId ?? "");
     }
   }, [mode, initialData?.role, playerData, setValue]);
 
@@ -254,6 +279,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         });
       }
     } else {
+      // --- Modo edición ---
       updateUser(
         {
           id: userId!,
@@ -261,11 +287,45 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         },
         {
           onSuccess: () => {
+            // Si es jugador y cambió de equipo, transferirlo
+            if (
+              selectedRole === UserRole.PLAYER &&
+              playerData &&
+              Array.isArray(playerData) &&
+              playerData.length > 0
+            ) {
+              const currentPlayer = playerData[0] as any;
+              const currentTeamId = currentPlayer.teamId
+                ? typeof currentPlayer.teamId === "string"
+                  ? currentPlayer.teamId
+                  : currentPlayer.teamId._id ?? currentPlayer.teamId.id
+                : "";
+
+              if ((data.teamId || "") !== (currentTeamId || "")) {
+                transferPlayer(
+                  {
+                    playerId: currentPlayer._id,
+                    teamId: data.teamId || "",
+                  },
+                  {
+                    onSuccess: () => {
+                      setFormSuccess(
+                        "Usuario y equipo actualizados exitosamente!"
+                      );
+                      setTimeout(() => navigate("/users"), 2000);
+                    },
+                    onError: (error: any) => {
+                      handleFormError(error);
+                    },
+                  }
+                );
+                return; // Salir para evitar doble navegación
+              }
+            }
+
+            // Si no hubo transferencia, mostrar éxito normal
             setFormSuccess("Usuario actualizado exitosamente!");
-            // Navegar después de 2 segundos para que el usuario vea el mensaje
-            setTimeout(() => {
-              navigate("/users");
-            }, 2000);
+            setTimeout(() => navigate("/users"), 2000);
           },
           onError: (error: any) => {
             handleFormError(error, "dni");
@@ -485,6 +545,26 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
               </div>
             )}
 
+            {/* Equipo solo para jugadores */}
+            {selectedRole === "Player" && (
+              <div className="mb-4">
+                <label className="block text-lg font-medium text-gray-700 mb-1">
+                  EQUIPO <ShieldIcon className="inline" />
+                </label>
+                <select
+                  {...register("teamId")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Sin equipo</option>
+                  {teams.map((team: any) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Información básica */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -577,7 +657,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={dayPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(e.target.value, monthPart, yearPart))
+                              field.onChange(
+                                buildDate(e.target.value, monthPart, yearPart)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
@@ -596,7 +678,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={monthPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(dayPart, e.target.value, yearPart))
+                              field.onChange(
+                                buildDate(dayPart, e.target.value, yearPart)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
@@ -625,13 +709,17 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                           <select
                             value={yearPart}
                             onChange={(e) =>
-                              field.onChange(buildDate(dayPart, monthPart, e.target.value))
+                              field.onChange(
+                                buildDate(dayPart, monthPart, e.target.value)
+                              )
                             }
                             className="border px-2 py-2 rounded w-full"
                           >
                             <option value="">Año</option>
                             {Array.from({ length: 121 }, (_, i) => {
-                              const yr = (new Date().getFullYear() - i).toString();
+                              const yr = (
+                                new Date().getFullYear() - i
+                              ).toString();
                               return (
                                 <option key={yr} value={yr}>
                                   {yr}
@@ -719,26 +807,6 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                 <p className="text-xs text-blue-600 mt-1">
                   El usuario deberá cambiar esta contraseña en su primer login.
                 </p>
-              </div>
-            )}
-
-            {/* Equipo solo para jugadores */}
-            {selectedRole === "Player" && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Equipo (opcional)
-                </label>
-                <select
-                  {...register("teamId")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Sin equipo</option>
-                  {teams.map((team: any) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
               </div>
             )}
 

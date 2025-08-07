@@ -224,6 +224,20 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
             </div>
           ) : (
             <div className="space-y-2 overflow-x-auto">
+              {/* Encabezados de columnas */}
+              <div className="flex items-center gap-3 bg-white py-2 px-2 rounded-t-md text-xs font-semibold text-blue-800 uppercase min-w-[900px]">
+                {/* Espacios vacíos para alinear con Equipo A, VS y Equipo B */}
+                <span className="w-32"></span>
+                <span className="w-6"></span>
+                <span className="w-32"></span>
+                <span className="w-20 text-center">Resultado</span>
+                <span className="w-24 text-center">Estado</span>
+                <span className="w-36 text-center">Fecha / Hora</span>
+                <span className="w-20 text-center">Cancha</span>
+                <span className="w-32 text-center">Veedor</span>
+                <span className="w-32 text-center">Árbitro</span>
+                <span className="w-28 text-right">Acciones</span>
+              </div>
               {matches.map((match: Match) => {
                 const dateObj = match.date ? parseISO(match.date) : null;
                 const dayHour = dateObj
