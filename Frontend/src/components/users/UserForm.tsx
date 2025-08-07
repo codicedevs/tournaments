@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../layout/Header";
-import { ArrowLeftIcon, UploadIcon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, ShieldIcon, UploadIcon, XIcon } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -106,10 +106,7 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
     isUpdateError ||
     isTransferError;
   const error =
-    createWithPlayerError ||
-    createUserError ||
-    updateError ||
-    transferError;
+    createWithPlayerError || createUserError || updateError || transferError;
 
   // Estado para manejar errores del formulario
   const [formError, setFormError] = useState<string>("");
@@ -291,7 +288,12 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
         {
           onSuccess: () => {
             // Si es jugador y cambió de equipo, transferirlo
-            if (selectedRole === UserRole.PLAYER && playerData && Array.isArray(playerData) && playerData.length > 0) {
+            if (
+              selectedRole === UserRole.PLAYER &&
+              playerData &&
+              Array.isArray(playerData) &&
+              playerData.length > 0
+            ) {
               const currentPlayer = playerData[0] as any;
               const currentTeamId = currentPlayer.teamId
                 ? typeof currentPlayer.teamId === "string"
@@ -307,7 +309,9 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                   },
                   {
                     onSuccess: () => {
-                      setFormSuccess("Usuario y equipo actualizados exitosamente!");
+                      setFormSuccess(
+                        "Usuario y equipo actualizados exitosamente!"
+                      );
                       setTimeout(() => navigate("/users"), 2000);
                     },
                     onError: (error: any) => {
@@ -538,6 +542,26 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Equipo solo para jugadores */}
+            {selectedRole === "Player" && (
+              <div className="mb-4">
+                <label className="block text-lg font-medium text-gray-700 mb-1">
+                  EQUIPO <ShieldIcon className="inline" />
+                </label>
+                <select
+                  {...register("teamId")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Sin equipo</option>
+                  {teams.map((team: any) => (
+                    <option key={team._id} value={team._id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -783,26 +807,6 @@ const UserForm: React.FC<UserFormProps> = ({ mode, userId, initialData }) => {
                 <p className="text-xs text-blue-600 mt-1">
                   El usuario deberá cambiar esta contraseña en su primer login.
                 </p>
-              </div>
-            )}
-
-            {/* Equipo solo para jugadores */}
-            {selectedRole === "Player" && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Equipo (opcional)
-                </label>
-                <select
-                  {...register("teamId")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Sin equipo</option>
-                  {teams.map((team: any) => (
-                    <option key={team._id} value={team._id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
               </div>
             )}
 
