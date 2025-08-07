@@ -98,31 +98,13 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  // Middleware para forzar HTTPS
+  // Middleware para manejar preflight requests específicamente para móviles
   app.use((req, res, next) => {
     // Log para diagnosticar problemas móviles
     console.log(`📱 Request: ${req.method} ${req.url}`);
     console.log(`📱 User-Agent: ${req.headers['user-agent']}`);
     console.log(`📱 Origin: ${req.headers.origin}`);
     console.log(`📱 Host: ${req.headers.host}`);
-    console.log(`📱 Protocol: ${req.protocol}`);
-    console.log(`📱 X-Forwarded-Proto: ${req.headers['x-forwarded-proto']}`);
-
-    // Forzar redirección a HTTPS
-    const isHttps =
-      req.secure ||
-      req.headers['x-forwarded-proto'] === 'https' ||
-      req.headers['x-forwarded-ssl'] === 'on';
-
-    if (
-      !isHttps &&
-      (process.env.NODE_ENV === 'production' ||
-        process.env.FORCE_HTTPS === 'true')
-    ) {
-      const httpsUrl = `https://${req.headers.host}${req.url}`;
-      console.log(`🔄 Redirecting to HTTPS: ${httpsUrl}`);
-      return res.redirect(301, httpsUrl);
-    }
 
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', '*');
@@ -143,20 +125,6 @@ async function bootstrap() {
 
   // Set up validation
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-
-  // Agregar headers de seguridad
-  app.use((req, res, next) => {
-    // Headers de seguridad para HTTPS
-    res.header(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains',
-    );
-    res.header('X-Content-Type-Options', 'nosniff');
-    res.header('X-Frame-Options', 'DENY');
-    res.header('X-XSS-Protection', '1; mode=block');
-    res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-    next();
-  });
 
   // Serve static files from the uploads directory
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
