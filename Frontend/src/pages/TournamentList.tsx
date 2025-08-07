@@ -25,13 +25,60 @@ const TournamentList: React.FC = () => {
   // Map to hold number of teams registered per tournament
   const registrationsByTournament = React.useMemo(() => {
     const map: Record<string, number> = {};
-    registrations.forEach((reg) => {
-      const tid =
-        typeof reg.tournamentId === "string"
-          ? reg.tournamentId
-          : (reg.tournamentId as any)._id;
-      map[tid] = (map[tid] || 0) + 1;
-    });
+
+    // Verificar que registrations sea un array válido
+    if (!Array.isArray(registrations)) {
+      console.warn("Registrations is not an array:", registrations);
+      return map;
+    }
+
+    try {
+      registrations.forEach((reg) => {
+        try {
+          // Verificar que tournamentId no sea null
+          if (!reg.tournamentId) {
+            console.warn("Registration without tournamentId:", reg);
+            return;
+          }
+
+          let tid: string | undefined;
+
+          if (typeof reg.tournamentId === "string") {
+            tid = reg.tournamentId;
+          } else if (reg.tournamentId && typeof reg.tournamentId === "object") {
+            // Si es un objeto Tournament, extraer el _id de forma segura
+            const tournamentObj = reg.tournamentId as any;
+            if (
+              tournamentObj &&
+              tournamentObj._id !== null &&
+              tournamentObj._id !== undefined
+            ) {
+              tid = tournamentObj._id;
+            } else {
+              console.warn(
+                "Tournament object has null or undefined _id:",
+                tournamentObj
+              );
+            }
+          }
+
+          // Verificar que tid no sea null, undefined o string vacío
+          if (tid && tid.trim() !== "") {
+            map[tid] = (map[tid] || 0) + 1;
+          } else {
+            console.warn(
+              "Could not extract valid tournament ID from registration:",
+              reg
+            );
+          }
+        } catch (error) {
+          console.error("Error processing registration:", reg, error);
+        }
+      });
+    } catch (error) {
+      console.error("Error processing registrations:", error);
+    }
+
     return map;
   }, [registrations]);
 
@@ -256,55 +303,62 @@ const TournamentList: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tournaments.map((tournament) => (
-              <div
-                key={tournament._id}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
-              >
-                {/* Header */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="flex-1">
-                      <h3 className="text-3xl font-bold mb-2">
-                        {tournament.name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-blue-100">
-                        <TrophyIcon size={16} />
-                        <span className="text-sm">División</span>
-                        {/* {tournament.phases && tournament.phases.length > 0 && (
+            {tournaments.map((tournament) => {
+              // Verificar que el tournament tenga _id
+              if (!tournament._id) {
+                console.warn("Tournament without _id:", tournament);
+                return null;
+              }
+
+              return (
+                <div
+                  key={tournament._id}
+                  className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
+                >
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex-1">
+                        <h3 className="text-3xl font-bold mb-2">
+                          {tournament.name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-blue-100">
+                          <TrophyIcon size={16} />
+                          <span className="text-sm">División</span>
+                          {/* {tournament.phases && tournament.phases.length > 0 && (
                           <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
                             Con Fases
                           </span>
                         )} */}
-                      </div>
+                        </div>
 
-                      {/* Registered teams count */}
-                      <div className="flex items-center gap-2 text-white mt-3">
-                        <ShieldIcon size={16} className="text-white" />
-                        <span className="text-sm font-medium">
-                          {registrationsByTournament[tournament._id] || 0}{" "}
-                          equipo
-                          {(registrationsByTournament[tournament._id] || 0) ===
-                          1
-                            ? ""
-                            : "s"}{" "}
-                          registrados
-                        </span>
+                        {/* Registered teams count */}
+                        <div className="flex items-center gap-2 text-white mt-3">
+                          <ShieldIcon size={16} className="text-white" />
+                          <span className="text-sm font-medium">
+                            {registrationsByTournament[tournament._id] || 0}{" "}
+                            equipo
+                            {(registrationsByTournament[tournament._id] ||
+                              0) === 1
+                              ? ""
+                              : "s"}{" "}
+                            registrados
+                          </span>
+                        </div>
                       </div>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(tournament._id)}
+                        onChange={() => handleSelect(tournament._id)}
+                        className="w-5 h-5 rounded border-2 border-white/30 checked:bg-white checked:border-white"
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(tournament._id)}
-                      onChange={() => handleSelect(tournament._id)}
-                      className="w-5 h-5 rounded border-2 border-white/30 checked:bg-white checked:border-white"
-                    />
                   </div>
-                </div>
 
-                {/* Content */}
-                <div className="p-6">
-                  {/* Fases */}
-                  {/* <div className="mb-4">
+                  {/* Content */}
+                  <div className="p-6">
+                    {/* Fases */}
+                    {/* <div className="mb-4">
                     <h4 className="text-sm font-semibold text-gray-700 mb-2">
                       Fases Configuradas
                     </h4>
@@ -328,8 +382,8 @@ const TournamentList: React.FC = () => {
                     )}
                   </div> */}
 
-                  {/* Stats */}
-                  {/* <div className="grid grid-cols-2 gap-4 mb-6">
+                    {/* Stats */}
+                    {/* <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
                       <p className="text-2xl font-bold text-gray-800">
                         {tournament.phases?.length || 0}
@@ -346,43 +400,47 @@ const TournamentList: React.FC = () => {
                     </div>
                   </div> */}
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        navigate(`/divisions/${tournament._id}/registrations`)
-                      }
-                      className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
-                    >
-                      <ShieldIcon size={18} />
-                      <span>Equipos</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Navegar directamente a la primera fase del torneo
-                        if (tournament.phases && tournament.phases.length > 0) {
-                          const firstPhase = tournament.phases[0];
-                          navigate(
-                            `/divisions/${tournament._id}/phases/${firstPhase._id}`
-                          );
-                        } else {
-                          // Si no hay fases, navegar a crear la primera fase
-                          navigate(`/divisions/${tournament._id}/phases/new`);
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          navigate(`/divisions/${tournament._id}/registrations`)
                         }
-                      }}
-                      className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
-                    >
-                      <EyeIcon size={18} />
-                      <span>
-                        {tournament.phases && tournament.phases.length > 0
-                          ? "Entrar a la división"
-                          : "Crear Fase"}
-                      </span>
-                    </button>
+                        className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
+                      >
+                        <ShieldIcon size={18} />
+                        <span>Equipos</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Navegar directamente a la primera fase del torneo
+                          if (
+                            tournament.phases &&
+                            tournament.phases.length > 0
+                          ) {
+                            const firstPhase = tournament.phases[0];
+                            navigate(
+                              `/divisions/${tournament._id}/phases/${firstPhase._id}`
+                            );
+                          } else {
+                            // Si no hay fases, navegar a crear la primera fase
+                            navigate(`/divisions/${tournament._id}/phases/new`);
+                          }
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition"
+                      >
+                        <EyeIcon size={18} />
+                        <span>
+                          {tournament.phases && tournament.phases.length > 0
+                            ? "Entrar a la división"
+                            : "Crear Fase"}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

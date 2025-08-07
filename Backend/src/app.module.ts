@@ -31,7 +31,8 @@ import * as express from 'express';
       serveRoot: '/admin', // Serve files from 'admin' directory at '/admin'
     }),
     MongooseModule.forRoot(
-      `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/TestTournaments?retryWrites=true&w=majority&appName=DbPrueba`,
+      serverSetting.DB_URL ?? '',
+      // `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/TestTournaments?retryWrites=true&w=majority&appName=DbPrueba`,
       // `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/tournaments?retryWrites=true&w=majority&appName=DbPrueba`,
     ),
     MulterModule.register({
