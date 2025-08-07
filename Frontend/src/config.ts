@@ -3,6 +3,13 @@ console.log("🔧 Environment variables:", {
   MODE: import.meta.env.MODE,
 });
 
+// Forzar HTTPS en producción
+if (import.meta.env.PROD && window.location.protocol === "http:") {
+  const httpsUrl = window.location.href.replace("http:", "https:");
+  console.log("🔄 Redirecting to HTTPS from frontend:", httpsUrl);
+  window.location.href = httpsUrl;
+}
+
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://torneosloyal.ar";
 
