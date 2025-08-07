@@ -1,5 +1,3 @@
-import { UserIcon } from "lucide-react";
-import { useApp } from "../context/AppContext";
 import { NavLink } from "react-router-dom";
 import LoyalLogo from "../assets/LoyalLeague2.png?url";
 
