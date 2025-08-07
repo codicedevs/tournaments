@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,12 +17,18 @@ import { extname, join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { serverSetting } from './settings';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import * as express from 'express';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public-client'),
+      serveRoot: '/', // Serve files from 'public' directory at '/'
+    }),
+    ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/admin', // Serve files from 'admin' directory at '/admin'
     }),
     MongooseModule.forRoot(
       `mongodb+srv://matiDb:${process.env.DBPASSWORD}@dbprueba.twy3nho.mongodb.net/TestTournaments?retryWrites=true&w=majority&appName=DbPrueba`,

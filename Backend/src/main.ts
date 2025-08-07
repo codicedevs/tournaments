@@ -16,15 +16,7 @@ export function getProtocolConfig() {
   let cert: string | Buffer = '';
   let protocol: 'http' | 'https' | undefined;
 
-  console.log('🔍 Verificando configuración SSL...');
-  console.log('SSL_PRIVATE_KEY:', process.env.SSL_PRIVATE_KEY);
-  console.log('SSL_CERT:', process.env.SSL_CERT);
-
   if (process.env.SSL_PRIVATE_KEY && process.env.SSL_CERT) {
-    console.log(
-      '✅ Variables de entorno SSL encontradas, verificando archivos...',
-    );
-
     // Verificar si los archivos existen
     try {
       const keyExists = fs.existsSync(process.env.SSL_PRIVATE_KEY);
