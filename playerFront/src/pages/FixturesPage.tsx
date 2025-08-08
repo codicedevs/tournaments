@@ -102,26 +102,19 @@ export function FixturesPage() {
     return (
       <article
         key={match._id}
-        className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl p-4 shadow hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col min-h-[148px]"
+        className="bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-xl overflow-hidden p-4 shadow hover:shadow-md hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col w-full min-h-[132px] sm:min-h-[148px]"
       >
-        <div className="flex justify-between items-center text-gray-600 text-sm mb-4">
-          <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
+        <div className="flex flex-wrap items-center justify-center sm:justify-between gap-x-5 sm:gap-x-2 gap-y-1 md:gap-3 text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 leading-tight">
+          <div className="flex items-center gap-1 sm:gap-2 bg-blue-50 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full mx-1">
             <CalendarIcon size={16} className="text-blue-600" />
-            <span className="font-medium">
+            <span className="font-medium whitespace-nowrap">
               {new Date(match.date).toLocaleDateString("es-AR")}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full">
-            <MapPinned size={16} className="text-indigo-600" />
-            <span className="font-medium">
-              Cancha N° {match.fieldNumber ?? "-"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+          <div className="flex items-center gap-1 sm:gap-2 bg-green-50 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full mx-1">
             <ClockIcon size={16} className="text-green-600" />
-            <span className="font-medium">
+            <span className="font-medium whitespace-nowrap">
               {new Date(match.date).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -130,14 +123,14 @@ export function FixturesPage() {
           </div>
         </div>
         <div className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center flex-1">
-          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-            {match.teamA?.name || "--"}
+          <div className="w-full text-center font-bold text-xs sm:text-sm md:text-base leading-tight whitespace-normal clamp-2 sm:clamp-none break-words max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+            {match.teamA?.name ?? "Equipo Local"}
           </div>
-          <div className="justify-self-center px-4 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow min-w-[64px] text-center">
+          <div className="justify-self-center px-3 md:px-4 py-1 bg-gradient-to-r from-orange-600 to-black text-white rounded-full font-bold text-xs md:text-sm shadow min-w-[56px] md:min-w-[64px] text-center">
             {showScore ? `${match.homeScore} - ${match.awayScore}` : "VS"}
           </div>
-          <div className="w-full text-center font-bold text-sm md:text-base leading-tight break-words whitespace-normal max-w-[180px]">
-            {match.teamB?.name || "--"}
+          <div className="w-full text-center font-bold text-xs sm:text-sm md:text-base leading-tight whitespace-normal clamp-2 sm:clamp-none break-words max-w-[140px] sm:max-w-[160px] md:max-w-[180px]">
+            {match.teamB?.name ?? "Equipo Visitante"}
           </div>
         </div>
         {showStatus && (
@@ -145,6 +138,14 @@ export function FixturesPage() {
             {match.status}
           </div>
         )}
+        <div className="mt-3 flex items-center">
+          <div className="flex items-center gap-2 text-gray-600 text-xs">
+            <MapPinned size={14} className="text-indigo-600" />
+            <span className="font-medium">
+              Cancha N° {match.fieldNumber ?? "-"}
+            </span>
+          </div>
+        </div>
       </article>
     );
   };
@@ -204,7 +205,7 @@ export function FixturesPage() {
 
       {/* Content Section */}
       <section className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-6xl mx-auto">
-        <div className="bg-gradient-to-r from-black to-orange-600 p-6">
+        <div className="bg-gradient-to-r from-black to-orange-600 p-4 sm:p-6">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <CalendarIcon size={28} />
             Calendario de Partidos
@@ -214,7 +215,7 @@ export function FixturesPage() {
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {loading && renderLoadingSkeleton()}
           {!loading && error && renderError()}
 
@@ -230,11 +231,11 @@ export function FixturesPage() {
                   >
                     <button
                       onClick={() => toggleMatchday(md._id)}
-                      className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-purple-50 p-6 text-left transition-all duration-300 flex items-center justify-between group"
+                      className="w-full bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-purple-50 p-4 sm:p-6 text-left transition-all duration-300 flex items-center justify-between group"
                     >
                       <div>
                         <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                          Jornada {md.order}
+                          Fecha {md.order}
                         </h3>
                         {/* {md.date && (
                           <p className="text-gray-600 mt-1">
@@ -266,7 +267,7 @@ export function FixturesPage() {
                     </button>
 
                     {isExpanded && (
-                      <div className="bg-gray-50 border-t border-gray-200 p-6 animate-in slide-in-from-top-2 duration-300">
+                      <div className="bg-gray-50 border-t border-gray-200 p-4 sm:p-6 animate-in slide-in-from-top-2 duration-300">
                         {md.matches?.length ? (
                           <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
                             {md.matches.map((m) => renderMatch(m as Match))}

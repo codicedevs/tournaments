@@ -21,16 +21,20 @@ export function WelcomeDivisionSelector({
   error = null,
 }: WelcomeDivisionSelectorProps) {
   return (
-    <div className="text-black rounded-lg p-1">
-      <div className="max-w-4xl mx-auto text-center">
+    <div className="text-black rounded-lg p-1 px-4 sm:px-6">
+      <div className="max-w-full sm:max-w-4xl mx-auto text-center">
         <div className="flex justify-center mb-4">
           <TrophyIcon className="w-12 h-12 text-orange-600" />
         </div>
-        <h1 className="text-4xl font-bold mb-4">{title}</h1>
-        <p className="text-xl text-black mb-6">{description}</p>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight break-words">
+          {title}
+        </h1>
+        <p className="text-base sm:text-lg md:text-xl text-black mb-6 leading-relaxed">
+          {description}
+        </p>
 
         {/* Division Selector */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 max-w-full sm:max-w-md mx-auto">
           <h2 className="text-lg font-semibold mb-4 flex items-center justify-center gap-2">
             <span>🏆</span>
             Selecciona tu División
