@@ -32,15 +32,19 @@ const BestDefenseTable: React.FC<BestDefenseTableProps> = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {sorted.map((registration) => {
-              const team =
+              const teamIdVal =
                 typeof registration.teamId === "string"
-                  ? { _id: registration.teamId, name: "Equipo Desconocido" }
-                  : registration.teamId;
+                  ? registration.teamId
+                  : registration.teamId?._id;
+              const teamName =
+                typeof registration.teamId === "string"
+                  ? "Equipo Desconocido"
+                  : registration.teamId?.name || "Sin equipo";
               const goalsAgainst = registration.stats?.goalsAgainst || 0;
               return (
-                <tr key={team._id}>
+                <tr key={teamIdVal || registration._id}>
                   <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {team.name}
+                    {teamName}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-center text-gray-500">
                     {goalsAgainst}

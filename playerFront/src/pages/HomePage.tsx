@@ -71,8 +71,8 @@ export function HomePage() {
 
       {/* Main Dashboard */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-7xl mx-auto">
-        <div className="bg-gradient-to-r from-black to-orange-600 p-6">
-          <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+        <div className="bg-gradient-to-r from-black to-orange-600 p-4 sm:p-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
             <TrophyIcon size={32} />
             {tournaments.find((t) => t._id === selectedTournamentId)?.name ??
               "Dashboard del Torneo"}
@@ -86,7 +86,7 @@ export function HomePage() {
         {error && renderErrorState()}
 
         {!loading && !error && (
-          <div className="p-6 space-y-8">
+          <div className="p-4 sm:p-6 space-y-8">
             {/* Content Sections */}
             <div className="space-y-8">
               {/* Next Matches Section */}

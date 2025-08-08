@@ -175,19 +175,19 @@ export function TeamsPage() {
       />
 
       {/* Content Section */}
-      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-7xl mx-auto">
-        <div className="bg-gradient-to-r from-black to-orange-600 p-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+      <section className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-lg max-w-full sm:max-w-7xl mx-auto">
+        <div className="bg-gradient-to-r from-black to-orange-600 p-4 sm:p-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
             <ShieldIcon size={28} />
             Equipos de la División
           </h2>
-          <p className="text-orange-100 mt-2">
+          <p className="text-orange-100 mt-2 text-sm sm:text-base">
             Explora todos los equipos y sus estadísticas
           </p>
         </div>
 
         <div className="p-6">
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {teams.map((team) => {
               const stats = getTeamStats(team);
               const totalGames = stats.wins + stats.draws + stats.losses;
@@ -195,7 +195,7 @@ export function TeamsPage() {
               return (
                 <article
                   key={team._id}
-                  className="group bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:border-orange-300 hover:-translate-y-1"
+                  className="group bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:border-orange-300 hover:-translate-y-1"
                   onClick={() => openTeamModal(team)}
                 >
                   {/* Header with team info */}
@@ -205,17 +205,17 @@ export function TeamsPage() {
                         <img
                           src={team.profileImage}
                           alt={team.name}
-                          className="w-12 h-12 object-cover rounded-full border-2 border-gray-200 group-hover:border-orange-300 transition-colors"
+                          className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full border-2 border-gray-200 group-hover:border-orange-300 transition-colors"
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                        <div className="absolute -bottom-1 -right-1 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
                           {stats.points}
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition-colors truncate">
+                        <h3 className="font-bold text-base sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors leading-tight whitespace-normal clamp-2 sm:clamp-none break-words max-w-[120px] sm:max-w-[160px] md:max-w-[180px]">
                           {team.name}
                         </h3>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
                           <UsersIcon size={14} />
                           {team.players?.length || 0} jugadores
                         </p>
@@ -225,35 +225,35 @@ export function TeamsPage() {
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
                     <div className="rounded-lg p-3 text-center border border-green-100">
-                      <div className="text-lg font-bold text-green-700">
+                      <div className="text-base sm:text-lg font-bold text-green-700">
                         {stats.wins}
                       </div>
-                      <div className="text-xs text-green-600 font-medium">
+                      <div className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Ganados
                       </div>
                     </div>
                     <div className="rounded-lg p-3 text-center border border-yellow-100">
-                      <div className="text-lg font-bold text-yellow-700">
+                      <div className="text-base sm:text-lg font-bold text-yellow-700">
                         {stats.draws}
                       </div>
-                      <div className="text-xs text-yellow-600 font-medium">
+                      <div className="text-[10px] sm:text-xs text-yellow-600 font-medium">
                         Empates
                       </div>
                     </div>
                     <div className="rounded-lg p-3 text-center border border-red-100">
-                      <div className="text-lg font-bold text-red-700">
+                      <div className="text-base sm:text-lg font-bold text-red-700">
                         {stats.losses}
                       </div>
-                      <div className="text-xs text-red-600 font-medium">
+                      <div className="text-[10px] sm:text-xs text-red-600 font-medium">
                         Perdidos
                       </div>
                     </div>
                   </div>
 
                   {/* Goals and Performance */}
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center gap-1">
                         <TargetIcon size={14} className="text-blue-500" />

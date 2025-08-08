@@ -225,32 +225,34 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
           ) : (
             <div className="space-y-2 overflow-x-auto">
               {/* Encabezados de columnas */}
-              <div className="flex items-center gap-3 bg-white py-2 px-2 rounded-t-md text-xs font-semibold text-blue-800 uppercase min-w-[900px]">
+              <div className="grid items-center gap-3 bg-white py-2 px-2 rounded-t-md text-xs font-semibold text-blue-800 uppercase min-w-[900px] grid-cols-[128px_24px_128px_96px_96px_160px_96px_96px_160px_192px]">
                 {/* Espacios vacíos para alinear con Equipo A, VS y Equipo B */}
                 <span className="w-32"></span>
                 <span className="w-6"></span>
                 <span className="w-32"></span>
-                <span className="w-20 text-center">Resultado</span>
+                <span className="w-24 text-center">Resultado</span>
                 <span className="w-24 text-center">Estado</span>
-                <span className="w-36 text-center">Fecha / Hora</span>
-                <span className="w-20 text-center">Cancha</span>
-                <span className="w-32 text-center">Veedor</span>
-                <span className="w-32 text-center">Árbitro</span>
-                <span className="w-28 text-right">Acciones</span>
+                <span className="w-40 text-center">Fecha / Hora</span>
+                <span className="w-24 text-center">Cancha</span>
+                <span className="w-24 text-center">Veedor</span>
+                <span className="w-40 text-center">Árbitro</span>
+                <span className="w-48 text-center">Acciones</span>
               </div>
               {matches.map((match: Match) => {
                 const dateObj = match.date ? parseISO(match.date) : null;
                 const dayHour = dateObj
                   ? format(dateObj, "dd/MM/yyyy HH:mm", { locale: es })
                   : "-";
+                const teamAName = match?.teamA?.name || "Sin equipo A";
+                const teamBName = match?.teamB?.name || "Sin equipo B";
                 return (
                   <div
                     key={match._id}
-                    className="flex items-center gap-3 border-b last:border-b-0 py-2 px-2 min-w-[900px] hover:bg-blue-50 transition"
+                    className="grid items-center gap-3 border-b last:border-b-0 py-2 px-2 min-w-[900px] hover:bg-blue-50 transition grid-cols-[128px_24px_128px_96px_96px_160px_96px_96px_160px_192px]"
                   >
                     {/* Equipo A */}
                     <span className="font-bold text-gray-800 w-32 truncate text-right">
-                      {match.teamA.name}
+                      {teamAName}
                     </span>
                     {/* VS */}
                     <span className="text-gray-500 font-semibold w-6 text-center">
@@ -258,10 +260,10 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                     </span>
                     {/* Equipo B */}
                     <span className="font-bold text-gray-800 w-32 truncate text-left">
-                      {match.teamB.name}
+                      {teamBName}
                     </span>
                     {/* Resultado */}
-                    <span className="w-20 text-center">
+                    <span className="w-24 text-center">
                       {match.status === MatchStatus.FINISHED ||
                       match.status === MatchStatus.COMPLETED ? (
                         <span className="bg-green-100 text-green-800 px-2 py-1 rounded font-bold">
@@ -281,29 +283,29 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                       {estadoTexto(match.status, match)}
                     </span>
                     {/* Fecha/Hora */}
-                    <span className="w-36 text-center text-gray-700">
+                    <span className="w-40 text-center text-gray-700">
                       {dayHour}
                     </span>
                     {/* Cancha */}
-                    <span className="w-20 text-center text-gray-700">
+                    <span className="w-24 text-center text-gray-700">
                       {match.fieldNumber || "-"}
                     </span>
                     {/* Veedor */}
                     <span
-                      className="w-32 text-center text-gray-700 truncate"
+                      className="w-24 text-center text-gray-700 truncate"
                       title={getUserName(match.viewerId)}
                     >
                       {getUserName(match.viewerId)}
                     </span>
                     {/* Árbitro */}
                     <span
-                      className="w-32 text-center text-gray-700 truncate"
+                      className="w-40 text-center text-gray-700 truncate"
                       title={getUserName(match.refereeId)}
                     >
                       {getUserName(match.refereeId)}
                     </span>
                     {/* Botones */}
-                    <div className="flex gap-2 ml-2">
+                    <div className="w-48 flex justify-center gap-2">
                       <button
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs px-3 py-1 border border-blue-600 rounded hover:bg-blue-50 transition"
                         onClick={() => setShowDetailModal(match._id)}
@@ -338,10 +340,16 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
           <div className="flex flex-col gap-1">
             <span className="text-lg font-bold text-center mb-2">
               {showDetailModal &&
-                matches.find((m) => m._id === showDetailModal)?.teamA.name}{" "}
-              <span className="text-gray-400">vs</span>{" "}
-              {showDetailModal &&
-                matches.find((m) => m._id === showDetailModal)?.teamB.name}
+                (() => {
+                  const mm = matches.find((m) => m._id === showDetailModal);
+                  const a = mm?.teamA?.name || "Sin equipo A";
+                  const b = mm?.teamB?.name || "Sin equipo B";
+                  return (
+                    <>
+                      {a} <span className="text-gray-400">vs</span> {b}
+                    </>
+                  );
+                })()}
             </span>
             {showDetailModal &&
               (() => {
@@ -511,9 +519,9 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                     {match.result && (
                       <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-2">
                         {match.result === "TeamA"
-                          ? `Victoria ${match.teamA.name}`
+                          ? `Victoria ${match.teamA?.name || "Sin equipo A"}`
                           : match.result === "TeamB"
-                          ? `Victoria ${match.teamB.name}`
+                          ? `Victoria ${match.teamB?.name || "Sin equipo B"}`
                           : "Empate"}
                       </span>
                     )}

@@ -45,18 +45,22 @@ const FairPlayTable: React.FC<FairPlayTableProps> = ({ registrations }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {sorted.map((registration) => {
-              const team =
+              const teamIdVal =
                 typeof registration.teamId === "string"
-                  ? { _id: registration.teamId, name: "Equipo Desconocido" }
-                  : registration.teamId;
+                  ? registration.teamId
+                  : registration.teamId?._id;
+              const teamName =
+                typeof registration.teamId === "string"
+                  ? "Equipo Desconocido"
+                  : registration.teamId?.name || "Sin equipo";
               const yellow = registration.stats?.yellowCards || 0;
               const blue = registration.stats?.blueCards || 0;
               const red = registration.stats?.redCards || 0;
               const total = yellow + blue + red;
               return (
-                <tr key={team._id}>
+                <tr key={teamIdVal || registration._id}>
                   <td className="px-2 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {team.name}
+                    {teamName}
                   </td>
                   <td className="px-1 py-2 whitespace-nowrap text-sm text-center text-gray-500">
                     {yellow}
