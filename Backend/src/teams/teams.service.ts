@@ -105,12 +105,9 @@ export class TeamsService {
     try {
       // Eliminar todas las registraciones relacionadas con este equipo
       const deletedRegistrations = await this.registrationModel
-        .deleteMany({ teamId: new Types.ObjectId(id) })
+        .deleteMany({ teamId: id })
         .exec();
-
-      console.log(
-        `🗑️ Eliminadas ${deletedRegistrations.deletedCount} registraciones del equipo ${id}`,
-      );
+      console.log('sdeletedRegistrations', deletedRegistrations);
 
       // Eliminar el equipo
       const deletedTeam = await this.teamModel.findByIdAndDelete(id).exec();
