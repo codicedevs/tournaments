@@ -44,46 +44,46 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {registrations.map((registration) => {
-              const teamStats = registration.stats;
-              const stats = {
-                wins: teamStats.wins || 0,
-                draws: teamStats.draws || 0,
-                losses: teamStats.losses || 0,
-                goalsFor: teamStats.goalsFor || 0,
-                goalsAgainst: teamStats.goalsAgainst || 0,
-                // tarjetas eliminadas
-              };
-              const played = stats.wins + stats.draws + stats.losses;
-              const points = stats.wins * 3 + stats.draws;
-              const goalDiff = stats.goalsFor - stats.goalsAgainst;
+              const wins = registration.stats?.wins || 0;
+              const draws = registration.stats?.draws || 0;
+              const losses = registration.stats?.losses || 0;
+              const goalsFor = registration.stats?.goalsFor || 0;
+              const goalsAgainst = registration.stats?.goalsAgainst || 0;
+              const played = wins + draws + losses;
+              const points = wins * 3 + draws;
+              const goalDiff = goalsFor - goalsAgainst;
 
-              const team =
+              const teamIdVal =
                 typeof registration.teamId === "string"
-                  ? { _id: registration.teamId, name: "Equipo Desconocido" }
-                  : registration.teamId;
+                  ? registration.teamId
+                  : registration.teamId?._id;
+              const teamName =
+                typeof registration.teamId === "string"
+                  ? "Equipo Desconocido"
+                  : registration.teamId?.name || "Sin equipo";
 
               return (
-                <tr key={team._id}>
+                <tr key={teamIdVal || registration._id}>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                    {team.name}
+                    {teamName}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {played}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
-                    {stats.wins}
+                    {wins}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
-                    {stats.draws}
+                    {draws}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
-                    {stats.losses}
+                    {losses}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
-                    {stats.goalsFor}
+                    {goalsFor}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
-                    {stats.goalsAgainst}
+                    {goalsAgainst}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
                     {goalDiff}

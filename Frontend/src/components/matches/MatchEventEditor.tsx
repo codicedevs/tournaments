@@ -22,8 +22,8 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
 
   // Obtener jugadores de cada equipo
-  const { data: teamAPlayers = [] } = useTeamPlayers(match.teamA._id);
-  const { data: teamBPlayers = [] } = useTeamPlayers(match.teamB._id);
+  const { data: teamAPlayers = [] } = useTeamPlayers(match.teamA?._id);
+  const { data: teamBPlayers = [] } = useTeamPlayers(match.teamB?._id);
 
   // Ahora cada player tiene playerId y user
   const playersA = teamAPlayers;
@@ -70,8 +70,8 @@ export const MatchEventEditor: React.FC<MatchEventEditorProps> = ({
         }}
         className="px-2 py-1 border rounded"
       >
-        <option value="TeamA">{match.teamA.name}</option>
-        <option value="TeamB">{match.teamB.name}</option>
+        <option value="TeamA">{match.teamA?.name || "Sin equipo A"}</option>
+        <option value="TeamB">{match.teamB?.name || "Sin equipo B"}</option>
       </select>
       <select
         value={selectedPlayerId}
@@ -124,7 +124,7 @@ export const MatchEventsList: React.FC<MatchEventsListProps> = ({
   teamA,
   teamB,
 }) => {
-  const getEventIcon = (type: MatchEventType) => {
+  const getEventIcon = (type: MatchEvent["type"]) => {
     switch (type) {
       case MatchEventType.GOAL:
         return "⚽";
@@ -140,7 +140,7 @@ export const MatchEventsList: React.FC<MatchEventsListProps> = ({
   };
 
   const getEventText = (event: MatchEvent) => {
-    const teamName = event.team === "TeamA" ? teamA.name : teamB.name;
+    const teamName = event.team === "TeamA" ? (teamA?.name || "Equipo A") : (teamB?.name || "Equipo B");
     switch (event.type) {
       case MatchEventType.GOAL:
         return `Gol para ${teamName}`;
