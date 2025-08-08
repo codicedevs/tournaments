@@ -71,8 +71,6 @@ export class PhasesService {
       throw new NotFoundException(`Phase with ID ${phaseId} not found`);
     }
 
-    console.log(phase, 'phase');
-
     // Get all teams registered for the tournament
     const registrations = await this.registrationModel
       .find({

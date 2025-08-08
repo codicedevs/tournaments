@@ -158,7 +158,6 @@ export class PlayersService {
       .populate('teamId')
       .exec();
     if (!player) throw new NotFoundException(`Player with ID ${id} not found`);
-    console.log('player', player);
     const team = player.teamId?._id
       ? await this.teamModel.findById(player.teamId._id).exec()
       : null;

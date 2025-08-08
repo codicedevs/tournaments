@@ -80,6 +80,7 @@ export class RegistrationsService {
         },
       })
       .exec();
+    console.log('res', res);
     return res;
   }
 

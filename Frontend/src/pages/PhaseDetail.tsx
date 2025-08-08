@@ -46,7 +46,7 @@ const PhaseDetail: React.FC = () => {
     useUpdateTournament();
 
   const isLoading = isPhaseLoading || isMatchdaysLoading;
-
+  console.log("registrations", registrations);
   // Inicializar el nombre del torneo cuando se carga
   React.useEffect(() => {
     if (tournament?.name) {

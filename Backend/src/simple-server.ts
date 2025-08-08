@@ -4,7 +4,6 @@ const port = 80;
 
 // Crear servidor HTTP simple que redirige todo a HTTPS
 const server = http.createServer((req, res) => {
-  console.log('chocaa', req.url);
   // Redirigir a tu dominio real en lugar de localhost
   const httpsUrl = `https://torneosloyal.ar${req.url}`;
 

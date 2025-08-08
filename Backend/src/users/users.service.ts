@@ -272,7 +272,7 @@ export class UsersService {
     // Si es Player, usar el servicio de players para eliminar correctamente
     if (user.role === 'Player') {
       const player = await this.playerModel.findOne({ userId: id }).exec();
-      console.log('player', player);
+
       if (player) {
         // Esto elimina el player y lo quita del equipo
         await this.playersService.remove((player as any)._id.toString());
