@@ -114,6 +114,7 @@ export class TeamsService {
 
       // Eliminar el equipo
       const deletedTeam = await this.teamModel.findByIdAndDelete(id).exec();
+      console.log('deletedTeam', deletedTeam);
 
       console.log(`✅ Equipo ${id} eliminado exitosamente`);
 
