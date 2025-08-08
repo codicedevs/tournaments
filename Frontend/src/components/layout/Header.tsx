@@ -63,7 +63,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header className="bg-blue-600 text-white p-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           {/* Logo y título */}
           <div className="flex items-center gap-4">
             <Link
@@ -119,7 +119,7 @@ const Header: React.FC = () => {
           <div className="hidden md:flex items-center gap-4">
             {user && (
               <div className="flex items-center gap-2 text-sm">
-                <span>{user.name}</span>
+                <span className="max-w-[8rem] truncate">{user.name}</span>
                 <span className="text-blue-200">({user.role})</span>
               </div>
             )}
@@ -127,6 +127,7 @@ const Header: React.FC = () => {
             {/* Dropdown menu */}
             <div className="relative" ref={dropdownRef}>
               <button
+                aria-label="Abrir menú de configuración"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-1 bg-blue-700 hover:bg-blue-800 p-2 rounded transition"
               >
@@ -168,6 +169,7 @@ const Header: React.FC = () => {
               </div>
             )}
             <button
+              aria-label={isMobileMenuOpen ? "Cerrar menú móvil" : "Abrir menú móvil"}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="flex items-center gap-1 bg-blue-700 hover:bg-blue-800 p-2 rounded transition"
             >
@@ -222,7 +224,7 @@ const Header: React.FC = () => {
               <div className="border-t border-blue-500 pt-4 mt-2">
                 {user && (
                   <div className="px-4 py-2 text-sm text-blue-200">
-                    <span>{user.name}</span>
+                    <span className="max-w-[8rem] truncate">{user.name}</span>
                   </div>
                 )}
 

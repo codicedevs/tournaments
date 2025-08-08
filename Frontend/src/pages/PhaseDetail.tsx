@@ -115,7 +115,7 @@ const PhaseDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <main className="container mx-auto py-8 px-4">
+        <main className="container mx-auto py-8 px-4 max-w-full overflow-hidden">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <span className="ml-3 text-gray-600">Cargando fase...</span>
@@ -129,7 +129,7 @@ const PhaseDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <main className="container mx-auto py-8 px-4">
+        <main className="container mx-auto py-8 px-4 max-w-full overflow-hidden">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">
               Fase no encontrada
@@ -149,7 +149,7 @@ const PhaseDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-4 max-w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
             onClick={() => navigate(`/divisions`)}
@@ -219,7 +219,7 @@ const PhaseDetail: React.FC = () => {
           <div className="sm:ml-auto flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() =>
-                navigate(`/divisions/${tournamentId}/registrations`)
+                navigate(`/divisions/${tournamentId}/registrations?phaseId=${phaseId}`)
               }
               className="flex items-center justify-center gap-1 w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-green-600 hover:text-green-800 border border-green-600 rounded-md hover:bg-green-50 transition"
             >
@@ -253,21 +253,20 @@ const PhaseDetail: React.FC = () => {
         </div>
 
         {/* StandingsTable ajustada y banner a la derecha en md+ */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          <div className="flex justify-center">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-extrabold text-green-700 flex items-center gap-2">
-                  <span className="text-3xl">🏆</span>
-                  Tabla de Posiciones
-                </h2>
-              </div>
-              <div className="max-w-fit">
-                <StandingsTable registrations={registrations} />
-              </div>
+        <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-extrabold text-green-700 flex items-center gap-2">
+                <span className="text-3xl">🏆</span>
+                Tabla de Posiciones
+              </h2>
+            </div>
+            {/* Ensure the table never forces page-level horizontal scroll */}
+            <div className="w-full overflow-x-auto">
+              <StandingsTable registrations={registrations} />
             </div>
           </div>
-          <div className="hidden md:flex flex-col items-center justify-center h-full w-full">
+          <div className="hidden xl:flex flex-col items-center justify-center h-full w-full">
             <div className="rounded-2xl shadow-xl bg-gradient-to-br from-green-400 via-yellow-200 to-white border-2 border-green-600 px-8 py-10 flex flex-col items-center">
               <span className="text-5xl mb-4">⚽</span>
               <span className="text-2xl font-bold text-green-900 mb-2 text-center">
@@ -280,7 +279,7 @@ const PhaseDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="rounded-xl shadow border border-indigo-400 bg-white">
             <div className="bg-indigo-600 rounded-t-xl px-4 py-2 flex items-center gap-2">
               <span className="text-xl">👥</span>

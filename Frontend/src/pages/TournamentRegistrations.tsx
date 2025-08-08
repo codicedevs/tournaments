@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeftIcon,
   PlusIcon,
@@ -19,6 +19,8 @@ import { Team } from "../models";
 const TournamentRegistrations: React.FC = () => {
   const navigate = useNavigate();
   const { tournamentId } = useParams<{ tournamentId: string }>();
+  const [searchParams] = useSearchParams();
+  const phaseId = searchParams.get("phaseId");
 
   // Data fetching
   const {
@@ -100,11 +102,17 @@ const TournamentRegistrations: React.FC = () => {
       <main className="container mx-auto py-8 px-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
           <button
-            onClick={() => navigate("/divisions")}
+            onClick={() => {
+              if (phaseId && tournamentId) {
+                navigate(`/divisions/${tournamentId}/phases/${phaseId}`);
+              } else {
+                navigate("/divisions");
+              }
+            }}
             className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
           >
             <ArrowLeftIcon size={16} />
-            <span>Volver a Divisiones</span>
+            <span>Volver</span>
           </button>
           <div className="h-6 w-px bg-gray-300" />
           <div>
@@ -122,7 +130,13 @@ const TournamentRegistrations: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2 sm:gap-3 mb-6 w-full sm:w-auto">
           {/* Registrar equipo existente en la división */}
           <button
-            onClick={() => navigate(`/divisions/${tournamentId}/register-team`)}
+            onClick={() => {
+              if (phaseId) {
+                navigate(`/divisions/${tournamentId}/register-team?phaseId=${phaseId}`);
+              } else {
+                navigate(`/divisions/${tournamentId}/register-team`);
+              }
+            }}
             className="flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition w-full sm:w-auto"
           >
             <ShieldPlusIcon size={18} />

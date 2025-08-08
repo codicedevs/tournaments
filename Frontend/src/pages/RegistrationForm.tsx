@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,8 @@ const RegistrationForm: React.FC = () => {
   const { tournamentId: preselectedTournamentId } = useParams<{
     tournamentId?: string;
   }>();
+  const [searchParams] = useSearchParams();
+  const phaseId = searchParams.get("phaseId");
   const [error, setError] = useState("");
   const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState(false);
   const [teamSearchTerm, setTeamSearchTerm] = useState("");
@@ -241,7 +243,8 @@ const RegistrationForm: React.FC = () => {
 
     await Promise.all(promises);
 
-    navigate(`/divisions/${selectedTournamentId}/registrations`);
+    const base = `/divisions/${selectedTournamentId}/registrations`;
+    navigate(phaseId ? `${base}?phaseId=${phaseId}` : base);
   };
 
   const handleRemovePending = (id: string) => {
@@ -253,13 +256,14 @@ const RegistrationForm: React.FC = () => {
       <Header />
       <main className="container mx-auto py-8 px-4">
         <button
-          onClick={() =>
-            navigate(
-              preselectedTournamentId
-                ? `/divisions/${preselectedTournamentId}/registrations`
-                : "/divisions"
-            )
-          }
+          onClick={() => {
+            if (preselectedTournamentId) {
+              const base = `/divisions/${preselectedTournamentId}/registrations`;
+              navigate(phaseId ? `${base}?phaseId=${phaseId}` : base);
+            } else {
+              navigate("/divisions");
+            }
+          }}
           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 mb-6"
         >
           <ArrowLeftIcon size={16} />
@@ -420,13 +424,14 @@ const RegistrationForm: React.FC = () => {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
-                onClick={() =>
-                  navigate(
-                    preselectedTournamentId
-                      ? `/divisions/${preselectedTournamentId}/registrations`
-                      : "/divisions"
-                  )
-                }
+                onClick={() => {
+                  if (preselectedTournamentId) {
+                    const base = `/divisions/${preselectedTournamentId}/registrations`;
+                    navigate(phaseId ? `${base}?phaseId=${phaseId}` : base);
+                  } else {
+                    navigate("/divisions");
+                  }
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 disabled={isLoading}
               >
@@ -436,13 +441,14 @@ const RegistrationForm: React.FC = () => {
                 <button
                   type="button"
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  onClick={() =>
-                    navigate(
-                      preselectedTournamentId
-                        ? `/divisions/${preselectedTournamentId}/registrations`
-                        : "/divisions"
-                    )
-                  }
+                  onClick={() => {
+                    if (preselectedTournamentId) {
+                      const base = `/divisions/${preselectedTournamentId}/registrations`;
+                      navigate(phaseId ? `${base}?phaseId=${phaseId}` : base);
+                    } else {
+                      navigate("/divisions");
+                    }
+                  }}
                 >
                   Volver a la lista
                 </button>

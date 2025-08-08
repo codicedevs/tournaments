@@ -64,7 +64,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ registrations }) => {
 
               return (
                 <tr key={teamIdVal || registration._id}>
-                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
+                  <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900 max-w-[140px] truncate">
                     {teamName}
                   </td>
                   <td className="px-2 sm:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-center text-gray-500">
