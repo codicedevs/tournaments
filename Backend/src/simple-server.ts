@@ -4,8 +4,8 @@ const port = 80;
 
 // Crear servidor HTTP simple que redirige todo a HTTPS
 const server = http.createServer((req, res) => {
-  const host = req.headers.host?.split(':')[0] || 'localhost';
-  const httpsUrl = `https://${host}${req.url}`;
+  // Redirigir a tu dominio real en lugar de localhost
+  const httpsUrl = `https://torneosloyal.ar${req.url}`;
 
   console.log(`🔄 Redirigiendo HTTP a HTTPS: ${req.url} -> ${httpsUrl}`);
 
@@ -74,12 +74,12 @@ const server = http.createServer((req, res) => {
       <body>
         <h1>🔄 Redirigiendo a HTTPS...</h1>
         <p>Estás siendo redirigido automáticamente a la versión segura</p>
-        <div class="redirect-info">
-          <p><strong>Desde:</strong> HTTP (Puerto 80)</p>
-          <p><strong>Hacia:</strong> HTTPS (Puerto 443)</p>
-          <p><strong>URL:</strong> ${httpsUrl}</p>
-          <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-        </div>
+                 <div class="redirect-info">
+           <p><strong>Desde:</strong> HTTP (Puerto 80)</p>
+           <p><strong>Hacia:</strong> https://torneosloyal.ar</p>
+           <p><strong>URL:</strong> ${httpsUrl}</p>
+           <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+         </div>
         <p>Si no eres redirigido automáticamente, <a href="${httpsUrl}?${Date.now()}" class="link">haz clic aquí</a></p>
       </body>
     </html>
@@ -90,8 +90,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
   console.log('🚀 Servidor HTTP de redirección iniciado en puerto 80');
-  console.log('   Redirigiendo todo el tráfico HTTP a HTTPS (puerto 443)');
-  console.log('   URL: http://localhost:80 → https://localhost:443');
+  console.log('   Redirigiendo todo el tráfico HTTP a HTTPS');
+  console.log('   URL: http://* → https://torneosloyal.ar');
 });
 
 server.on('error', (error: any) => {
