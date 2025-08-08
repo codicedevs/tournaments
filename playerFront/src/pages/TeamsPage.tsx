@@ -187,7 +187,7 @@ export function TeamsPage() {
         </div>
 
         <div className="p-6">
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {teams.map((team) => {
               const stats = getTeamStats(team);
               const totalGames = stats.wins + stats.draws + stats.losses;
@@ -200,19 +200,23 @@ export function TeamsPage() {
                 >
                   {/* Header with team info */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="relative flex-shrink-0">
                         <img
-                          src={team.profileImage}
+                          src={team.profileImage ? `http://localhost:3000${team.profileImage}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(team.name)}&background=000000&color=f97316&size=128`}
                           alt={team.name}
                           className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full border-2 border-gray-200 group-hover:border-orange-300 transition-colors"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(team.name)}&background=000000&color=f97316&size=128`;
+                          }}
                         />
                         <div className="absolute -bottom-1 -right-1 bg-orange-500 text-white text-[10px] sm:text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
                           {stats.points}
                         </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-base sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors leading-tight whitespace-normal clamp-2 sm:clamp-none break-words max-w-[120px] sm:max-w-[160px] md:max-w-[180px]">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-base sm:text-md text-gray-800 group-hover:text-orange-600 transition-colors leading-tight truncate">
                           {team.name}
                         </h3>
                         <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
@@ -221,12 +225,12 @@ export function TeamsPage() {
                         </p>
                       </div>
                     </div>
-                    <TrophyIcon className="w-5 h-5 text-orange-600 opacity-90 group-hover:opacity-100 transition-opacity" />
+                    <TrophyIcon className="w-5 h-5 text-orange-600 opacity-90 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                   </div>
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-                    <div className="rounded-lg p-3 text-center border border-green-100">
+                    <div className="rounded-lg p-3 text-center border border-green-100 flex flex-col items-center justify-center">
                       <div className="text-base sm:text-lg font-bold text-green-700">
                         {stats.wins}
                       </div>
@@ -234,7 +238,7 @@ export function TeamsPage() {
                         Ganados
                       </div>
                     </div>
-                    <div className="rounded-lg p-3 text-center border border-yellow-100">
+                    <div className="rounded-lg p-3 text-center border border-yellow-100 flex flex-col items-center justify-center">
                       <div className="text-base sm:text-lg font-bold text-yellow-700">
                         {stats.draws}
                       </div>
@@ -242,7 +246,7 @@ export function TeamsPage() {
                         Empates
                       </div>
                     </div>
-                    <div className="rounded-lg p-3 text-center border border-red-100">
+                    <div className="rounded-lg p-3 text-center border border-red-100 flex flex-col items-center justify-center">
                       <div className="text-base sm:text-lg font-bold text-red-700">
                         {stats.losses}
                       </div>

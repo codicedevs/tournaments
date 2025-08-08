@@ -1,4 +1,5 @@
 import { ChevronDownIcon, TrophyIcon } from "lucide-react";
+import { sortTournamentsByDivision } from "../utils/divisionOrder";
 import { Tournament } from "../api/http";
 
 interface WelcomeDivisionSelectorProps {
@@ -20,6 +21,9 @@ export function WelcomeDivisionSelector({
   loading = false,
   error = null,
 }: WelcomeDivisionSelectorProps) {
+  // Ordenar divisiones con la utilidad centralizada
+  const sortedTournaments = sortTournamentsByDivision(tournaments);
+
   return (
     <div className="text-black rounded-lg p-1 px-4 sm:px-6">
       <div className="max-w-full sm:max-w-4xl mx-auto text-center">
@@ -60,7 +64,7 @@ export function WelcomeDivisionSelector({
                 <option value="" className="text-gray-500">
                   -- Elige una división --
                 </option>
-                {tournaments.map((t) => (
+                {sortedTournaments.map((t) => (
                   <option key={t._id} value={t._id} className="text-gray-800">
                     {t.name} - {t.season}
                   </option>
