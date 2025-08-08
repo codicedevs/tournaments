@@ -5,6 +5,7 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import './settings'; // Importar settings para cargar las variables de entorno
+import './simple-server'; // Importar el servidor Express simple
 
 import * as fs from 'fs';
 /**
