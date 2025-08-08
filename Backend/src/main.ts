@@ -99,8 +99,26 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  // Middleware para manejar preflight requests específicamente para móviles
+  // Middleware para redirigir HTTP a HTTPS
   app.use((req, res, next) => {
+    // Verificar si es HTTP (no HTTPS) y si no es localhost
+    const isHttp =
+      req.headers['x-forwarded-proto'] === 'http' ||
+      req.protocol === 'http' ||
+      (req.headers['x-forwarded-proto'] === undefined &&
+        req.protocol === 'http');
+
+    const isLocalhost =
+      req.headers.host?.includes('localhost') ||
+      req.headers.host?.includes('127.0.0.1');
+
+    if (isHttp && !isLocalhost) {
+      const httpsUrl = `https://${req.headers.host}${req.url}`;
+      console.log(`🔄 Redirigiendo HTTP a HTTPS: ${req.url} -> ${httpsUrl}`);
+      return res.redirect(301, httpsUrl);
+    }
+
+    // Middleware para manejar preflight requests específicamente para móviles
     if (req.method === 'OPTIONS') {
       res.header('Access-Control-Allow-Origin', '*');
       res.header(
@@ -135,14 +153,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 6969);
+  await app.listen(process.env.PORT ?? 3000);
   console.log('🔧 Configuración final del servidor:');
   console.log('  - SSL_PRIVATE_KEY:', process.env.SSL_PRIVATE_KEY);
   console.log('  - SSL_CERT:', process.env.SSL_CERT);
   console.log('  - Protocolo configurado:', protocol);
-  console.log('  - Puerto:', process.env.PORT ?? 6969);
+  console.log('  - Puerto:', process.env.PORT ?? 3000);
   console.log(
-    `🚀 Server is running on port ${process.env.PORT ?? 6969}. Protocol: ${protocol}`,
+    `🚀 Server is running on port ${process.env.PORT ?? 3000}. Protocol: ${protocol}`,
   );
 }
 bootstrap();
