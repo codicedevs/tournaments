@@ -175,17 +175,21 @@ const MatchdayItem: React.FC<MatchdayItemProps> = ({
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                      <div className="font-medium">{match.teamA.name}</div>
+                      <div className="font-medium">
+                        {match.teamA?.name || "Equipo A"}
+                      </div>
                       <div className="text-gray-500">vs</div>
-                      <div className="font-medium">{match.teamB.name}</div>
+                      <div className="font-medium">
+                        {match.teamB?.name || "Equipo B"}
+                      </div>
                     </div>
                     <div>
                       {match.result ? (
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                           {match.result === "TeamA"
-                            ? `Victoria ${match.teamA.name}`
+                            ? `Victoria ${match.teamA?.name || "Equipo A"}`
                             : match.result === "TeamB"
-                            ? `Victoria ${match.teamB.name}`
+                            ? `Victoria ${match.teamB?.name || "Equipo B"}`
                             : "Empate"}
                         </span>
                       ) : (
