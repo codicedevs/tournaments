@@ -13,6 +13,10 @@ import {
 } from 'src/matchdays/entities/matchday.entity';
 import { Player, PlayerSchema } from 'src/players/entities/player.entity';
 import { PlayersModule } from 'src/players/players.module';
+import {
+  Registration,
+  RegistrationSchema,
+} from 'src/registrations/entities/registration.entity';
 
 @Module({
   imports: [
@@ -21,6 +25,7 @@ import { PlayersModule } from 'src/players/players.module';
       { name: Match.name, schema: MatchSchema },
       { name: Matchday.name, schema: MatchdaySchema },
       { name: Player.name, schema: PlayerSchema },
+      { name: Registration.name, schema: RegistrationSchema },
     ]),
     forwardRef(() => UsersModule),
     PlayersModule,
