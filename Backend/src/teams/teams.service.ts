@@ -16,6 +16,7 @@ import { Matchday } from '../matchdays/entities/matchday.entity';
 import { PlayersService } from 'src/players/players.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { Player } from 'src/players/entities/player.entity';
+import { Registration } from '../registrations/entities/registration.entity';
 
 @Injectable()
 export class TeamsService {
@@ -27,6 +28,8 @@ export class TeamsService {
     @InjectModel(Match.name) private matchModel: Model<Match>,
     @InjectModel(Matchday.name) private matchdayModel: Model<Matchday>,
     @InjectModel(Player.name) private playerModel: Model<Player>,
+    @InjectModel(Registration.name)
+    private registrationModel: Model<Registration>,
   ) {}
 
   async create(createTeamDto: CreateTeamDto): Promise<Team> {
@@ -89,7 +92,38 @@ export class TeamsService {
   }
 
   async remove(id: string): Promise<Team | null> {
-    return this.teamModel.findByIdAndDelete(id).exec();
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException(`Invalid team ID: ${id}`);
+    }
+
+    // Verificar que el equipo existe antes de eliminarlo
+    const team = await this.teamModel.findById(id).exec();
+    if (!team) {
+      throw new NotFoundException(`Team with ID ${id} not found`);
+    }
+
+    try {
+      // Eliminar todas las registraciones relacionadas con este equipo
+      const deletedRegistrations = await this.registrationModel
+        .deleteMany({ teamId: new Types.ObjectId(id) })
+        .exec();
+
+      console.log(
+        `🗑️ Eliminadas ${deletedRegistrations.deletedCount} registraciones del equipo ${id}`,
+      );
+
+      // Eliminar el equipo
+      const deletedTeam = await this.teamModel.findByIdAndDelete(id).exec();
+
+      console.log(`✅ Equipo ${id} eliminado exitosamente`);
+
+      return deletedTeam;
+    } catch (error) {
+      console.error('❌ Error al eliminar equipo:', error);
+      throw new BadRequestException(
+        'Error al eliminar el equipo y sus registraciones',
+      );
+    }
   }
 
   async addPlayer(teamId: string, userDto: any): Promise<Player> {
